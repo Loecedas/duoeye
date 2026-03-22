@@ -1,0 +1,211 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="DuoEye - 多邻国学习数据仪表盘" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem('duoeye-theme');
+          const themeMode =
+            savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system'
+              ? savedTheme
+              : 'system';
+          const resolvedTheme =
+            themeMode === 'system'
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+              : themeMode;
+          document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+        } catch {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen font-sans antialiased text-apple-dark1 transition-colors dark:text-white">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    color-scheme: light;
+    --duo-green: #58CC02;
+    --duo-green-dark: #46A302;
+    --duo-blue: #1CB0F6;
+    --duo-blue-dark: #1899D6;
+    --duo-purple: #A572F7;
+    --duo-red: #FF4B4B;
+    --duo-yellow: #FFC800;
+    --duo-orange: #FF9600;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #f5f5f7;
+  }
+
+  html.dark {
+    background: #1c1c1e;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(88, 204, 2, 0.05), transparent 22%),
+      radial-gradient(circle at top right, rgba(28, 176, 246, 0.05), transparent 20%),
+      linear-gradient(180deg, #fbfbfd 0%, #f5f5f7 45%, #f7f7fa 100%);
+  }
+
+  html.dark body {
+    background:
+      radial-gradient(circle at top left, rgba(88, 204, 2, 0.06), transparent 20%),
+      radial-gradient(circle at top right, rgba(28, 176, 246, 0.06), transparent 20%),
+      linear-gradient(180deg, #141416 0%, #1c1c1e 50%, #151517 100%);
+  }
+
+  ::selection {
+    background: rgba(28, 176, 246, 0.18);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 128, 0.28);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
+
+  html.animations-off {
+    scroll-behavior: auto !important;
+  }
+
+  html.animations-off .animate-fade-in-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  html.animations-off button,
+  html.animations-off a,
+  html.animations-off [role="button"],
+  html.animations-off .group,
+  html.animations-off nav {
+    transition: none !important;
+  }
+
+  html.animations-off button:hover,
+  html.animations-off a:hover,
+  html.animations-off [role="button"]:hover,
+  html.animations-off [class*='hover:-translate']:hover,
+  html.animations-off [class*='hover:translate']:hover,
+  html.animations-off [class*='hover:scale']:hover,
+  html.animations-off [class*='group-hover:-translate'],
+  html.animations-off [class*='group-hover:translate'],
+  html.animations-off [class*='group-hover:scale'] {
+    transform: none !important;
+  }
+
+  html.screenshot-mode nav,
+  html.screenshot-mode footer,
+  html.screenshot-mode [class*='backdrop-blur'] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html.screenshot-mode,
+  html.screenshot-mode body {
+    background: #f5f5f7 !important;
+  }
+
+  html.dark.screenshot-mode,
+  html.dark.screenshot-mode body {
+    background: #1c1c1e !important;
+  }
+
+  html.screenshot-mode nav {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-color: rgba(255, 255, 255, 0.92) !important;
+  }
+
+  html.dark.screenshot-mode nav {
+    background: rgba(44, 44, 46, 0.96) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+  }
+
+  html.screenshot-mode footer {
+    background: rgba(255, 255, 255, 0.92) !important;
+  }
+
+  html.dark.screenshot-mode footer {
+    background: rgba(20, 20, 22, 0.92) !important;
+  }
+
+  html.screenshot-mode .screenshot-solid-surface {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 252, 0.98)) !important;
+    border-color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  html.dark.screenshot-mode .screenshot-solid-surface {
+    background: linear-gradient(180deg, rgba(58, 58, 60, 0.98), rgba(28, 28, 30, 0.98)) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  html.screenshot-mode .screenshot-solid-panel {
+    background: rgba(255, 255, 255, 0.94) !important;
+    border-color: rgba(255, 255, 255, 0.88) !important;
+  }
+
+  html.dark.screenshot-mode .screenshot-solid-panel {
+    background: rgba(44, 44, 46, 0.92) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  html.screenshot-mode .screenshot-disable-blur {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html.screenshot-mode .screenshot-soft-glow {
+    opacity: 0.78 !important;
+  }
+</style>
