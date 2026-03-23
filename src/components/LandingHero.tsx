@@ -78,15 +78,15 @@ const totalTime = timeChartData.reduce((sum, item) => sum + item.time, 0);
 const averageXp = Math.round(totalXp / xpChartData.filter((item) => item.xp > 0).length);
 
 const floatingNavClassName =
-  'mx-auto flex max-w-[1560px] items-center justify-between overflow-visible rounded-[28px] border px-4 py-3.5 transition-all duration-300 sm:px-5';
+  'mx-auto flex max-w-[1560px] items-center justify-between overflow-visible rounded-[28px] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5';
 const sectionCardClassName =
-  'render-isolate screenshot-solid-panel overflow-hidden rounded-[30px] border border-white/72 bg-[rgba(255,255,255,0.9)] [background-clip:padding-box] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
+  'render-isolate screenshot-solid-panel overflow-hidden rounded-[30px] border border-white/72 bg-[rgba(255,255,255,0.9)] [background-clip:padding-box] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
 const sectionCardStaticClassName =
   'render-isolate screenshot-solid-panel overflow-hidden rounded-[30px] border border-white/72 bg-[rgba(255,255,255,0.9)] [background-clip:padding-box] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
 const badgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6';
 const navTabClassName =
-  'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
+  'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
 
 function formatDateKey(date: Date): string {
   try {
@@ -193,7 +193,7 @@ function HeroMetric({
   accent: string;
 }) {
   return (
-    <div className="render-isolate overflow-hidden rounded-[22px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/8 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
+    <div className="render-isolate overflow-hidden rounded-[22px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(34,34,36,0.98))] dark:shadow-[0_10px_24px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
       <div className="text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 dark:text-apple-dark6">{label}</div>
       <div className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: accent }}>
         {value}
@@ -308,36 +308,16 @@ export default function LandingHero() {
     return () => observer.disconnect();
   }, [shouldRenderPreview]);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = username.trim();
 
     if (!trimmed) return;
 
     setLoading(true);
-
-    try {
-      const response = await fetch('/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: trimmed }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        alert(error.error || '获取数据失败');
-        setLoading(false);
-        return;
-      }
-
-      const { data } = await response.json();
-      sessionStorage.setItem('duoeye_userdata', JSON.stringify(data));
-      sessionStorage.setItem('duoeye_username', trimmed);
-      window.location.href = '/dashboard';
-    } catch {
-      alert('网络错误，请稍后重试');
-      setLoading(false);
-    }
+    sessionStorage.setItem('duoeye_username', trimmed);
+    sessionStorage.removeItem('duoeye_userdata');
+    window.location.href = '/dashboard';
   }
 
   function handleThemeChange(mode: ThemeMode) {
@@ -357,7 +337,7 @@ export default function LandingHero() {
     <div className="relative min-h-screen overflow-x-hidden bg-apple-gray1 text-apple-dark1 transition-colors duration-500 dark:bg-apple-dark1 dark:text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_24%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.08),transparent_22%),linear-gradient(180deg,#fbfbfd_0%,rgba(245,245,247,0.76)_48%,transparent_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_22%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_22%),linear-gradient(180deg,rgba(28,28,30,0.96)_0%,rgba(28,28,30,0.72)_46%,transparent_100%)]" />
 
-      <nav className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
+      <nav data-floating-navbar="true" className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
         <div
           className={`${floatingNavClassName} ${
             isScrolled
@@ -387,7 +367,7 @@ export default function LandingHero() {
             <button
               type="button"
               onClick={toggleAnimations}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-all duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
               title={animationsEnabled ? '关闭动效' : '开启动效'}
               aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
             >
@@ -419,7 +399,7 @@ export default function LandingHero() {
                       onChange={(event) => setUsername(event.target.value)}
                       placeholder="输入你的多邻国用户名"
                       disabled={loading}
-                      className="render-isolate w-full overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.92)] [background-clip:padding-box] py-4 pl-5 pr-14 text-base text-apple-dark1 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition-all duration-200 focus:border-[#58cc02]/40 focus:ring-4 focus:ring-[#58cc02]/10 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-[rgba(44,44,46,0.78)] dark:text-white"
+                      className="render-isolate w-full overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.92)] [background-clip:padding-box] py-4 pl-5 pr-14 text-base text-apple-dark1 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition-[box-shadow,border-color,background-color,color] duration-200 focus:border-[#58cc02]/40 focus:ring-4 focus:ring-[#58cc02]/10 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-[rgba(44,44,46,0.78)] dark:text-white"
                     />
                     <button
                       type="submit"
@@ -435,7 +415,7 @@ export default function LandingHero() {
                     <button
                       type="submit"
                       disabled={loading || !username.trim()}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-[#111827] px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(17,24,39,0.14)] transition-all duration-200 hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-55 dark:bg-white dark:text-apple-dark1 dark:hover:bg-white/92"
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-[#111827] px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(17,24,39,0.14)] transition-[transform,box-shadow,background-color,opacity] duration-200 hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-55 dark:bg-white dark:text-apple-dark1 dark:hover:bg-white/92"
                     >
                       {loading ? <SearchButtonSpinner /> : null}
                       {loading ? '正在生成...' : '生成我的仪表盘'}
@@ -464,7 +444,7 @@ export default function LandingHero() {
                 <HeroMetric label="热力活跃" value="365 天" accent="#a572f7" />
               </div>
 
-              <div className="render-isolate mt-4 overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.82)] [background-clip:padding-box] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-white/6">
+              <div className="render-isolate mt-4 overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.82)] [background-clip:padding-box] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(52,52,54,0.96),rgba(30,30,32,0.98))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-semibold text-apple-dark1 dark:text-white">体验重点</div>
                   <span className="rounded-full bg-[#58cc02]/10 px-2.5 py-1 text-[11px] font-semibold text-[#3d8f09] dark:bg-[#58cc02]/15 dark:text-[#b6ef89]">
@@ -560,7 +540,7 @@ export default function LandingHero() {
               {faqItems.map((item) => (
                 <article
                   key={item.question}
-                  className="render-isolate overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] p-6 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/6 dark:hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)]"
+                  className="render-isolate overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] p-6 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(56,56,58,0.96),rgba(32,32,34,0.98))] dark:shadow-[0_10px_22px_rgba(0,0,0,0.16)] dark:hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)]"
                 >
                   <h3 className="text-base font-semibold tracking-tight text-apple-dark1 dark:text-white">Q. {item.question}</h3>
                   <p className="mt-3 text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">A. {item.answer}</p>

@@ -65,7 +65,7 @@ const headerBadgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/20 dark:bg-white/16 dark:text-white/85';
 
 function getHeaderActionClassName(isActive: boolean): string {
-  return `rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+  return `rounded-full border px-3 py-1.5 text-xs font-semibold transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
     isActive
       ? 'border-transparent bg-[#111827] text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(17,24,39,0.2)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]'
       : 'border-black/5 bg-white/88 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -299,6 +299,8 @@ function DashboardSections({
 
 export default function DuoDashApp() {
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [username, setUsername] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
@@ -313,11 +315,65 @@ export default function DuoDashApp() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const storedUserData = sessionStorage.getItem('duoeye_userdata');
+    let isCancelled = false;
+    const controller = new AbortController();
     const storedAnimations = localStorage.getItem('duoeye_animations_enabled');
+    const timer = window.setTimeout(() => setIsLoaded(true), 120);
 
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
+    async function bootstrap(): Promise<void> {
+      const storedUsername = sessionStorage.getItem('duoeye_username')?.trim() || '';
+      const storedUserData = sessionStorage.getItem('duoeye_userdata');
+
+      setUsername(storedUsername);
+
+      if (storedUserData) {
+        try {
+          if (isCancelled) return;
+
+          setUserData(JSON.parse(storedUserData));
+          setLoadError('');
+          setLoading(false);
+          return;
+        } catch {
+          sessionStorage.removeItem('duoeye_userdata');
+        }
+      }
+
+      if (!storedUsername) {
+        if (isCancelled) return;
+
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: storedUsername }),
+          signal: controller.signal,
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(typeof result?.error === 'string' ? result.error : '获取学习数据失败');
+        }
+
+        if (isCancelled) return;
+
+        setUserData(result.data);
+        setLoadError('');
+        sessionStorage.setItem('duoeye_userdata', JSON.stringify(result.data));
+      } catch (error) {
+        if (controller.signal.aborted || isCancelled) return;
+
+        sessionStorage.removeItem('duoeye_userdata');
+        setUserData(null);
+        setLoadError(error instanceof Error ? error.message : '获取学习数据失败');
+      } finally {
+        if (isCancelled) return;
+        setLoading(false);
+      }
     }
 
     if (storedAnimations === 'false') {
@@ -325,15 +381,18 @@ export default function DuoDashApp() {
       document.documentElement.classList.add('animations-off');
     }
 
-    setLoading(false);
-    const timer = window.setTimeout(() => setIsLoaded(true), 120);
     const initialThemeMode = resolveThemeMode(localStorage.getItem(THEME_STORAGE_KEY));
     const initialResolvedTheme = getResolvedTheme(initialThemeMode);
     setThemeMode(initialThemeMode);
     setResolvedTheme(initialResolvedTheme);
     applyResolvedTheme(initialResolvedTheme);
+    bootstrap();
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      isCancelled = true;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -546,8 +605,13 @@ export default function DuoDashApp() {
           <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[30px] border border-white/80 bg-white/88 shadow-[0_14px_32px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/8">
             <span className="text-5xl">📊</span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-apple-dark1 dark:text-white">还没有可展示的数据</h1>
-          <p className="mt-2 text-sm text-apple-gray6 dark:text-apple-dark6">先回到首页输入用户名，再生成学习面板。</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-apple-dark1 dark:text-white">
+            {loadError ? '学习数据加载失败' : '还没有可展示的数据'}
+          </h1>
+          <p className="mt-2 text-sm text-apple-gray6 dark:text-apple-dark6">
+            {loadError || '先回到首页输入用户名，再生成学习面板。'}
+          </p>
+          {username ? <p className="mt-2 text-xs text-apple-gray6/80 dark:text-apple-dark6/80">@{username}</p> : null}
           <a
             href="/"
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#111827] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] transition-colors duration-200 dark:bg-white dark:text-apple-dark1"
@@ -576,7 +640,7 @@ export default function DuoDashApp() {
       ) : null}
 
       <Navbar
-        username={sessionStorage.getItem('duoeye_username') || ''}
+        username={username}
         themeMode={themeMode}
         resolvedTheme={resolvedTheme}
         animationsEnabled={animationsEnabled}
@@ -585,7 +649,8 @@ export default function DuoDashApp() {
         onToggleAnimations={toggleAnimations}
         onScreenshot={handleScreenshot}
         onLogout={() => {
-          sessionStorage.clear();
+          sessionStorage.removeItem('duoeye_username');
+          sessionStorage.removeItem('duoeye_userdata');
           window.location.href = '/';
         }}
       />

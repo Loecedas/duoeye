@@ -5,6 +5,7 @@ import { DuoColors } from '../../styles/duolingoColors';
 interface HeatmapChartProps {
   data: { date: string; xp: number; time?: number }[];
   forceViewMode?: ViewMode;
+  closeTooltipOnScroll?: boolean;
 }
 
 type ViewMode = 'quarter' | 'half' | 'year';
@@ -60,7 +61,7 @@ function getViewRangeLabel(viewMode: ViewMode, selectedYear: number, selectedQua
   return `${selectedYear} 全年`;
 }
 
-export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps) {
+export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll = false }: HeatmapChartProps) {
   const now = new Date();
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -246,6 +247,15 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
   useEffect(() => {
     if (!tooltip) return;
 
+    if (closeTooltipOnScroll) {
+      function handleScrollClose(): void {
+        setTooltip(null);
+      }
+
+      window.addEventListener('scroll', handleScrollClose, { capture: true, passive: true });
+      return () => window.removeEventListener('scroll', handleScrollClose, true);
+    }
+
     const currentTooltip = tooltip;
 
     function handleViewportChange(): void {
@@ -267,7 +277,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
         window.cancelAnimationFrame(tooltipFrameRef.current);
       }
     };
-  }, [tooltip, updateTooltipPosition]);
+  }, [closeTooltipOnScroll, tooltip, updateTooltipPosition]);
 
   function handleDayClick(day: HeatmapDay, event: MouseEvent<HTMLDivElement>): void {
     event.preventDefault();
@@ -320,7 +330,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                 <button
                   key={quarter}
                   onClick={() => setSelectedQuarter(quarter)}
-                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-all duration-200 ${
+                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     quarter === selectedQuarter
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                       : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -338,7 +348,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                 <button
                   key={half}
                   onClick={() => setSelectedHalf(half)}
-                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-all duration-200 ${
+                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                       : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -354,7 +364,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
             <button
               key={year}
               onClick={() => setSelectedYear(year)}
-               className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-all duration-200 ${
+               className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                 year === selectedYear
                   ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                   : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
