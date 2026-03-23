@@ -1,18 +1,7 @@
-﻿import { useEffect, useState, type ReactNode } from 'react';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Suspense, lazy, startTransition, useEffect, useRef, useState } from 'react';
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
 import ThemeModeControl from './ThemeModeControl';
-import HeatmapChart from './dashboard/HeatmapChart';
 import {
   THEME_STORAGE_KEY,
   applyResolvedTheme,
@@ -44,6 +33,8 @@ const timeChartData = [
   { date: '周六', time: 1 },
   { date: '周日', time: 0 },
 ];
+
+const LandingPreviewSection = lazy(() => import('./home/LandingPreviewSection'));
 
 const featureCards = [
   {
@@ -87,9 +78,11 @@ const totalTime = timeChartData.reduce((sum, item) => sum + item.time, 0);
 const averageXp = Math.round(totalXp / xpChartData.filter((item) => item.xp > 0).length);
 
 const floatingNavClassName =
-  'mx-auto flex max-w-[1560px] items-center justify-between overflow-visible rounded-[28px] border px-4 py-3.5 backdrop-blur-md transition-all duration-300 sm:px-5';
+  'mx-auto flex max-w-[1560px] items-center justify-between overflow-visible rounded-[28px] border px-4 py-3.5 transition-all duration-300 sm:px-5';
 const sectionCardClassName =
-  'rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
+  'render-isolate screenshot-solid-panel overflow-hidden rounded-[30px] border border-white/72 bg-[rgba(255,255,255,0.9)] [background-clip:padding-box] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
+const sectionCardStaticClassName =
+  'render-isolate screenshot-solid-panel overflow-hidden rounded-[30px] border border-white/72 bg-[rgba(255,255,255,0.9)] [background-clip:padding-box] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
 const badgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6';
 const navTabClassName =
@@ -190,90 +183,6 @@ function SearchButtonSpinner() {
   );
 }
 
-function TooltipCard({
-  active,
-  payload,
-  label,
-  color,
-  unit,
-}: {
-  active?: boolean;
-  payload?: Array<{ value?: number }>;
-  label?: string;
-  color: string;
-  unit: string;
-}) {
-  if (!active || !payload?.length) return null;
-
-  return (
-    <div className="rounded-xl border border-black/5 bg-white/96 px-3 py-2 text-xs shadow-[0_10px_24px_rgba(15,23,42,0.1)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.94)]">
-      <span className="text-apple-gray6 dark:text-apple-dark6">{label}:</span>
-      <span className="ml-1 font-bold" style={{ color }}>
-        {payload[0].value ?? 0} {unit}
-      </span>
-    </div>
-  );
-}
-
-function PreviewChartCard({
-  title,
-  description,
-  color,
-  unit,
-  data,
-  dataKey,
-  gradientId,
-  footer,
-  icon,
-  referenceLine,
-}: {
-  title: string;
-  description: string;
-  color: string;
-  unit: string;
-  data: Array<Record<string, string | number>>;
-  dataKey: string;
-  gradientId: string;
-  footer: string;
-  icon: ReactNode;
-  referenceLine?: number;
-}) {
-  return (
-    <div className={`${sectionCardClassName} h-full p-6`}>
-      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-apple-dark1 dark:text-white">
-        <span style={{ color }}>{icon}</span>
-        <span>{title}</span>
-      </div>
-      <p className="mb-3 text-sm leading-6 text-apple-gray6 dark:text-apple-dark6">{description}</p>
-      <ResponsiveContainer width="100%" height={168}>
-        <AreaChart data={data} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}>
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.25} />
-              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#edf2f7" vertical={false} />
-          <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-          <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-          {referenceLine ? <ReferenceLine y={referenceLine} stroke={color} strokeDasharray="4 4" strokeOpacity={0.45} /> : null}
-          <Tooltip content={<TooltipCard color={color} unit={unit} />} cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '4 4' }} />
-          <Area
-            type="monotone"
-            dataKey={dataKey}
-            stroke={color}
-            strokeWidth={2.5}
-            fill={`url(#${gradientId})`}
-            dot={false}
-            activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-      <div className="mt-2 text-center text-xs text-apple-gray6 dark:text-apple-dark6">{footer}</div>
-    </div>
-  );
-}
-
 function HeroMetric({
   label,
   value,
@@ -284,7 +193,7 @@ function HeroMetric({
   accent: string;
 }) {
   return (
-    <div className="rounded-[22px] border border-white/70 bg-white/78 px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/8 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
+    <div className="render-isolate overflow-hidden rounded-[22px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/8 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
       <div className="text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 dark:text-apple-dark6">{label}</div>
       <div className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: accent }}>
         {value}
@@ -301,6 +210,11 @@ export default function LandingHero() {
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [shouldRenderPreview, setShouldRenderPreview] = useState(false);
+  const scrollFrameRef = useRef<number | null>(null);
+  const showBackToTopRef = useRef(false);
+  const isScrolledRef = useRef(false);
+  const previewSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const storedAnimations = localStorage.getItem('duoeye_animations_enabled');
@@ -315,15 +229,42 @@ export default function LandingHero() {
       document.documentElement.classList.add('animations-off');
     }
 
-    function handleScroll() {
-      const scrollTop = window.scrollY;
-      setShowBackToTop(scrollTop > 420);
-      setIsScrolled(scrollTop > 12);
+    function commitScrollState(scrollTop: number): void {
+      const nextShowBackToTop = scrollTop > 420;
+      const nextIsScrolled = scrollTop > 12;
+
+      if (
+        nextShowBackToTop === showBackToTopRef.current &&
+        nextIsScrolled === isScrolledRef.current
+      ) {
+        return;
+      }
+
+      showBackToTopRef.current = nextShowBackToTop;
+      isScrolledRef.current = nextIsScrolled;
+      startTransition(() => {
+        setShowBackToTop(nextShowBackToTop);
+        setIsScrolled(nextIsScrolled);
+      });
     }
 
-    handleScroll();
+    function handleScroll(): void {
+      if (scrollFrameRef.current !== null) return;
+
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        commitScrollState(window.scrollY);
+      });
+    }
+
+    commitScrollState(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -344,6 +285,28 @@ export default function LandingHero() {
     document.documentElement.classList.toggle('animations-off', !animationsEnabled);
     localStorage.setItem('duoeye_animations_enabled', String(animationsEnabled));
   }, [animationsEnabled]);
+
+  useEffect(() => {
+    const previewSection = previewSectionRef.current;
+    if (!previewSection || shouldRenderPreview) return;
+
+    if (!('IntersectionObserver' in window)) {
+      setShouldRenderPreview(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setShouldRenderPreview(true);
+        observer.disconnect();
+      },
+      { rootMargin: '520px 0px' },
+    );
+
+    observer.observe(previewSection);
+    return () => observer.disconnect();
+  }, [shouldRenderPreview]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -398,8 +361,8 @@ export default function LandingHero() {
         <div
           className={`${floatingNavClassName} ${
             isScrolled
-              ? 'border-white/75 bg-white/72 shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.72)]'
-              : 'border-white/60 bg-white/58 shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.62)]'
+              ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.88)]'
+              : 'border-white/68 bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]'
           }`}
         >
           <a href="#hero" className="flex min-w-0 items-center gap-1 overflow-visible py-1">
@@ -456,7 +419,7 @@ export default function LandingHero() {
                       onChange={(event) => setUsername(event.target.value)}
                       placeholder="输入你的多邻国用户名"
                       disabled={loading}
-                      className="w-full rounded-[24px] border border-white/70 bg-white/90 py-4 pl-5 pr-14 text-base text-apple-dark1 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition-all duration-200 focus:border-[#58cc02]/40 focus:ring-4 focus:ring-[#58cc02]/10 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-[rgba(44,44,46,0.78)] dark:text-white"
+                      className="render-isolate w-full overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.92)] [background-clip:padding-box] py-4 pl-5 pr-14 text-base text-apple-dark1 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition-all duration-200 focus:border-[#58cc02]/40 focus:ring-4 focus:ring-[#58cc02]/10 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-[rgba(44,44,46,0.78)] dark:text-white"
                     />
                     <button
                       type="submit"
@@ -495,13 +458,13 @@ export default function LandingHero() {
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-4">
-                <HeroMetric label="本周经验" value={`${totalXp} XP`} accent="#58cc02" />
-                <HeroMetric label="本周时长" value={`${totalTime} 分钟`} accent="#1cb0f6" />
-                <HeroMetric label="日均经验" value={`${averageXp} XP`} accent="#ff9600" />
+                <HeroMetric label="本周经验" value="1268 XP" accent="#58cc02" />
+                <HeroMetric label="本周时长" value="73 分钟" accent="#1cb0f6" />
+                <HeroMetric label="日均经验" value="88 XP" accent="#ff9600" />
                 <HeroMetric label="热力活跃" value="365 天" accent="#a572f7" />
               </div>
 
-              <div className="mt-4 rounded-[24px] border border-white/70 bg-white/72 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-white/6">
+              <div className="render-isolate mt-4 overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.82)] [background-clip:padding-box] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-white/6">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-semibold text-apple-dark1 dark:text-white">体验重点</div>
                   <span className="rounded-full bg-[#58cc02]/10 px-2.5 py-1 text-[11px] font-semibold text-[#3d8f09] dark:bg-[#58cc02]/15 dark:text-[#b6ef89]">
@@ -518,7 +481,7 @@ export default function LandingHero() {
           </div>
         </section>
 
-        <section id="features" className="mt-6">
+        <section id="features" className="deferred-section mt-6">
           <div className={`${sectionCardClassName} p-7 sm:p-8`}>
             <div className="max-w-3xl">
               <span className={badgeClassName}>FEATURES</span>
@@ -537,7 +500,7 @@ export default function LandingHero() {
                 return (
                   <article
                     key={item.title}
-                    className="rounded-[26px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,249,252,0.92))] p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(32,32,34,0.96))] dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)]"
+                    className="render-isolate overflow-hidden rounded-[26px] border border-white/72 bg-[rgba(255,255,255,0.88)] [background-clip:padding-box] p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)]"
                   >
                     <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.tone}`}>
                       <Icon />
@@ -551,60 +514,40 @@ export default function LandingHero() {
           </div>
         </section>
 
-        <section id="preview" className="mt-6">
+        <section ref={previewSectionRef} id="preview" className="deferred-section mt-6">
           <div className={`${sectionCardClassName} p-4 sm:p-6`}>
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <span className={badgeClassName}>PREVIEW</span>
-                <h2 className="mt-4 text-[clamp(1.9rem,3vw,3rem)] font-semibold tracking-tight text-apple-dark1 dark:text-white">
-                  首页预览也沿用仪表盘的卡片系统
-                </h2>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={badgeClassName}>热力图</span>
-                <span className={badgeClassName}>经验曲线</span>
-                <span className={badgeClassName}>学习时长</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-              <div className={`${sectionCardClassName} overflow-hidden p-4 md:col-span-12 sm:p-5`}>
-                <HeatmapChart data={landingHeatmapPreviewData} />
-              </div>
-
-              <div className="md:col-span-6">
-                <PreviewChartCard
-                  title="最近 7 天经验"
-                  description="通过经验曲线看一周里什么时候最强，什么时候明显掉速。"
-                  color="#58cc02"
-                  unit="XP"
-                  data={xpChartData}
-                  dataKey="xp"
-                  gradientId="landing-xp-gradient"
-                  footer={`本周共获得 ${totalXp} XP`}
-                  icon={<BoltIcon className="h-4 w-4" />}
-                  referenceLine={averageXp}
+            {shouldRenderPreview ? (
+              <Suspense
+                fallback={
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+                    <div className={`${sectionCardStaticClassName} min-h-[320px] md:col-span-12`} />
+                    <div className={`${sectionCardClassName} min-h-[280px] md:col-span-6`} />
+                    <div className={`${sectionCardClassName} min-h-[280px] md:col-span-6`} />
+                  </div>
+                }
+              >
+                <LandingPreviewSection
+                  badgeClassName={badgeClassName}
+                  sectionCardClassName={sectionCardStaticClassName}
+                  xpChartData={xpChartData}
+                  timeChartData={timeChartData}
+                  landingHeatmapPreviewData={landingHeatmapPreviewData}
+                  totalXp={totalXp}
+                  totalTime={totalTime}
+                  averageXp={averageXp}
                 />
+              </Suspense>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+                <div className={`${sectionCardStaticClassName} min-h-[320px] md:col-span-12`} />
+                <div className={`${sectionCardClassName} min-h-[280px] md:col-span-6`} />
+                <div className={`${sectionCardClassName} min-h-[280px] md:col-span-6`} />
               </div>
-
-              <div className="md:col-span-6">
-                <PreviewChartCard
-                  title="最近 7 天学习时长"
-                  description="把投入时间单独拎出来，更容易判断你的学习节奏。"
-                  color="#1cb0f6"
-                  unit="分钟"
-                  data={timeChartData}
-                  dataKey="time"
-                  gradientId="landing-time-gradient"
-                  footer={`本周累计投入 ${totalTime} 分钟`}
-                  icon={<ClockIcon className="h-4 w-4" />}
-                />
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
-        <section id="faq" className="mt-6">
+        <section id="faq" className="deferred-section mt-6">
           <div className={`${sectionCardClassName} p-7 sm:p-8`}>
             <div className="max-w-2xl">
               <span className={badgeClassName}>FAQ</span>
@@ -617,7 +560,7 @@ export default function LandingHero() {
               {faqItems.map((item) => (
                 <article
                   key={item.question}
-                  className="rounded-[24px] border border-white/70 bg-white/78 p-6 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/6 dark:hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)]"
+                  className="render-isolate overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] p-6 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/6 dark:hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)]"
                 >
                   <h3 className="text-base font-semibold tracking-tight text-apple-dark1 dark:text-white">Q. {item.question}</h3>
                   <p className="mt-3 text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">A. {item.answer}</p>
@@ -628,7 +571,7 @@ export default function LandingHero() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-black/5 bg-white/60 py-12 backdrop-blur-sm dark:border-white/10 dark:bg-[rgba(20,20,22,0.45)]">
+      <footer className="relative z-10 border-t border-black/5 bg-white/92 py-12 dark:border-white/10 dark:bg-[rgba(20,20,22,0.92)]">
         <div className="mx-auto flex w-full max-w-[1560px] flex-col items-center overflow-visible px-4 text-center sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 overflow-visible py-1">
             <AppIcon className="h-11 w-11 shrink-0" />

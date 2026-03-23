@@ -31,6 +31,8 @@ function getMonthlyYears(data: Array<{ date: string; xp: number; time?: number }
     .sort((a, b) => Number(b) - Number(a));
 }
 
+type WeeklyRangeMode = 'week' | 'recent7';
+
 interface DashboardCardProps {
   icon: string;
   title: string;
@@ -47,16 +49,54 @@ interface DashboardSectionsProps {
   isLoaded: boolean;
   selectedMonthlyYear: string;
   monthlyViewMode: 'year' | 'rolling12';
+  weeklyXpRangeMode: WeeklyRangeMode;
+  weeklyTimeRangeMode: WeeklyRangeMode;
   onSelectMonthlyYear: (year: string) => void;
   onSelectRollingMonths: () => void;
+  onSelectWeeklyXpRangeMode: (mode: WeeklyRangeMode) => void;
+  onSelectWeeklyTimeRangeMode: (mode: WeeklyRangeMode) => void;
   animated?: boolean;
 }
 
 const surfaceClassName =
-  'screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))]';
+  'render-isolate screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))]';
 
 const headerBadgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/20 dark:bg-white/16 dark:text-white/85';
+
+function getHeaderActionClassName(isActive: boolean): string {
+  return `rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+    isActive
+      ? 'border-transparent bg-[#111827] text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(17,24,39,0.2)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]'
+      : 'border-black/5 bg-white/88 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+  }`;
+}
+
+interface WeeklyRangeActionsProps {
+  value: WeeklyRangeMode;
+  onChange: (mode: WeeklyRangeMode) => void;
+}
+
+function WeeklyRangeActions({ value, onChange }: WeeklyRangeActionsProps) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => onChange('recent7')}
+        className={getHeaderActionClassName(value === 'recent7')}
+      >
+        最近七天
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('week')}
+        className={getHeaderActionClassName(value === 'week')}
+      >
+        本周
+      </button>
+    </>
+  );
+}
 
 function DashboardCard({
   icon,
@@ -106,12 +146,24 @@ function DashboardSections({
   isLoaded,
   selectedMonthlyYear,
   monthlyViewMode,
+  weeklyXpRangeMode,
+  weeklyTimeRangeMode,
   onSelectMonthlyYear,
   onSelectRollingMonths,
+  onSelectWeeklyXpRangeMode,
+  onSelectWeeklyTimeRangeMode,
   animated = true,
 }: DashboardSectionsProps) {
   const monthlyYears = getMonthlyYears(userData.yearlyXpHistory);
   const animationClass = animated ? (isLoaded ? 'animate-fade-in-up' : 'opacity-0') : '';
+  const weeklyXpData =
+    weeklyXpRangeMode === 'week'
+      ? userData.weeklyXpHistory || []
+      : (userData.dailyXpHistory || []).map((item) => ({ date: item.date, xp: item.xp }));
+  const weeklyTimeData =
+    weeklyTimeRangeMode === 'week'
+      ? userData.weeklyTimeHistory || []
+      : (userData.dailyTimeHistory || []).map((item) => ({ date: item.date, time: item.time }));
 
   return (
     <div className={`${animationClass} space-y-6`}>
@@ -145,21 +197,19 @@ function DashboardSections({
             <DashboardCard
               icon="📈"
               title="本周经验"
-              subtitle="观察最近 7 天的 XP 变化"
-              badge="XP"
-              badgeClassName="inline-flex items-center rounded-full bg-[#58cc02]/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-[#3d8f09] dark:bg-[#58cc02]/15 dark:text-[#b6ef89]"
+              subtitle={weeklyXpRangeMode === 'week' ? '查看本周每日 XP 分布' : '观察最近 7 天的 XP 变化'}
+              actions={<WeeklyRangeActions value={weeklyXpRangeMode} onChange={onSelectWeeklyXpRangeMode} />}
             >
-              <WeeklyChart data={userData.weeklyXpHistory || []} />
+              <WeeklyChart data={weeklyXpData} />
             </DashboardCard>
 
             <DashboardCard
               icon="⏱"
               title="本周学习时间"
-              subtitle="查看最近 7 天的学习投入"
-              badge="分钟"
-              badgeClassName="inline-flex items-center rounded-full bg-[#1cb0f6]/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-[#147fb2] dark:bg-[#1cb0f6]/15 dark:text-[#8ddcff]"
+              subtitle={weeklyTimeRangeMode === 'week' ? '查看本周每日学习投入' : '查看最近 7 天的学习投入'}
+              actions={<WeeklyRangeActions value={weeklyTimeRangeMode} onChange={onSelectWeeklyTimeRangeMode} />}
             >
-              <WeeklyTimeChart data={userData.weeklyTimeHistory || []} />
+              <WeeklyTimeChart data={weeklyTimeData} />
             </DashboardCard>
 
             <DashboardCard
@@ -172,11 +222,7 @@ function DashboardSections({
                   <button
                     type="button"
                     onClick={onSelectRollingMonths}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                      monthlyViewMode === 'rolling12'
-                        ? 'border-transparent bg-[#111827] text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(17,24,39,0.2)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]'
-                        : 'border-black/5 bg-white/88 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
-                    }`}
+                    className={getHeaderActionClassName(monthlyViewMode === 'rolling12')}
                   >
                     近 12 个月
                   </button>
@@ -186,11 +232,7 @@ function DashboardSections({
                       key={year}
                       type="button"
                       onClick={() => onSelectMonthlyYear(year)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                        monthlyViewMode === 'year' && selectedMonthlyYear === year
-                          ? 'border-transparent bg-[#111827] text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(17,24,39,0.2)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]'
-                          : 'border-black/5 bg-white/88 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
-                      }`}
+                      className={getHeaderActionClassName(monthlyViewMode === 'year' && selectedMonthlyYear === year)}
                     >
                       {year}
                     </button>
@@ -242,7 +284,7 @@ function DashboardSections({
         </aside>
       </div>
 
-      <section className={`group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(15,23,42,0.1)] dark:hover:shadow-[0_22px_42px_rgba(0,0,0,0.28)] ${animationClass}`} style={animated ? { animationDelay: '0.32s' } : undefined}>
+      <section className={`deferred-section group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(15,23,42,0.1)] dark:hover:shadow-[0_22px_42px_rgba(0,0,0,0.28)] ${animationClass}`} style={animated ? { animationDelay: '0.32s' } : undefined}>
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.32),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(28,176,246,0.06),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(28,176,246,0.1),transparent_28%)]"
@@ -264,7 +306,9 @@ export default function DuoDashApp() {
   const [loading, setLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedMonthlyYear, setSelectedMonthlyYear] = useState('');
-  const [monthlyViewMode, setMonthlyViewMode] = useState<'year' | 'rolling12'>('year');
+  const [monthlyViewMode, setMonthlyViewMode] = useState<'year' | 'rolling12'>('rolling12');
+  const [weeklyXpRangeMode, setWeeklyXpRangeMode] = useState<WeeklyRangeMode>('recent7');
+  const [weeklyTimeRangeMode, setWeeklyTimeRangeMode] = useState<WeeklyRangeMode>('recent7');
   const pageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -552,15 +596,19 @@ export default function DuoDashApp() {
           isLoaded={isLoaded}
           selectedMonthlyYear={selectedMonthlyYear}
           monthlyViewMode={monthlyViewMode}
+          weeklyXpRangeMode={weeklyXpRangeMode}
+          weeklyTimeRangeMode={weeklyTimeRangeMode}
           onSelectMonthlyYear={(year) => {
             setSelectedMonthlyYear(year);
             setMonthlyViewMode('year');
           }}
           onSelectRollingMonths={() => setMonthlyViewMode('rolling12')}
+          onSelectWeeklyXpRangeMode={setWeeklyXpRangeMode}
+          onSelectWeeklyTimeRangeMode={setWeeklyTimeRangeMode}
         />
       </main>
 
-      <footer className="screenshot-solid-panel screenshot-disable-blur relative z-10 border-t border-black/5 bg-white/78 py-12 dark:border-white/10 dark:bg-[rgba(20,20,22,0.82)]">
+      <footer className="render-isolate screenshot-solid-panel screenshot-disable-blur relative z-10 border-t border-black/5 bg-white/78 py-12 dark:border-white/10 dark:bg-[rgba(20,20,22,0.82)]">
         <div className="mx-auto flex w-full max-w-[1560px] flex-col items-center overflow-visible px-4 text-center sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 overflow-visible py-1">
             <AppIcon className="h-11 w-11 shrink-0" />

@@ -115,6 +115,16 @@ const { title } = Astro.props;
     font: inherit;
   }
 
+  .render-isolate {
+    contain: layout;
+    isolation: isolate;
+  }
+
+  .deferred-section {
+    content-visibility: auto;
+    contain-intrinsic-size: 960px;
+  }
+
   html.animations-off {
     scroll-behavior: auto !important;
   }

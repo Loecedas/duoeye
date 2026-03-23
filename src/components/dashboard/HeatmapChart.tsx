@@ -70,6 +70,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
   const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
   const [tooltipTransitionMs, setTooltipTransitionMs] = useState(180);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const tooltipFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     setTooltip(null);
@@ -248,15 +249,23 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
     const currentTooltip = tooltip;
 
     function handleViewportChange(): void {
-      updateTooltipPosition(currentTooltip.date, currentTooltip.xp, currentTooltip.time, 90);
+      if (tooltipFrameRef.current !== null) return;
+
+      tooltipFrameRef.current = window.requestAnimationFrame(() => {
+        tooltipFrameRef.current = null;
+        updateTooltipPosition(currentTooltip.date, currentTooltip.xp, currentTooltip.time, 90);
+      });
     }
 
-    window.addEventListener('scroll', handleViewportChange, true);
+    window.addEventListener('scroll', handleViewportChange, { capture: true, passive: true });
     window.addEventListener('resize', handleViewportChange);
 
     return () => {
       window.removeEventListener('scroll', handleViewportChange, true);
       window.removeEventListener('resize', handleViewportChange);
+      if (tooltipFrameRef.current !== null) {
+        window.cancelAnimationFrame(tooltipFrameRef.current);
+      }
     };
   }, [tooltip, updateTooltipPosition]);
 
@@ -311,7 +320,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                 <button
                   key={quarter}
                   onClick={() => setSelectedQuarter(quarter)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-all duration-200 ${
                     quarter === selectedQuarter
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                       : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -329,7 +338,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                 <button
                   key={half}
                   onClick={() => setSelectedHalf(half)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-all duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                       : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -345,7 +354,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
             <button
               key={year}
               onClick={() => setSelectedYear(year)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+               className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-all duration-200 ${
                 year === selectedYear
                   ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                   : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -372,7 +381,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
           </div>
 
           <div
-            className="screenshot-solid-panel screenshot-disable-blur relative grid gap-[1px] rounded-[24px] border border-white/70 bg-white/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-md lg:gap-[2px] dark:border-white/10 dark:bg-white/5"
+            className="render-isolate screenshot-solid-panel screenshot-disable-blur relative grid gap-[1px] overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] lg:gap-[2px] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)]"
             style={{
               gridTemplateColumns: `16px repeat(${weeks.length}, minmax(12px, 1fr))`,
               minWidth: `${gridMinWidth}px`,
@@ -396,10 +405,10 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                   <div
                     key={`${weekIndex}-${dayIndex}-${day.dateStr || 'empty'}`}
                     data-heatmap-date={day.dateStr || undefined}
-                    className={`heatmap-cell w-full rounded-[4px] transition-transform duration-150 ${
-                      isValidDay ? 'cursor-pointer hover:scale-[1.08] hover:ring-2 hover:ring-[#58cc02]' : ''
+                    className={`heatmap-cell relative w-full rounded-[4px] transition-transform duration-150 ${
+                      isValidDay ? 'cursor-pointer hover:z-[2] hover:scale-[1.08] hover:ring-2 hover:ring-[#58cc02]' : ''
                     } ${
-                      tooltip?.date === day.dateStr ? 'ring-2 ring-[#1cb0f6] ring-offset-1 ring-offset-white dark:ring-offset-apple-dark2' : ''
+                      tooltip?.date === day.dateStr ? 'z-[3] ring-2 ring-[#1cb0f6]' : ''
                     }`}
                     style={{
                       backgroundColor: getHeatmapColor(day.xp, maxXp),
@@ -418,10 +427,10 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
             createPortal(
               <div
                 ref={tooltipRef}
-                className={`fixed z-[9999] w-[190px] rounded-[22px] p-3 backdrop-blur-md ${
+                className={`fixed z-[9999] w-[190px] rounded-[22px] p-3 ${
                   isDark
                     ? 'border border-white/10 bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(36,36,38,0.92))] text-white shadow-[0_24px_52px_rgba(0,0,0,0.34)]'
-                    : 'border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(246,247,250,0.96))] text-apple-dark1 shadow-[0_20px_48px_rgba(15,23,42,0.14)]'
+                    : 'border border-black/6 bg-[rgba(250,251,253,0.9)] text-apple-dark1 shadow-[0_18px_38px_rgba(15,23,42,0.12)]'
                 }`}
                 style={{
                   left: `${tooltip.x}px`,
@@ -433,11 +442,11 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
               >
                 <button
                   onClick={() => setTooltip(null)}
-                  className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm transition-colors ${
-                    isDark
-                      ? 'border border-white/10 bg-[rgba(72,72,74,0.98)] text-apple-dark6 hover:text-white'
-                      : 'border border-black/5 bg-[#f6f7fa] text-apple-gray6 hover:text-apple-dark1'
-                  }`}
+                    className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm transition-colors ${
+                      isDark
+                        ? 'border border-white/10 bg-[rgba(72,72,74,0.98)] text-apple-dark6 hover:text-white'
+                        : 'border border-black/6 bg-[rgba(255,255,255,0.9)] text-apple-gray6 hover:text-apple-dark1'
+                    }`}
                 >
                   ×
                 </button>
@@ -449,7 +458,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                     className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
                       isDark
                         ? 'bg-white/10 text-apple-dark6 hover:text-white'
-                        : 'bg-[#e5e7eb] text-apple-gray6 hover:text-apple-dark1'
+                        : 'bg-[rgba(240,243,247,0.86)] text-apple-gray6 hover:text-apple-dark1'
                     }`}
                   >
                     ←
@@ -471,7 +480,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                     className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
                       isDark
                         ? 'bg-white/10 text-apple-dark6 hover:text-white'
-                        : 'bg-[#e5e7eb] text-apple-gray6 hover:text-apple-dark1'
+                        : 'bg-[rgba(240,243,247,0.86)] text-apple-gray6 hover:text-apple-dark1'
                     }`}
                   >
                     →
@@ -479,11 +488,11 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[#e5e7eb]/80'}`}>
+                  <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[rgba(241,244,248,0.82)]'}`}>
                     <div className="truncate text-base font-bold text-[#58cc02]">{tooltip.xp}</div>
                     <div className={`text-[10px] ${isDark ? 'text-apple-dark6' : 'text-apple-gray6'}`}>XP</div>
                   </div>
-                  <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[#e5e7eb]/80'}`}>
+                  <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[rgba(241,244,248,0.82)]'}`}>
                     <div className="truncate text-base font-bold text-[#1cb0f6]">{tooltip.time && tooltip.time > 0 ? tooltip.time : 0}</div>
                     <div className="text-[10px] text-apple-gray6 dark:text-apple-dark6">分钟</div>
                   </div>
@@ -494,7 +503,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
                     tooltip.showBelow
                       ? isDark
                         ? 'top-[-6px] border-b-[6px] border-b-[rgba(58,58,60,0.96)]'
-                        : 'top-[-6px] border-b-[6px] border-b-[#f6f7fa]'
+                        : 'top-[-6px] border-b-[6px] border-b-[rgba(250,251,253,0.9)]'
                       : isDark
                         ? 'bottom-[-6px] border-t-[6px] border-t-[rgba(36,36,38,0.96)]'
                         : 'bottom-[-6px] border-t-[6px] border-t-[#f6f7fa]'
@@ -508,7 +517,7 @@ export default function HeatmapChart({ data, forceViewMode }: HeatmapChartProps)
               document.body,
             )}
 
-          <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-3 rounded-[24px] border border-white/70 bg-white/65 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-white/10 dark:bg-white/5 dark:text-apple-dark6">
+          <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-3 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-white/10 dark:bg-[rgba(44,44,46,0.88)] dark:text-apple-dark6">
             <div>
               {getViewRangeLabel(viewMode, selectedYear, selectedQuarter, selectedHalf)}，学习{' '}
               <span className="font-bold" style={{ color: DuoColors.featherGreen }}>

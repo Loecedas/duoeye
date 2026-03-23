@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import AppIcon from '../AppIcon';
 import DuoWordmark from '../DuoWordmark';
 import ThemeModeControl from '../ThemeModeControl';
@@ -31,24 +31,46 @@ export default function Navbar({
   onLogout,
 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const scrollFrameRef = useRef<number | null>(null);
+  const isScrolledRef = useRef(false);
 
   useEffect(() => {
-    function handleScroll(): void {
-      setIsScrolled(window.scrollY > 12);
+    function commitScrollState(scrollTop: number): void {
+      const nextIsScrolled = scrollTop > 12;
+      if (nextIsScrolled === isScrolledRef.current) return;
+
+      isScrolledRef.current = nextIsScrolled;
+      startTransition(() => {
+        setIsScrolled(nextIsScrolled);
+      });
     }
 
-    handleScroll();
+    function handleScroll(): void {
+      if (scrollFrameRef.current !== null) return;
+
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        commitScrollState(window.scrollY);
+      });
+    }
+
+    commitScrollState(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
   }, []);
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
       <div
-        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border px-4 py-3.5 backdrop-blur-md transition-all duration-300 sm:flex-row sm:items-center sm:justify-between sm:px-5 ${
+        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border px-4 py-3.5 transition-all duration-300 sm:flex-row sm:items-center sm:justify-between sm:px-5 ${
           isScrolled
-            ? 'border-white/70 bg-white/72 shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.72)]'
-            : 'border-white/55 bg-white/58 shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.62)]'
+            ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.88)]'
+            : 'border-white/68 bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]'
         }`}
       >
         <div className="flex min-w-0 items-center justify-between gap-2 overflow-visible py-1 sm:justify-start sm:gap-3">

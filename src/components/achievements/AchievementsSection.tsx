@@ -199,7 +199,7 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
           <div
             key={selectedAchievement.id}
             ref={modalRef}
-            className="pointer-events-auto w-[260px] animate-scale-in rounded-3xl border border-white/60 bg-white/78 px-5 py-6 text-center shadow-[0_18px_48px_rgba(15,23,42,0.16)] backdrop-blur-md transition-all duration-200 dark:border-white/10 dark:bg-apple-dark2/72"
+            className="pointer-events-auto w-[260px] animate-scale-in rounded-3xl border border-black/6 bg-[rgba(255,255,255,0.94)] px-5 py-6 text-center shadow-[0_22px_52px_rgba(15,23,42,0.16)] transition-all duration-200 dark:border-white/10 dark:bg-[rgba(44,44,46,0.96)]"
           >
             <div
               className={`mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[22px] bg-gradient-to-br ${
