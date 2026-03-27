@@ -1,8 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import LandingHero from '../components/LandingHero';
+import mountLandingUrl from '../scripts/mountLanding.ts?url';
 ---
 
 <Layout title="DuoEye - 多邻国学习数据仪表盘">
-  <LandingHero client:load />
+  <div id="landing-root"></div>
+  <script type="module" src={mountLandingUrl}></script>
 </Layout>
