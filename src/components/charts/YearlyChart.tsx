@@ -40,7 +40,7 @@ export default function YearlyChart({ data }: YearlyChartProps) {
     return ((current / previous) * 100 - 100).toFixed(0);
   }, [yearlyData]);
 
-  const isDark = document.documentElement.classList.contains('dark');
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
   if (yearlyData.length === 0) {
     return (

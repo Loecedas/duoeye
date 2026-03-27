@@ -22,7 +22,7 @@ function formatRollingMonthLabel(date: Date): string {
 }
 
 export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: MonthlyChartProps) {
-  const isDark = document.documentElement.classList.contains('dark');
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   const chartData = useMemo(() => {
     if (viewMode === 'rolling12') {
       const monthlyXp = new Map<string, number>();

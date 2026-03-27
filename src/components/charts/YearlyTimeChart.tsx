@@ -34,7 +34,7 @@ export default function YearlyTimeChart({ data }: YearlyTimeChartProps) {
     return hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
   }, [totalTime]);
 
-  const isDark = document.documentElement.classList.contains('dark');
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
   if (yearlyData.length === 0) {
     return (

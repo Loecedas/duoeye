@@ -20,7 +20,7 @@ export default function WeeklyTimeChart({ data }: WeeklyTimeChartProps) {
     const minutes = totalTime % 60;
     return hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
   }, [totalTime]);
-  const isDark = document.documentElement.classList.contains('dark');
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">

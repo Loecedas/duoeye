@@ -15,7 +15,7 @@ interface WeeklyChartProps {
 
 export default function WeeklyChart({ data }: WeeklyChartProps) {
   const totalXp = useMemo(() => data.reduce((sum, item) => sum + (item.xp || 0), 0), [data]);
-  const isDark = document.documentElement.classList.contains('dark');
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">

@@ -4,7 +4,6 @@ import 'piccolore';
 import { A as AppIcon, D as DuoWordmark, T as ThemeModeControl, r as resolveThemeMode, a as THEME_STORAGE_KEY, g as getResolvedTheme, b as applyResolvedTheme, $ as $$Layout } from '../chunks/theme_DRz0DP3H.mjs';
 import { jsxs, jsx, Fragment } from 'react/jsx-runtime';
 import { useState, useRef, useMemo, useEffect, startTransition } from 'react';
-import html2canvas from 'html2canvas';
 import { ResponsiveContainer, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, Area } from 'recharts';
 import { H as HeatmapChart } from '../chunks/HeatmapChart_D8-J1T-y.mjs';
 export { renderers } from '../renderers.mjs';
@@ -207,7 +206,7 @@ function formatRollingMonthLabel(date) {
   return `${String(date.getFullYear()).slice(-2)}/${date.getMonth() + 1}`;
 }
 function MonthlyChart({ data, selectedYear, viewMode = "year" }) {
-  const isDark = document.documentElement.classList.contains("dark");
+  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   const chartData = useMemo(() => {
     if (viewMode === "rolling12") {
       const monthlyXp2 = /* @__PURE__ */ new Map();
@@ -313,7 +312,7 @@ function MonthlyChart({ data, selectedYear, viewMode = "year" }) {
 
 function WeeklyChart({ data }) {
   const totalXp = useMemo(() => data.reduce((sum, item) => sum + (item.xp || 0), 0), [data]);
-  const isDark = document.documentElement.classList.contains("dark");
+  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   return /* @__PURE__ */ jsxs("div", { className: "flex h-full min-h-0 w-full flex-col", children: [
     /* @__PURE__ */ jsx("div", { className: "min-h-[180px] flex-1", children: /* @__PURE__ */ jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs(AreaChart, { data, margin: { top: 5, right: 10, bottom: 5, left: 0 }, children: [
       /* @__PURE__ */ jsx("defs", { children: /* @__PURE__ */ jsxs("linearGradient", { id: "xpGradient", x1: "0", y1: "0", x2: "0", y2: "1", children: [
@@ -389,7 +388,7 @@ function WeeklyTimeChart({ data }) {
     const minutes = totalTime % 60;
     return hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
   }, [totalTime]);
-  const isDark = document.documentElement.classList.contains("dark");
+  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   return /* @__PURE__ */ jsxs("div", { className: "flex h-full min-h-0 w-full flex-col", children: [
     /* @__PURE__ */ jsx("div", { className: "min-h-[180px] flex-1", children: /* @__PURE__ */ jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs(AreaChart, { data, margin: { top: 5, right: 10, bottom: 5, left: 0 }, children: [
       /* @__PURE__ */ jsx("defs", { children: /* @__PURE__ */ jsxs("linearGradient", { id: "timeGradient", x1: "0", y1: "0", x2: "0", y2: "1", children: [
@@ -471,7 +470,7 @@ function YearlyChart({ data }) {
     if (previous === 0) return null;
     return (current / previous * 100 - 100).toFixed(0);
   }, [yearlyData]);
-  const isDark = document.documentElement.classList.contains("dark");
+  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   if (yearlyData.length === 0) {
     return /* @__PURE__ */ jsx("div", { className: "flex h-full min-h-[220px] w-full items-center justify-center text-apple-gray6", children: "暂无年度数据" });
   }
@@ -564,7 +563,7 @@ function YearlyTimeChart({ data }) {
     const minutes = totalTime % 60;
     return hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
   }, [totalTime]);
-  const isDark = document.documentElement.classList.contains("dark");
+  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   if (yearlyData.length === 0) {
     return /* @__PURE__ */ jsx("div", { className: "flex h-full min-h-[220px] w-full items-center justify-center text-apple-gray6", children: "暂无时间数据" });
   }
@@ -1401,6 +1400,7 @@ function DuoDashApp() {
   async function handleScreenshot() {
     if (!userData || !pageRef.current || isScreenshotting) return;
     const root = document.documentElement;
+    const { default: html2canvas } = await import('html2canvas');
     const fileName = getScreenshotFileName();
     const hadAnimationsDisabled = root.classList.contains("animations-off");
     const hadScreenshotMode = root.classList.contains("screenshot-mode");

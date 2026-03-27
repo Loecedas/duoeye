@@ -1,5 +1,4 @@
 ﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
-import html2canvas from 'html2canvas';
 import type { UserData } from '../types';
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
@@ -533,6 +532,7 @@ export default function DuoDashApp() {
     if (!userData || !pageRef.current || isScreenshotting) return;
 
     const root = document.documentElement;
+    const { default: html2canvas } = await import('html2canvas');
     const fileName = getScreenshotFileName();
     const hadAnimationsDisabled = root.classList.contains('animations-off');
     const hadScreenshotMode = root.classList.contains('screenshot-mode');

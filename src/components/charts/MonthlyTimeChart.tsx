@@ -38,7 +38,7 @@ export default function MonthlyTimeChart({ data }: MonthlyTimeChartProps) {
     return hours > 0 ? `${hours}小时${mins}分钟` : `${mins}分钟`;
   }, [totalTime]);
 
-  const isDark = document.documentElement.classList.contains('dark');
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
   return (
     <div className="w-full">
