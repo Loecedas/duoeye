@@ -1,9 +1,8 @@
 ---
+import DuoDashApp from '../components/DuoDashApp';
 import Layout from '../layouts/Layout.astro';
-import mountDashboardUrl from '../scripts/mountDashboard.ts?url';
 ---
 
 <Layout title="DuoEye - 仪表盘">
-  <div id="dashboard-root"></div>
-  <script type="module" src={mountDashboardUrl}></script>
+  <DuoDashApp client:only="react" />
 </Layout>
