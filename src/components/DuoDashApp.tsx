@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { UserData } from '../types';
+import html2canvas from 'html2canvas';
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
 import AchievementsSection from './achievements/AchievementsSection';
@@ -317,7 +318,7 @@ export default function DuoDashApp({
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [isScreenshotting, setIsScreenshotting] = useState(false);
-  const [loading, setLoading] = useState(!initialUserData && !initialLoadError && !initialUsername);
+  const [loading, setLoading] = useState(Boolean(initialUsername) && !initialUserData && !initialLoadError);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedMonthlyYear, setSelectedMonthlyYear] = useState('');
   const [monthlyViewMode, setMonthlyViewMode] = useState<'year' | 'rolling12'>('rolling12');
@@ -492,9 +493,18 @@ export default function DuoDashApp({
     const link = document.createElement('a');
     link.href = dataUrl;
     link.download = `${fileName}.png`;
+    link.target = '_blank';
+    link.rel = 'noopener';
     document.body.appendChild(link);
     link.click();
     link.remove();
+
+    window.setTimeout(() => {
+      const isLikelyMobileBrowser = window.innerWidth < 1024 || navigator.maxTouchPoints > 0;
+      if (isLikelyMobileBrowser && document.visibilityState === 'visible') {
+        window.open(dataUrl, '_blank', 'noopener,noreferrer');
+      }
+    }, 160);
   }
 
   function waitForStableFrame(delayMs = 0): Promise<void> {
@@ -580,7 +590,6 @@ export default function DuoDashApp({
     if (!userData || !pageRef.current || isScreenshotting) return;
 
     const root = document.documentElement;
-    const { default: html2canvas } = await import('html2canvas');
     const fileName = getScreenshotFileName();
     const hadAnimationsDisabled = root.classList.contains('animations-off');
     const hadScreenshotMode = root.classList.contains('screenshot-mode');

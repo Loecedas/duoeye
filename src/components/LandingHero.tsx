@@ -90,6 +90,10 @@ const badgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6';
 const navTabClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
+const mobileMenuCompactItemClassName =
+  'flex min-h-[50px] items-center gap-2 rounded-[20px] border border-black/5 bg-white/72 px-3 py-2 text-left shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.18)]';
+const mobileMenuExpandedItemClassName =
+  'flex min-h-[68px] flex-col items-center justify-center rounded-[24px] border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,249,252,0.92))] px-4 py-2 text-center shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.72),rgba(34,34,36,0.9))] dark:hover:shadow-[0_16px_28px_rgba(0,0,0,0.2)]';
 
 function formatDateKey(date: Date): string {
   try {
@@ -186,6 +190,86 @@ function SearchButtonSpinner() {
   );
 }
 
+function QuestionIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+      <path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 17h.01" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="9" />
+    </svg>
+  );
+}
+
+function SparkleIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="m18.5 15 0.9 2.6L22 18.5l-2.6 0.9-0.9 2.6-0.9-2.6-2.6-0.9 2.6-0.9 0.9-2.6Z" />
+    </svg>
+  );
+}
+
+function PauseIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <rect x="6" y="5" width="4" height="14" rx="1.2" />
+      <rect x="14" y="5" width="4" height="14" rx="1.2" />
+    </svg>
+  );
+}
+
+function ThemeCycleIcon({ resolvedTheme }: { resolvedTheme: ResolvedTheme }) {
+  if (resolvedTheme === 'dark') {
+    return (
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" strokeWidth="1.8" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M12 2.5V5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M12 19v2.5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M4.93 4.93 6.7 6.7" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="m17.3 17.3 1.77 1.77" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M2.5 12H5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M19 12h2.5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="m4.93 19.07 1.77-1.77" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="m17.3 6.7 1.77-1.77" />
+    </svg>
+  );
+}
+
+function getNextThemeMode(mode: ThemeMode): ThemeMode {
+  if (mode === 'light') return 'dark';
+  if (mode === 'dark') return 'system';
+  return 'light';
+}
+
+function getThemeLabel(mode: ThemeMode): string {
+  if (mode === 'light') return '浅色';
+  if (mode === 'dark') return '深色';
+  return '跟随系统';
+}
+
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      {open ? (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="m6 6 12 12M18 6 6 18" />
+      ) : (
+        <>
+          <path strokeLinecap="round" strokeWidth="1.8" d="M4 7h16" />
+          <path strokeLinecap="round" strokeWidth="1.8" d="M4 12h16" />
+          <path strokeLinecap="round" strokeWidth="1.8" d="M4 17h16" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function HeroMetric({
   label,
   value,
@@ -211,6 +295,7 @@ export default function LandingHero() {
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [shouldRenderPreview, setShouldRenderPreview] = useState(false);
@@ -218,6 +303,7 @@ export default function LandingHero() {
   const showBackToTopRef = useRef(false);
   const isScrolledRef = useRef(false);
   const previewSectionRef = useRef<HTMLElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const storedAnimations = localStorage.getItem('duoeye_animations_enabled');
@@ -290,6 +376,35 @@ export default function LandingHero() {
   }, [animationsEnabled]);
 
   useEffect(() => {
+    function handlePointerDown(event: MouseEvent): void {
+      if (navRef.current?.contains(event.target as Node)) return;
+      setIsMenuOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    }
+
+    function handleResize(): void {
+      if (window.innerWidth >= 1024) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
     const previewSection = previewSectionRef.current;
     if (!previewSection || shouldRenderPreview) return;
 
@@ -342,7 +457,7 @@ export default function LandingHero() {
     <div className="relative min-h-screen overflow-x-hidden bg-apple-gray1 text-apple-dark1 transition-colors duration-500 dark:bg-apple-dark1 dark:text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_24%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.08),transparent_22%),linear-gradient(180deg,#fbfbfd_0%,rgba(245,245,247,0.76)_48%,transparent_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_22%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_22%),linear-gradient(180deg,rgba(28,28,30,0.96)_0%,rgba(28,28,30,0.72)_46%,transparent_100%)]" />
 
-      <nav data-floating-navbar="true" className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
+      <nav ref={navRef} data-floating-navbar="true" className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
         <div
           className={`${floatingNavClassName} ${
             isScrolled
@@ -357,8 +472,8 @@ export default function LandingHero() {
             <div className="min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55">多邻国学习数据仪表盘</div>
           </a>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 min-[768px]:flex">
+            <div className="flex items-center gap-1.5 min-[900px]:gap-2">
               <a href="#features" className={navTabClassName}>
                 功能亮点
               </a>
@@ -379,6 +494,90 @@ export default function LandingHero() {
               <span className="text-sm">{animationsEnabled ? '✨' : '⏸'}</span>
             </button>
             <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={handleThemeChange} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((current) => !current)}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white min-[768px]:hidden"
+            aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
+            title={isMenuOpen ? '关闭菜单' : '打开菜单'}
+            aria-expanded={isMenuOpen}
+          >
+            <MenuIcon open={isMenuOpen} />
+          </button>
+        </div>
+
+        <div
+          className={`overflow-hidden transition-[max-height,opacity,transform,margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] min-[768px]:hidden ${
+            isMenuOpen ? 'mt-3 max-h-[360px] opacity-100 translate-y-0' : 'pointer-events-none max-h-0 opacity-0 -translate-y-2'
+          }`}
+        >
+          <div className="mx-auto max-w-[1560px] rounded-[28px] border border-white/68 bg-[rgba(255,255,255,0.9)] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]">
+            <div className="grid grid-cols-3 gap-2.5">
+              <a href="#features" onClick={() => setIsMenuOpen(false)} className={mobileMenuCompactItemClassName}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  <BarChartIcon className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[15px] font-semibold tracking-tight text-apple-dark1 dark:text-white">功能</div>
+                  <div className="text-[10px] leading-tight text-apple-gray6 dark:text-white/62">亮点速览</div>
+                </div>
+              </a>
+              <a href="#preview" onClick={() => setIsMenuOpen(false)} className={mobileMenuCompactItemClassName}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  <SearchIcon className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[15px] font-semibold tracking-tight text-apple-dark1 dark:text-white">预览</div>
+                  <div className="text-[10px] leading-tight text-apple-gray6 dark:text-white/62">查看界面</div>
+                </div>
+              </a>
+              <a href="#faq" onClick={() => setIsMenuOpen(false)} className={mobileMenuCompactItemClassName}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  <QuestionIcon className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[15px] font-semibold tracking-tight text-apple-dark1 dark:text-white">问题</div>
+                  <div className="text-[10px] leading-tight text-apple-gray6 dark:text-white/62">常见问答</div>
+                </div>
+              </a>
+            </div>
+
+            <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  toggleAnimations();
+                  setIsMenuOpen(false);
+                }}
+                className={mobileMenuExpandedItemClassName}
+              >
+                <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  {animationsEnabled ? <SparkleIcon className="h-3.5 w-3.5" /> : <PauseIcon className="h-3.5 w-3.5" />}
+                </div>
+                <div className="mt-1">
+                  <div className="text-[17px] font-semibold tracking-tight text-apple-dark1 dark:text-white">动效</div>
+                  <div className="mt-0 text-[11px] text-apple-gray6 dark:text-white/62">{animationsEnabled ? '当前开启' : '当前关闭'}</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleThemeChange(getNextThemeMode(themeMode));
+                  setIsMenuOpen(false);
+                }}
+                className={mobileMenuExpandedItemClassName}
+              >
+                <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  <ThemeCycleIcon resolvedTheme={resolvedTheme} />
+                </div>
+                <div className="mt-1">
+                  <div className="text-[17px] font-semibold tracking-tight text-apple-dark1 dark:text-white">主题</div>
+                  <div className="mt-0 text-[11px] text-apple-gray6 dark:text-white/62">{getThemeLabel(themeMode)}</div>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </nav>

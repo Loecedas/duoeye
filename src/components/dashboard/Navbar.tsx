@@ -17,7 +17,101 @@ interface NavbarProps {
 }
 
 const iconButtonClassName =
-  'flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white';
+  'flex h-10 w-10 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white sm:h-11 sm:w-11';
+
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      {open ? (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="m6 6 12 12M18 6 6 18" />
+      ) : (
+        <>
+          <path strokeLinecap="round" strokeWidth={1.8} d="M4 7h16" />
+          <path strokeLinecap="round" strokeWidth={1.8} d="M4 12h16" />
+          <path strokeLinecap="round" strokeWidth={1.8} d="M4 17h16" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function SparkleIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="m18.5 15 0.9 2.6L22 18.5l-2.6 0.9-0.9 2.6-0.9-2.6-2.6-0.9 2.6-0.9 0.9-2.6Z" />
+    </svg>
+  );
+}
+
+function PauseIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <rect x="6" y="5" width="4" height="14" rx="1.2" />
+      <rect x="14" y="5" width="4" height="14" rx="1.2" />
+    </svg>
+  );
+}
+
+function CameraIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+    </svg>
+  );
+}
+
+function ExitIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0-4-4m4 4H9" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 20H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h6" />
+    </svg>
+  );
+}
+
+function SunIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" strokeWidth="1.8" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M12 2.5V5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M12 19v2.5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M4.93 4.93 6.7 6.7" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="m17.3 17.3 1.77 1.77" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M2.5 12H5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="M19 12h2.5" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="m4.93 19.07 1.77-1.77" />
+      <path strokeLinecap="round" strokeWidth="1.8" d="m17.3 6.7 1.77-1.77" />
+    </svg>
+  );
+}
+
+function MoonIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+    </svg>
+  );
+}
+
+function SystemIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="12" rx="2" strokeWidth="1.8" />
+      <path d="M8 20h8" strokeLinecap="round" strokeWidth="1.8" />
+      <path d="M12 16v4" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function getThemeMenuButtonClassName(active: boolean): string {
+  return `flex h-[36px] w-full items-center justify-center rounded-[16px] transition-[transform,box-shadow,color,background-color] duration-200 sm:h-[40px] ${
+    active
+      ? 'bg-[#111827] text-white shadow-[0_10px_22px_rgba(17,24,39,0.16)] dark:bg-white dark:text-apple-dark1'
+      : 'text-apple-dark1 hover:bg-black/[0.04] dark:text-white dark:hover:bg-white/[0.08]'
+  }`;
+}
 
 export default function Navbar({
   username,
@@ -31,8 +125,10 @@ export default function Navbar({
   onLogout,
 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
   const scrollFrameRef = useRef<number | null>(null);
   const isScrolledRef = useRef(false);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function commitScrollState(scrollTop: number): void {
@@ -56,6 +152,7 @@ export default function Navbar({
 
     commitScrollState(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (scrollFrameRef.current !== null) {
@@ -64,25 +161,161 @@ export default function Navbar({
     };
   }, []);
 
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent): void {
+      if (themeMenuRef.current?.contains(event.target as Node)) return;
+      setIsThemeMenuOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent): void {
+      if (event.key !== 'Escape') return;
+      setIsThemeMenuOpen(false);
+    }
+
+    function handleResize(): void {
+      if (window.innerWidth < 768) return;
+      setIsThemeMenuOpen(false);
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <nav data-floating-navbar="true" className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
       <div
-        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:flex-row sm:items-center sm:justify-between sm:px-5 ${
+        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5 min-[768px]:flex-row min-[768px]:items-center min-[768px]:justify-between ${
           isScrolled
             ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.88)]'
             : 'border-white/68 bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]'
         }`}
       >
-        <div className="flex min-w-0 items-center justify-between gap-2 overflow-visible py-1 sm:justify-start sm:gap-3">
-          <a href="/" className="group flex items-center gap-1 overflow-visible py-1">
+        <div className="flex min-w-0 items-center justify-between gap-3 overflow-visible py-1">
+          <a href="/" className="group flex min-w-0 items-center gap-3 overflow-visible py-1">
             <AppIcon className="h-11 w-11 shrink-0" />
-            <DuoWordmark size="xs" className="shrink-0 max-w-full overflow-visible" />
-            <span className="hidden -mx-0.5 shrink-0 text-[11px] font-medium text-apple-gray6/70 dark:text-white/38 sm:inline">-</span>
-            <div className="hidden min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55 sm:block">@{username || 'duolingo'}</div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 overflow-visible">
+                <DuoWordmark size="xs" className="shrink-0 max-w-full overflow-visible" />
+                <span className="hidden -mx-0.5 shrink-0 text-[11px] font-medium text-apple-gray6/70 dark:text-white/38 min-[768px]:inline">-</span>
+                <div className="hidden min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55 min-[768px]:block">
+                  @{username || 'duolingo'}
+                </div>
+              </div>
+              <div className="min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55 min-[768px]:hidden">
+                @{username || 'duolingo'}
+              </div>
+            </div>
           </a>
+
+          <div className="flex items-center gap-2 min-[768px]:hidden">
+            <button
+              type="button"
+              onClick={onToggleAnimations}
+              className={iconButtonClassName}
+              title={animationsEnabled ? '关闭动效' : '开启动效'}
+              aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
+            >
+              {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={onScreenshot}
+              disabled={isScreenshotting}
+              className={`${iconButtonClassName} disabled:cursor-not-allowed disabled:opacity-55`}
+              title={isScreenshotting ? '正在截图' : '截图'}
+              aria-label={isScreenshotting ? '正在截图' : '截图'}
+            >
+              {isScreenshotting ? (
+                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" className="opacity-25" />
+                  <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="opacity-90" />
+                </svg>
+              ) : (
+                <CameraIcon className="h-4 w-4" />
+              )}
+            </button>
+
+            <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
+              <ExitIcon className="h-4 w-4" />
+            </button>
+
+            <div ref={themeMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsThemeMenuOpen((current) => !current)}
+                className={iconButtonClassName}
+                title={isThemeMenuOpen ? '关闭主题菜单' : '打开主题菜单'}
+                aria-label={isThemeMenuOpen ? '关闭主题菜单' : '打开主题菜单'}
+                aria-expanded={isThemeMenuOpen}
+              >
+                <MenuIcon open={isThemeMenuOpen} />
+              </button>
+
+              <div
+                className={`absolute right-0 top-[calc(100%+8px)] w-10 sm:w-11 transition-[opacity,transform] duration-200 ${
+                  isThemeMenuOpen ? 'pointer-events-auto opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-1'
+                }`}
+              >
+                <div className="w-full rounded-[20px] border border-white/75 bg-[rgba(255,255,255,0.94)] p-[2px] shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.96)]">
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onThemeChange('light');
+                        setIsThemeMenuOpen(false);
+                      }}
+                      className={getThemeMenuButtonClassName(themeMode === 'light')}
+                      title="浅色"
+                      aria-label="浅色"
+                    >
+                      <SunIcon />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onThemeChange('dark');
+                        setIsThemeMenuOpen(false);
+                      }}
+                      className={getThemeMenuButtonClassName(themeMode === 'dark')}
+                      title="深色"
+                      aria-label="深色"
+                    >
+                      <MoonIcon />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onThemeChange('system');
+                        setIsThemeMenuOpen(false);
+                      }}
+                      className={getThemeMenuButtonClassName(themeMode === 'system')}
+                      title="跟随系统"
+                      aria-label="跟随系统"
+                    >
+                      <div className="relative flex items-center justify-center">
+                        <SystemIcon />
+                        <span
+                          aria-hidden="true"
+                          className={`absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full ${resolvedTheme === 'dark' ? 'bg-[#1cb0f6]' : 'bg-[#58cc02]'}`}
+                        />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 self-end sm:self-auto">
+        <div className="hidden items-center justify-end gap-2 min-[768px]:flex">
           <button
             type="button"
             onClick={onToggleAnimations}
@@ -90,7 +323,7 @@ export default function Navbar({
             title={animationsEnabled ? '关闭动效' : '开启动效'}
             aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
           >
-            <span className="text-sm">{animationsEnabled ? '✨' : '⏸'}</span>
+            {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
           </button>
 
           <button
@@ -107,19 +340,14 @@ export default function Navbar({
                 <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="opacity-90" />
               </svg>
             ) : (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
+              <CameraIcon className="h-4 w-4" />
             )}
           </button>
 
           <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={onThemeChange} />
 
-          <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出登录" aria-label="退出登录">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />
-            </svg>
+          <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
+            <ExitIcon className="h-4 w-4" />
           </button>
         </div>
       </div>
