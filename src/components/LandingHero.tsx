@@ -81,19 +81,26 @@ const totalTime = timeChartData.reduce((sum, item) => sum + item.time, 0);
 const averageXp = Math.round(totalXp / xpChartData.filter((item) => item.xp > 0).length);
 
 const floatingNavClassName =
-  'mx-auto flex max-w-[1560px] items-center justify-between overflow-visible rounded-[28px] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5';
+  'mx-auto flex max-w-[1560px] items-center justify-between overflow-visible rounded-[28px] border border-white/78 px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5 dark:border-transparent';
 const sectionCardClassName =
-  'render-isolate screenshot-solid-panel overflow-hidden rounded-[30px] border border-white/72 bg-[rgba(255,255,255,0.9)] [background-clip:padding-box] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
+  'screenshot-solid-panel relative overflow-hidden rounded-[30px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.9)] transition-[transform,background-color,filter] duration-300 will-change-transform hover:-translate-y-1 dark:bg-[rgba(44,44,46,0.92)]';
 const sectionCardStaticClassName =
-  'render-isolate screenshot-solid-panel overflow-hidden rounded-[30px] border border-white/72 bg-[rgba(255,255,255,0.9)] [background-clip:padding-box] shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]';
+  'screenshot-solid-panel relative overflow-hidden rounded-[30px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.9)] transition-[transform,background-color,filter] duration-300 will-change-transform hover:-translate-y-1 dark:bg-[rgba(44,44,46,0.92)]';
 const badgeClassName =
-  'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6';
+  'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-apple-dark6';
 const navTabClassName =
-  'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/15 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
+  'inline-flex items-center justify-center h-11 min-w-[44px] rounded-2xl border border-black/5 bg-white/88 px-3 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
+const navIconButtonClassName =
+  'flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-transparent dark:bg-white/12 dark:text-white/72 dark:hover:text-white';
 const mobileMenuCompactItemClassName =
-  'flex min-h-[50px] items-center gap-2 rounded-[20px] border border-black/5 bg-white/72 px-3 py-2 text-left shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.18)]';
+  'flex min-h-[50px] items-center gap-2 rounded-[20px] border border-black/5 bg-white/72 px-3 py-2 text-left shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)] dark:border-transparent dark:bg-white/[0.06] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.18)]';
 const mobileMenuExpandedItemClassName =
-  'flex min-h-[68px] flex-col items-center justify-center rounded-[24px] border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,249,252,0.92))] px-4 py-2 text-center shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.72),rgba(34,34,36,0.9))] dark:hover:shadow-[0_16px_28px_rgba(0,0,0,0.2)]';
+  'flex min-h-[68px] flex-col items-center justify-center rounded-[24px] border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,249,252,0.92))] px-4 py-2 text-center shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:border-transparent dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.72),rgba(34,34,36,0.9))] dark:hover:shadow-[0_16px_28px_rgba(0,0,0,0.2)]';
+const landingNavItems = [
+  { href: '#features', label: '功能亮点' },
+  { href: '#preview', label: '数据预览' },
+  { href: '#faq', label: '常见问题' },
+] as const;
 
 function formatDateKey(date: Date): string {
   try {
@@ -280,7 +287,7 @@ function HeroMetric({
   accent: string;
 }) {
   return (
-    <div className="render-isolate overflow-hidden rounded-[22px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(34,34,36,0.98))] dark:shadow-[0_10px_24px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
+    <div className="render-isolate overflow-hidden rounded-[22px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.84)] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)] dark:bg-[rgba(44,44,46,0.92)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
       <div className="text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 dark:text-apple-dark6">{label}</div>
       <div className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: accent }}>
         {value}
@@ -461,62 +468,69 @@ export default function LandingHero() {
         <div
           className={`${floatingNavClassName} ${
             isScrolled
-              ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.88)]'
-              : 'border-white/68 bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]'
+              ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-transparent dark:bg-[rgba(44,44,46,0.88)]'
+              : 'border-white/68 bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-[rgba(44,44,46,0.82)]'
           }`}
         >
-          <a href="#hero" className="flex min-w-0 items-center gap-1 overflow-visible py-1">
+          <a href="/" className="flex min-w-0 items-center gap-1 overflow-visible py-1">
             <AppIcon className="h-11 w-11 shrink-0" />
             <DuoWordmark size="xs" className="shrink-0 overflow-visible" />
             <span className="-mx-0.5 shrink-0 text-[11px] font-medium text-apple-gray6/70 dark:text-white/38">-</span>
             <div className="min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55">多邻国学习数据仪表盘</div>
           </a>
 
-          <div className="hidden items-center gap-2 min-[768px]:flex">
+          <div className="hidden items-center gap-2 min-[1024px]:flex">
             <div className="flex items-center gap-1.5 min-[900px]:gap-2">
-              <a href="#features" className={navTabClassName}>
-                功能亮点
-              </a>
-              <a href="#preview" className={navTabClassName}>
-                数据预览
-              </a>
-              <a href="#faq" className={navTabClassName}>
-                常见问题
-              </a>
+              {landingNavItems.map((item) => (
+                <a key={item.href} href={item.href} className={navTabClassName}>
+                  {item.label}
+                </a>
+              ))}
             </div>
             <button
               type="button"
               onClick={toggleAnimations}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
+              className={navIconButtonClassName}
               title={animationsEnabled ? '关闭动效' : '开启动效'}
               aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
             >
-              <span className="text-sm">{animationsEnabled ? '✨' : '⏸'}</span>
+              {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
             </button>
             <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={handleThemeChange} />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((current) => !current)}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white min-[768px]:hidden"
-            aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
-            title={isMenuOpen ? '关闭菜单' : '打开菜单'}
-            aria-expanded={isMenuOpen}
-          >
-            <MenuIcon open={isMenuOpen} />
-          </button>
+          <div className="flex items-center gap-2 min-[1024px]:hidden">
+            <button
+              type="button"
+              onClick={() => handleThemeChange(getNextThemeMode(themeMode))}
+              className={navIconButtonClassName}
+              aria-label={`切换主题，当前${getThemeLabel(themeMode)}`}
+              title={`切换主题，当前${getThemeLabel(themeMode)}`}
+            >
+              <ThemeCycleIcon resolvedTheme={resolvedTheme} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((current) => !current)}
+              className={navIconButtonClassName}
+              aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
+              title={isMenuOpen ? '关闭菜单' : '打开菜单'}
+              aria-expanded={isMenuOpen}
+            >
+              <MenuIcon open={isMenuOpen} />
+            </button>
+          </div>
         </div>
 
         <div
-          className={`overflow-hidden transition-[max-height,opacity,transform,margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] min-[768px]:hidden ${
+          className={`overflow-hidden transition-[max-height,opacity,transform,margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] min-[1024px]:hidden ${
             isMenuOpen ? 'mt-3 max-h-[360px] opacity-100 translate-y-0' : 'pointer-events-none max-h-0 opacity-0 -translate-y-2'
           }`}
         >
-          <div className="mx-auto max-w-[1560px] rounded-[28px] border border-white/68 bg-[rgba(255,255,255,0.9)] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]">
+          <div className="mx-auto max-w-[1560px] rounded-[28px] border border-white/68 bg-[rgba(255,255,255,0.9)] px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-[rgba(44,44,46,0.82)]">
             <div className="grid grid-cols-3 gap-2.5">
               <a href="#features" onClick={() => setIsMenuOpen(false)} className={mobileMenuCompactItemClassName}>
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-white">
                   <BarChartIcon className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0">
@@ -525,7 +539,7 @@ export default function LandingHero() {
                 </div>
               </a>
               <a href="#preview" onClick={() => setIsMenuOpen(false)} className={mobileMenuCompactItemClassName}>
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-white">
                   <SearchIcon className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0">
@@ -534,7 +548,7 @@ export default function LandingHero() {
                 </div>
               </a>
               <a href="#faq" onClick={() => setIsMenuOpen(false)} className={mobileMenuCompactItemClassName}>
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_10px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-white">
                   <QuestionIcon className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0">
@@ -553,7 +567,7 @@ export default function LandingHero() {
                 }}
                 className={mobileMenuExpandedItemClassName}
               >
-                <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-white">
                   {animationsEnabled ? <SparkleIcon className="h-3.5 w-3.5" /> : <PauseIcon className="h-3.5 w-3.5" />}
                 </div>
                 <div className="mt-1">
@@ -569,7 +583,7 @@ export default function LandingHero() {
                 }}
                 className={mobileMenuExpandedItemClassName}
               >
-                <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-white">
                   <ThemeCycleIcon resolvedTheme={resolvedTheme} />
                 </div>
                 <div className="mt-1">
@@ -585,8 +599,8 @@ export default function LandingHero() {
       <main className="relative z-10 mx-auto max-w-[1560px] px-4 pb-16 pt-28 sm:px-6 sm:pt-32 lg:px-8 lg:pt-32">
         <section id="hero" className="grid grid-cols-1 gap-6 xl:grid-cols-12">
           <div className={`${sectionCardClassName} overflow-hidden xl:col-span-7`}>
-            <div className="relative p-7 sm:p-8">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.08),transparent_34%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.12),transparent_32%)]" />
+            <div className="relative h-full p-7 sm:p-8">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(88,204,2,0.1)_0%,transparent_42%),radial-gradient(ellipse_at_bottom_right,rgba(28,176,246,0.1)_0%,transparent_56%),linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,249,252,0.95)_52%,rgba(242,245,249,0.92)_100%)] dark:bg-[radial-gradient(ellipse_at_top_left,rgba(88,204,2,0.14)_0%,transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(28,176,246,0.14)_0%,transparent_54%),linear-gradient(180deg,rgba(58,58,60,0.96)_0%,rgba(40,40,42,0.95)_52%,rgba(32,32,34,0.98)_100%)]" />
               <div className="relative">
                 <span className={badgeClassName}>DUOEYE HOME</span>
                 <h1 className="mt-5 max-w-4xl text-[clamp(2.4rem,4vw,4.6rem)] font-semibold tracking-tight text-apple-dark1 dark:text-white">
@@ -596,20 +610,20 @@ export default function LandingHero() {
                   输入用户名，快速生成和首页同风格的 Apple 风数据面板。热力图、经验趋势、学习时长和关键统计会集中呈现。
                 </p>
                 <form onSubmit={handleSubmit} className="mt-8 max-w-2xl">
-                  <div className="relative">
+                  <div className="relative flex items-center">
                     <input
                       type="text"
                       value={username}
                       onChange={(event) => setUsername(event.target.value)}
                       placeholder="输入你的多邻国用户名"
                       disabled={loading}
-                      className="render-isolate w-full overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.92)] [background-clip:padding-box] py-4 pl-5 pr-14 text-base text-apple-dark1 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition-[box-shadow,border-color,background-color,color] duration-200 focus:border-[#58cc02]/40 focus:ring-4 focus:ring-[#58cc02]/10 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-[rgba(44,44,46,0.78)] dark:text-white"
+                      className="render-isolate w-full overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.92)] [background-clip:padding-box] py-4 pl-5 pr-14 text-base text-apple-dark1 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition-[box-shadow,border-color,background-color,color] duration-200 focus:border-[#58cc02]/40 focus:ring-4 focus:ring-[#58cc02]/10 disabled:cursor-not-allowed disabled:opacity-70 dark:border-transparent dark:bg-[rgba(44,44,46,0.78)] dark:text-white"
                     />
                     <button
                       type="submit"
                       disabled={loading || !username.trim()}
                       aria-label="提交用户名"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-apple-gray6 transition-colors duration-200 hover:text-[#58cc02] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="absolute right-4 text-apple-gray6 transition-colors duration-200 hover:text-[#58cc02] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {loading ? <SearchButtonSpinner /> : <SearchIcon />}
                     </button>
@@ -648,7 +662,7 @@ export default function LandingHero() {
                 <HeroMetric label="热力活跃" value="365 天" accent="#a572f7" />
               </div>
 
-              <div className="render-isolate mt-4 overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.82)] [background-clip:padding-box] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(52,52,54,0.96),rgba(30,30,32,0.98))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+              <div className="render-isolate mt-4 overflow-hidden rounded-[24px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.82)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-1 dark:bg-[rgba(44,44,46,0.92)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-semibold text-apple-dark1 dark:text-white">体验重点</div>
                   <span className="rounded-full bg-[#58cc02]/10 px-2.5 py-1 text-[11px] font-semibold text-[#3d8f09] dark:bg-[#58cc02]/15 dark:text-[#b6ef89]">
@@ -684,7 +698,7 @@ export default function LandingHero() {
                 return (
                   <article
                     key={item.title}
-                    className="render-isolate overflow-hidden rounded-[26px] border border-white/72 bg-[rgba(255,255,255,0.88)] [background-clip:padding-box] p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)]"
+                    className="render-isolate overflow-hidden rounded-[26px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.88)] p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.07)] dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)]"
                   >
                     <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.tone}`}>
                       <Icon />
@@ -744,7 +758,7 @@ export default function LandingHero() {
               {faqItems.map((item) => (
                 <article
                   key={item.question}
-                  className="render-isolate overflow-hidden rounded-[24px] border border-white/72 bg-[rgba(255,255,255,0.84)] [background-clip:padding-box] p-6 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(56,56,58,0.96),rgba(32,32,34,0.98))] dark:shadow-[0_10px_22px_rgba(0,0,0,0.16)] dark:hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)]"
+                  className="render-isolate overflow-hidden rounded-[24px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.84)] p-6 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-1 hover:shadow-[0_12px_22px_rgba(15,23,42,0.06)] dark:bg-[rgba(44,44,46,0.92)] dark:shadow-[0_10px_22px_rgba(0,0,0,0.16)] dark:hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)]"
                 >
                   <h3 className="text-base font-semibold tracking-tight text-apple-dark1 dark:text-white">Q. {item.question}</h3>
                   <p className="mt-3 text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">A. {item.answer}</p>
@@ -755,7 +769,7 @@ export default function LandingHero() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-black/5 bg-white/92 py-12 dark:border-white/10 dark:bg-[rgba(20,20,22,0.92)]">
+      <footer className="relative z-10 border-t border-black/5 bg-white/92 py-12 dark:border-transparent dark:bg-[rgba(20,20,22,0.92)]">
         <div className="mx-auto flex w-full max-w-[1560px] flex-col items-center overflow-visible px-4 text-center sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 overflow-visible py-1">
             <AppIcon className="h-11 w-11 shrink-0" />
