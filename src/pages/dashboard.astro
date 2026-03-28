@@ -8,7 +8,7 @@ const initialUsername = normalizeUsername(Astro.url.searchParams.get('username')
 
 <Layout title="DuoEye - 仪表盘">
   <DuoDashApp
-    client:only="react"
+    client:load
     initialUsername={initialUsername}
   />
 </Layout>
