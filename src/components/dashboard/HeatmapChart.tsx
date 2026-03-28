@@ -489,7 +489,7 @@ export default function HeatmapChart({
           </div>
 
           <div
-            className={`render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)] ${shouldUseCompactGrid ? 'gap-[1px] p-2.5' : 'gap-[1px] p-3 lg:gap-[2px]'}`}
+            className={`render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-0 dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.9)] dark:shadow-none ${shouldUseCompactGrid ? 'gap-[1px] p-2.5' : 'gap-[1px] p-3 lg:gap-[2px]'}`}
             style={{
               gridTemplateColumns: shouldUseCompactGrid ? `12px repeat(${weeks.length}, minmax(0, 1fr))` : `16px repeat(${weeks.length}, minmax(12px, 1fr))`,
               minWidth: shouldUseCompactGrid ? undefined : `${gridMinWidth}px`,
@@ -625,7 +625,7 @@ export default function HeatmapChart({
               document.body,
             )}
 
-          <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-3 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-white/10 dark:bg-[rgba(44,44,46,0.88)] dark:text-apple-dark6">
+          <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-3 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-0 dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.88)] dark:shadow-none dark:text-apple-dark6">
             <div>
               {getViewRangeLabel(viewMode, selectedYear, selectedQuarter, selectedHalf)}，学习{' '}
               <span className="font-bold" style={{ color: DuoColors.featherGreen }}>

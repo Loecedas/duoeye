@@ -109,10 +109,10 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
   }, [secondaryStats.length]);
 
   return (
-    <section className="screenshot-solid-surface overflow-hidden rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(249,250,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(28,28,30,0.98))] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]">
+    <section className="screenshot-solid-surface overflow-hidden rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(249,250,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(28,28,30,0.98))] dark:shadow-[0_14px_30px_rgba(0,0,0,0.14)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.24)]">
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
         <div className="xl:col-span-4">
-          <div className="screenshot-solid-panel group relative h-full overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.12),transparent_36%),linear-gradient(135deg,#ffffff_0%,#f5f7fb_100%)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.14),transparent_34%),linear-gradient(135deg,rgba(72,72,74,0.98)_0%,rgba(44,44,46,0.98)_100%)] dark:hover:shadow-[0_18px_34px_rgba(0,0,0,0.24)]">
+          <div className="screenshot-solid-panel group relative h-full overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.12),transparent_36%),linear-gradient(135deg,#ffffff_0%,#f5f7fb_100%)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.24),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.2),transparent_32%),linear-gradient(135deg,rgba(90,94,98,0.98)_0%,rgba(58,60,66,0.98)_58%,rgba(44,56,68,0.98)_100%)] dark:shadow-[0_20px_44px_rgba(0,0,0,0.24)] dark:hover:shadow-[0_24px_48px_rgba(0,0,0,0.3)]">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/88 px-3 py-1 text-xs font-semibold text-apple-gray6 shadow-sm dark:bg-white/8 dark:text-apple-dark6">
               <span className="text-sm">📊</span>
               今日概览
@@ -143,7 +143,7 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
             {primaryStats.map((stat) => (
               <article
                 key={stat.label}
-                className={`group relative min-h-[168px] overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br ${stat.panelClass} ${stat.darkPanelClass} p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)] dark:border-white/10 dark:hover:shadow-[0_16px_30px_rgba(0,0,0,0.24)]`}
+                className={`group relative min-h-[168px] overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br ${stat.panelClass} ${stat.darkPanelClass} p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)] dark:border-0 dark:[background-clip:border-box] dark:shadow-none dark:hover:shadow-none`}
               >
                 <div className={`absolute right-[-12px] top-[-12px] h-20 w-20 rounded-full opacity-70 blur-2xl transition-transform duration-200 group-hover:scale-105 ${stat.glowClass} dark:opacity-45`} />
                 <div className="relative flex h-full flex-col justify-between">
@@ -169,7 +169,7 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
         {secondaryStats.map((item) => (
           <div
             key={item.label}
-            className="screenshot-solid-panel rounded-[22px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(246,247,250,0.92))] px-4 py-4 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(72,72,74,0.96),rgba(44,44,46,0.98))] dark:hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)]"
+            className="screenshot-solid-panel rounded-[22px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(246,247,250,0.92))] px-4 py-4 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(15,23,42,0.06)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(72,72,74,0.96),rgba(44,44,46,0.98))] dark:shadow-none dark:hover:shadow-[0_14px_26px_rgba(0,0,0,0.22)]"
           >
             <div className="text-xs font-medium text-apple-gray6 dark:text-apple-dark6">{item.label}</div>
             <div className="mt-2 text-lg font-semibold tracking-tight text-apple-dark1 dark:text-white">{item.value}</div>

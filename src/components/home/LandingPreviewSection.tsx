@@ -37,7 +37,7 @@ function TooltipCard({
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-xl border border-black/5 bg-white/96 px-3 py-2 text-xs shadow-[0_10px_24px_rgba(15,23,42,0.1)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.94)]">
+    <div className="rounded-xl border border-black/5 bg-white/96 px-3 py-2 text-xs shadow-[0_10px_24px_rgba(15,23,42,0.1)] dark:border-transparent dark:bg-[rgba(44,44,46,0.94)]">
       <span className="text-apple-gray6 dark:text-apple-dark6">{label}:</span>
       <span className="ml-1 font-bold" style={{ color }}>
         {payload[0].value ?? 0} {unit}

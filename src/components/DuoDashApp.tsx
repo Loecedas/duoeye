@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { UserData } from '../types';
+import { Component, type ErrorInfo } from 'react';
 import { toPng } from 'html-to-image';
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
@@ -42,6 +43,48 @@ function getMonthlyYears(data: Array<{ date: string; xp: number; time?: number }
 
 type WeeklyRangeMode = 'week' | 'recent7';
 
+interface RenderBoundaryProps {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}
+
+interface RenderBoundaryState {
+  hasError: boolean;
+}
+
+class RenderBoundary extends Component<RenderBoundaryProps, RenderBoundaryState> {
+  state: RenderBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): RenderBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    console.error(`[dashboard:${this.props.label}] render failed`, error, info);
+  }
+
+  render() {
+    if (!this.state.hasError) {
+      return this.props.children;
+    }
+
+    return (
+      <div
+        className={
+          this.props.className ||
+          'flex min-h-[180px] items-center justify-center rounded-[28px] border border-dashed border-black/10 bg-white/72 px-6 py-8 text-center text-sm text-apple-gray6 dark:border-white/12 dark:bg-white/6 dark:text-apple-dark6'
+        }
+      >
+        <div>
+          <div className="font-semibold text-apple-dark1 dark:text-white">{this.props.label} 暂时无法显示</div>
+          <div className="mt-2">刷新页面后重试。</div>
+        </div>
+      </div>
+    );
+  }
+}
+
 interface DashboardCardProps {
   icon: string;
   title: string;
@@ -68,7 +111,7 @@ interface DashboardSectionsProps {
 }
 
 const surfaceClassName =
-  'render-isolate screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))]';
+  'render-isolate screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none';
 
 const headerBadgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/20 dark:bg-white/16 dark:text-white/85';
@@ -144,7 +187,9 @@ function DashboardCard({
           ) : null}
         </div>
 
-        <div className="min-h-0 flex-1">{children}</div>
+        <div className="min-h-0 flex-1">
+          <RenderBoundary label={title}>{children}</RenderBoundary>
+        </div>
       </div>
     </section>
   );
@@ -197,7 +242,9 @@ function DashboardSections({
       </section>
 
       <div className={animationClass} style={animated ? { animationDelay: '0.08s' } : undefined}>
-        <TodayOverview userData={userData} />
+        <RenderBoundary label="今日概览">
+          <TodayOverview userData={userData} />
+        </RenderBoundary>
       </div>
 
       <div className={`grid grid-cols-1 gap-6 xl:grid-cols-12 ${animationClass}`} style={animated ? { animationDelay: '0.14s' } : undefined}>
@@ -280,15 +327,21 @@ function DashboardSections({
 
         <aside className="space-y-6 xl:col-span-4">
           <div className={animationClass} style={animated ? { animationDelay: '0.2s' } : undefined}>
-            <LanguageDistribution courses={userData.courses} totalXp={userData.totalXp} />
+            <RenderBoundary label="语言分布">
+              <LanguageDistribution courses={userData.courses} totalXp={userData.totalXp} />
+            </RenderBoundary>
           </div>
 
           <div className={animationClass} style={animated ? { animationDelay: '0.24s' } : undefined}>
-            <AchievementsSection userData={userData} />
+            <RenderBoundary label="成就">
+              <AchievementsSection userData={userData} />
+            </RenderBoundary>
           </div>
 
           <div className={animationClass} style={animated ? { animationDelay: '0.28s' } : undefined}>
-            <DuoReview userData={userData} />
+            <RenderBoundary label="AI 总结">
+              <DuoReview userData={userData} />
+            </RenderBoundary>
           </div>
         </aside>
       </div>
@@ -299,7 +352,9 @@ function DashboardSections({
           className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.32),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(28,176,246,0.06),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(28,176,246,0.1),transparent_28%)]"
         />
         <div className="relative p-6">
-          <HeatmapChart data={userData.yearlyXpHistory || []} />
+          <RenderBoundary label="学习热力图">
+            <HeatmapChart data={userData.yearlyXpHistory || []} />
+          </RenderBoundary>
         </div>
       </section>
     </div>
@@ -676,23 +731,28 @@ export default function DuoDashApp({
         </div>
       ) : null}
 
-      <Navbar
-        username={username}
-        themeMode={themeMode}
-        resolvedTheme={resolvedTheme}
-        animationsEnabled={animationsEnabled}
-        isScreenshotting={isScreenshotting}
-        onThemeChange={handleThemeChange}
-        onToggleAnimations={toggleAnimations}
-        onScreenshot={handleScreenshot}
-        onLogout={() => {
-          sessionStorage.removeItem(USERNAME_STORAGE_KEY);
-          sessionStorage.removeItem(USERDATA_STORAGE_KEY);
-          localStorage.removeItem(USERNAME_STORAGE_KEY);
-          localStorage.removeItem(USERDATA_STORAGE_KEY);
-          window.location.assign('/');
-        }}
-      />
+      <RenderBoundary
+        label="导航栏"
+        className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8"
+      >
+        <Navbar
+          username={username}
+          themeMode={themeMode}
+          resolvedTheme={resolvedTheme}
+          animationsEnabled={animationsEnabled}
+          isScreenshotting={isScreenshotting}
+          onThemeChange={handleThemeChange}
+          onToggleAnimations={toggleAnimations}
+          onScreenshot={handleScreenshot}
+          onLogout={() => {
+            sessionStorage.removeItem(USERNAME_STORAGE_KEY);
+            sessionStorage.removeItem(USERDATA_STORAGE_KEY);
+            localStorage.removeItem(USERNAME_STORAGE_KEY);
+            localStorage.removeItem(USERDATA_STORAGE_KEY);
+            window.location.assign('/');
+          }}
+        />
+      </RenderBoundary>
 
       <main ref={contentRef} data-screenshot-lock="true" className="relative mx-auto max-w-[1560px] px-4 pb-10 pt-40 sm:px-6 sm:pt-32 lg:px-8 lg:pt-32">
         <DashboardSections

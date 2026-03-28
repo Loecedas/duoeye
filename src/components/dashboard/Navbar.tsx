@@ -17,7 +17,25 @@ interface NavbarProps {
 }
 
 const iconButtonClassName =
-  'flex h-10 w-10 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white sm:h-11 sm:w-11';
+  'group flex h-10 w-10 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white sm:h-11 sm:w-11';
+
+function getNavbarActionIconClassName(variant: 'sparkle' | 'pause' | 'camera' | 'exit'): string {
+  const base = 'h-4 w-4 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform';
+
+  if (variant === 'sparkle') {
+    return `${base} group-hover:-translate-y-0.5 group-hover:rotate-12`;
+  }
+
+  if (variant === 'camera') {
+    return `${base} group-hover:-translate-y-0.5 group-hover:rotate-6`;
+  }
+
+  if (variant === 'exit') {
+    return `${base} group-hover:translate-x-0.5`;
+  }
+
+  return `${base} group-hover:-translate-y-0.5`;
+}
 
 function MenuIcon({ open }: { open: boolean }) {
   return (
@@ -35,16 +53,16 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
-function SparkleIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+function SparkleIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="m18.5 15 0.9 2.6L22 18.5l-2.6 0.9-0.9 2.6-0.9-2.6-2.6-0.9 2.6-0.9 0.9-2.6Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="m18.5 15 0.9 2.6L22 18.5l-2.6 0.9-0.9 2.6-0.9-2.6-2.6-0.9 2.6-0.9 0.9-2.6Z" />
     </svg>
   );
 }
 
-function PauseIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+function PauseIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <rect x="6" y="5" width="4" height="14" rx="1.2" />
@@ -53,20 +71,20 @@ function PauseIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
   );
 }
 
-function CameraIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+function CameraIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
   );
 }
 
-function ExitIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+function ExitIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0-4-4m4 4H9" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 20H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h6" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0-4-4m4 4H9" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 20H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h6" />
     </svg>
   );
 }
@@ -192,10 +210,10 @@ export default function Navbar({
     <nav data-floating-navbar="true" className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
       <div
         data-screenshot-lock="true"
-        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5 min-[768px]:flex-row min-[768px]:items-center min-[768px]:justify-between ${
+        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] px-4 py-3.5 transition-[background-color,box-shadow] duration-300 sm:px-5 min-[768px]:flex-row min-[768px]:items-center min-[768px]:justify-between ${
           isScrolled
-            ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.88)]'
-            : 'border-white/68 bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]'
+            ? 'bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:bg-[rgba(44,44,46,0.88)]'
+            : 'bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:bg-[rgba(44,44,46,0.82)]'
         }`}
       >
         <div className="flex min-w-0 items-center justify-between gap-3 overflow-visible py-1">
@@ -223,7 +241,11 @@ export default function Navbar({
               title={animationsEnabled ? '关闭动效' : '开启动效'}
               aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
             >
-              {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
+              {animationsEnabled ? (
+                <SparkleIcon className={getNavbarActionIconClassName('sparkle')} />
+              ) : (
+                <PauseIcon className={getNavbarActionIconClassName('pause')} />
+              )}
             </button>
 
             <button
@@ -240,12 +262,12 @@ export default function Navbar({
                   <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="opacity-90" />
                 </svg>
               ) : (
-                <CameraIcon className="h-4 w-4" />
+                <CameraIcon className={getNavbarActionIconClassName('camera')} />
               )}
             </button>
 
             <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
-              <ExitIcon className="h-4 w-4" />
+              <ExitIcon className={getNavbarActionIconClassName('exit')} />
             </button>
 
             <div ref={themeMenuRef} className="relative">
@@ -324,7 +346,11 @@ export default function Navbar({
             title={animationsEnabled ? '关闭动效' : '开启动效'}
             aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
           >
-            {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
+            {animationsEnabled ? (
+              <SparkleIcon className={getNavbarActionIconClassName('sparkle')} />
+            ) : (
+              <PauseIcon className={getNavbarActionIconClassName('pause')} />
+            )}
           </button>
 
           <button
@@ -341,14 +367,14 @@ export default function Navbar({
                 <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="opacity-90" />
               </svg>
             ) : (
-              <CameraIcon className="h-4 w-4" />
+              <CameraIcon className={getNavbarActionIconClassName('camera')} />
             )}
           </button>
 
           <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={onThemeChange} />
 
           <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
-            <ExitIcon className="h-4 w-4" />
+            <ExitIcon className={getNavbarActionIconClassName('exit')} />
           </button>
         </div>
       </div>
