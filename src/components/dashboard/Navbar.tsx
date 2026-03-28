@@ -191,6 +191,7 @@ export default function Navbar({
   return (
     <nav data-floating-navbar="true" className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
       <div
+        data-screenshot-lock="true"
         className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5 min-[768px]:flex-row min-[768px]:items-center min-[768px]:justify-between ${
           isScrolled
             ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.88)]'

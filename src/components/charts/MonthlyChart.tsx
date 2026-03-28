@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -15,20 +15,51 @@ interface MonthlyChartProps {
   viewMode?: 'year' | 'rolling12';
 }
 
+interface MonthlyChartPoint {
+  date: string;
+  axisLabel: string;
+  xp: number;
+}
+
 const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
 function formatRollingMonthLabel(date: Date): string {
   return `${String(date.getFullYear()).slice(-2)}/${date.getMonth() + 1}`;
 }
 
+function formatRollingMonthLabelForNarrowScreen(value: string): string {
+  const month = value.split('/')[1];
+  return month ? `${month}月` : value;
+}
+
 export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: MonthlyChartProps) {
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-  const chartData = useMemo(() => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(0);
+  const isExtraNarrowScreen = chartWidth > 0 && chartWidth <= 425;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      setChartWidth(Math.round(entry.contentRect.width));
+    });
+
+    observer.observe(container);
+    setChartWidth(Math.round(container.getBoundingClientRect().width));
+
+    return () => observer.disconnect();
+  }, []);
+
+  const chartData = useMemo<MonthlyChartPoint[]>(() => {
     if (viewMode === 'rolling12') {
       const monthlyXp = new Map<string, number>();
       const today = new Date();
 
-      for (let i = 11; i >= 0; i--) {
+      for (let i = 11; i >= 0; i -= 1) {
         const monthDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
         const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
         monthlyXp.set(monthKey, 0);
@@ -42,8 +73,11 @@ export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: 
 
       return Array.from(monthlyXp.entries()).map(([monthKey, xp]) => {
         const [year, month] = monthKey.split('-');
+        const fullLabel = formatRollingMonthLabel(new Date(Number(year), Number(month) - 1, 1));
+
         return {
-          date: formatRollingMonthLabel(new Date(Number(year), Number(month) - 1, 1)),
+          date: fullLabel,
+          axisLabel: isExtraNarrowScreen ? formatRollingMonthLabelForNarrowScreen(fullLabel) : fullLabel,
           xp,
         };
       });
@@ -63,9 +97,10 @@ export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: 
 
     return MONTH_LABELS.map((label, index) => ({
       date: label,
+      axisLabel: label,
       xp: monthlyXp[index],
     }));
-  }, [data, selectedYear, viewMode]);
+  }, [data, isExtraNarrowScreen, selectedYear, viewMode]);
 
   if (data.length === 0) {
     return (
@@ -76,7 +111,7 @@ export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: 
   }
 
   return (
-    <div className="h-full min-h-[220px] w-full">
+    <div ref={containerRef} className="h-full min-h-[220px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
           <defs>
@@ -85,13 +120,9 @@ export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: 
               <stop offset="95%" stopColor="#1CB0F6" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={false}
-            stroke={isDark ? '#334155' : '#e5e5e5'}
-          />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#334155' : '#e5e5e5'} />
           <XAxis
-            dataKey="date"
+            dataKey="axisLabel"
             axisLine={false}
             tickLine={false}
             tick={{ fill: isDark ? '#cbd5e1' : '#6b7280', fontSize: 10 }}
@@ -107,9 +138,13 @@ export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: 
             tickFormatter={(value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value)}
           />
           <Tooltip
+            labelFormatter={(_, payload) => {
+              const entry = payload?.[0]?.payload as MonthlyChartPoint | undefined;
+              return entry?.date || '';
+            }}
             formatter={(value: number) => [
               `${value.toLocaleString()} XP`,
-              viewMode === 'rolling12' ? '近12个月' : (selectedYear || '当年'),
+              viewMode === 'rolling12' ? '最近 12 个月' : (selectedYear || '当年'),
             ]}
             contentStyle={{
               borderRadius: '12px',

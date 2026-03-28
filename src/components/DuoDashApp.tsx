@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { UserData } from '../types';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
 import AchievementsSection from './achievements/AchievementsSection';
@@ -74,7 +74,7 @@ const headerBadgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/20 dark:bg-white/16 dark:text-white/85';
 
 function getHeaderActionClassName(isActive: boolean): string {
-  return `rounded-full border px-3 py-1.5 text-xs font-semibold transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+  return `inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
     isActive
       ? 'border-transparent bg-[#111827] text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(17,24,39,0.2)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.22)]'
       : 'border-black/5 bg-white/88 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -92,14 +92,14 @@ function WeeklyRangeActions({ value, onChange }: WeeklyRangeActionsProps) {
       <button
         type="button"
         onClick={() => onChange('recent7')}
-        className={getHeaderActionClassName(value === 'recent7')}
+        className={`${getHeaderActionClassName(value === 'recent7')} min-w-[76px]`}
       >
         最近七天
       </button>
       <button
         type="button"
         onClick={() => onChange('week')}
-        className={getHeaderActionClassName(value === 'week')}
+        className={`${getHeaderActionClassName(value === 'week')} min-w-[58px]`}
       >
         本周
       </button>
@@ -118,7 +118,7 @@ function DashboardCard({
   children,
 }: DashboardCardProps) {
   return (
-    <section className={`group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)] ${className}`}>
+    <section data-screenshot-lock="true" className={`group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)] ${className}`}>
       <div
         aria-hidden="true"
         className="screenshot-soft-glow pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.58),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.04),transparent_30%)]"
@@ -137,7 +137,7 @@ function DashboardCard({
           </div>
 
           {actions || badge ? (
-            <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap">
               {actions}
               {badge ? <span className={badgeClassName || headerBadgeClassName}>{badge}</span> : null}
             </div>
@@ -175,8 +175,8 @@ function DashboardSections({
       : (userData.dailyTimeHistory || []).map((item) => ({ date: item.date, time: item.time }));
 
   return (
-    <div className={`${animationClass} space-y-6`}>
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div data-screenshot-lock="true" className={`${animationClass} space-y-6`}>
+      <section data-screenshot-lock="true" className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6">
             DUOEYE DASHBOARD
@@ -519,71 +519,50 @@ export default function DuoDashApp({
     });
   }
 
-  function uniquifySvgReferences(container: HTMLElement, prefix: string): void {
-    const idMap = new Map<string, string>();
+  function lockScreenshotLayout(rootNode: HTMLElement): () => void {
+    const targets = new Set<HTMLElement>();
+    const selectors = ['[data-screenshot-lock="true"]', '.recharts-responsive-container', '.recharts-wrapper', '.recharts-surface'];
 
-    container.querySelectorAll('[id]').forEach((node) => {
-      const currentId = node.getAttribute('id');
-      if (!currentId) return;
+    if (rootNode.matches('[data-screenshot-lock="true"]')) {
+      targets.add(rootNode);
+    }
 
-      const nextId = `${prefix}-${currentId}`;
-      idMap.set(currentId, nextId);
-      node.setAttribute('id', nextId);
+    selectors.forEach((selector) => {
+      rootNode.querySelectorAll(selector).forEach((node) => {
+        if (node instanceof HTMLElement) {
+          targets.add(node);
+        }
+      });
     });
 
-    if (!idMap.size) return;
+    const snapshots = Array.from(targets).map((node) => ({
+      node,
+      style: node.getAttribute('style'),
+      width: Math.ceil(node.getBoundingClientRect().width),
+      height: Math.ceil(node.getBoundingClientRect().height),
+    }));
 
-    const refAttributes = ['clip-path', 'fill', 'filter', 'mask', 'stroke', 'href', 'xlink:href'];
-    const urlPattern = /url\(#([^)]+)\)/g;
+    snapshots.forEach(({ node, width, height }) => {
+      if (!width || !height) return;
 
-    container.querySelectorAll('*').forEach((node) => {
-      refAttributes.forEach((attribute) => {
-        const value = node.getAttribute(attribute);
-        if (!value) return;
+      node.style.width = `${width}px`;
+      node.style.minWidth = `${width}px`;
+      node.style.maxWidth = `${width}px`;
+      node.style.height = `${height}px`;
+      node.style.minHeight = `${height}px`;
+      node.style.maxHeight = `${height}px`;
+    });
 
-        if (attribute === 'href' || attribute === 'xlink:href') {
-          const rawId = value.startsWith('#') ? value.slice(1) : '';
-          const mappedId = rawId ? idMap.get(rawId) : null;
-          if (mappedId) {
-            node.setAttribute(attribute, `#${mappedId}`);
-          }
+    return () => {
+      snapshots.forEach(({ node, style }) => {
+        if (style === null) {
+          node.removeAttribute('style');
           return;
         }
 
-        const replacedValue = value.replace(urlPattern, (match, rawId) => {
-          const mappedId = idMap.get(rawId);
-          return mappedId ? `url(#${mappedId})` : match;
-        });
-
-        if (replacedValue !== value) {
-          node.setAttribute(attribute, replacedValue);
-        }
+        node.setAttribute('style', style);
       });
-    });
-  }
-
-  function lockClonedChartSizes(sourceRoot: HTMLElement, clonedRoot: HTMLElement): void {
-    const selectors = ['.recharts-responsive-container', '.recharts-wrapper', '.recharts-surface'];
-
-    selectors.forEach((selector) => {
-      const sourceNodes = Array.from(sourceRoot.querySelectorAll(selector));
-      const clonedNodes = Array.from(clonedRoot.querySelectorAll(selector));
-
-      sourceNodes.forEach((sourceNode, index) => {
-        const clonedNode = clonedNodes[index] as HTMLElement | undefined;
-        if (!clonedNode) return;
-
-        const rect = (sourceNode as HTMLElement).getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-
-        clonedNode.style.width = `${Math.ceil(rect.width)}px`;
-        clonedNode.style.minWidth = `${Math.ceil(rect.width)}px`;
-        clonedNode.style.maxWidth = `${Math.ceil(rect.width)}px`;
-        clonedNode.style.height = `${Math.ceil(rect.height)}px`;
-        clonedNode.style.minHeight = `${Math.ceil(rect.height)}px`;
-        clonedNode.style.maxHeight = `${Math.ceil(rect.height)}px`;
-      });
-    });
+    };
   }
 
   async function handleScreenshot(): Promise<void> {
@@ -598,35 +577,36 @@ export default function DuoDashApp({
       root.classList.add('animations-off');
       root.classList.add('screenshot-mode');
       setIsScreenshotting(true);
-      await waitForStableFrame(260);
+      await waitForStableFrame(360);
 
       const pageNode = pageRef.current;
-      const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-      const captureWidth = Math.ceil(pageNode.getBoundingClientRect().width || viewportWidth);
+      const unlockScreenshotLayout = lockScreenshotLayout(pageNode);
+      const captureWidth = Math.ceil(pageNode.getBoundingClientRect().width || window.innerWidth || 0);
       const captureHeight = Math.ceil(pageNode.scrollHeight);
-      const canvas = await html2canvas(pageNode, {
-        backgroundColor: null,
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        foreignObjectRendering: true,
-        removeContainer: true,
-        ignoreElements: (element) => element instanceof HTMLElement && element.dataset.screenshotIgnore === 'true',
-        width: captureWidth,
-        height: captureHeight,
-        windowWidth: viewportWidth,
-        windowHeight: Math.max(window.innerHeight || 0, 1),
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (clonedDocument) => {
-          const clonedRoot = clonedDocument.documentElement;
-          clonedRoot.classList.add('animations-off', 'screenshot-mode');
-          clonedRoot.classList.toggle('dark', root.classList.contains('dark'));
-          clonedDocument.body.style.margin = '0';
-          clonedDocument.body.style.minHeight = `${captureHeight}px`;
-        },
-      });
-      const dataUrl = canvas.toDataURL('image/png');
+      let dataUrl = '';
+
+      try {
+        dataUrl = await toPng(pageNode, {
+          cacheBust: true,
+          pixelRatio: 2,
+          skipAutoScale: true,
+          width: captureWidth,
+          height: captureHeight,
+          canvasWidth: captureWidth * 2,
+          canvasHeight: captureHeight * 2,
+          backgroundColor: root.classList.contains('dark') ? '#1c1c1e' : '#f5f5f7',
+          filter: (domNode) => !(domNode instanceof HTMLElement && domNode.dataset.screenshotIgnore === 'true'),
+          style: {
+            margin: '0',
+            width: `${captureWidth}px`,
+            minWidth: `${captureWidth}px`,
+            maxWidth: `${captureWidth}px`,
+            minHeight: `${captureHeight}px`,
+          },
+        });
+      } finally {
+        unlockScreenshotLayout();
+      }
 
       downloadDataUrl(dataUrl, fileName);
     } catch (error) {
@@ -681,7 +661,7 @@ export default function DuoDashApp({
   }
 
   return (
-    <div ref={pageRef} className="relative min-h-screen overflow-x-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
+    <div ref={pageRef} data-screenshot-root="true" data-screenshot-lock="true" className="relative min-h-screen overflow-x-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
       <div className="screenshot-soft-glow pointer-events-none absolute inset-x-0 top-0 h-[360px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_22%),linear-gradient(180deg,#fbfbfd_0%,rgba(245,245,247,0.72)_44%,transparent_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_22%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_22%),linear-gradient(180deg,rgba(28,28,30,0.94)_0%,rgba(28,28,30,0.72)_42%,transparent_100%)]" />
 
       {isScreenshotting ? (
@@ -714,7 +694,7 @@ export default function DuoDashApp({
         }}
       />
 
-      <main ref={contentRef} className="relative mx-auto max-w-[1560px] px-4 pb-10 pt-40 sm:px-6 sm:pt-32 lg:px-8 lg:pt-32">
+      <main ref={contentRef} data-screenshot-lock="true" className="relative mx-auto max-w-[1560px] px-4 pb-10 pt-40 sm:px-6 sm:pt-32 lg:px-8 lg:pt-32">
         <DashboardSections
           userData={userData}
           isLoaded={isLoaded}
@@ -733,7 +713,7 @@ export default function DuoDashApp({
       </main>
 
       <footer className="render-isolate screenshot-solid-panel screenshot-disable-blur relative z-10 border-t border-black/5 bg-white/78 py-12 dark:border-white/10 dark:bg-[rgba(20,20,22,0.82)]">
-        <div className="mx-auto flex w-full max-w-[1560px] flex-col items-center overflow-visible px-4 text-center sm:px-6 lg:px-8">
+        <div data-screenshot-lock="true" className="mx-auto flex w-full max-w-[1560px] flex-col items-center overflow-visible px-4 text-center sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 overflow-visible py-1">
             <AppIcon className="h-11 w-11 shrink-0" />
             <DuoWordmark size="xs" className="shrink-0 overflow-visible" />

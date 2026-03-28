@@ -75,6 +75,7 @@ export default function HeatmapChart({
   const [selectedHalf, setSelectedHalf] = useState(now.getMonth() < 6 ? 1 : 2);
   const [viewMode, setViewMode] = useState<ViewMode>(forceViewMode || 'year');
   const [isCompactLayout, setIsCompactLayout] = useState(false);
+  const [isNarrowControlLayout, setIsNarrowControlLayout] = useState(false);
   const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
   const [tooltipTransitionMs, setTooltipTransitionMs] = useState(180);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -120,13 +121,14 @@ export default function HeatmapChart({
   }, [forceViewMode]);
 
   useEffect(() => {
-    function syncCompactLayout(): void {
+    function syncLayoutFlags(): void {
+      setIsNarrowControlLayout(window.innerWidth <= 480);
       setIsCompactLayout(window.innerWidth <= 420);
     }
 
-    syncCompactLayout();
-    window.addEventListener('resize', syncCompactLayout);
-    return () => window.removeEventListener('resize', syncCompactLayout);
+    syncLayoutFlags();
+    window.addEventListener('resize', syncLayoutFlags);
+    return () => window.removeEventListener('resize', syncLayoutFlags);
   }, []);
 
   useEffect(() => {
@@ -245,6 +247,9 @@ export default function HeatmapChart({
   const gridMinWidth = useMemo(() => Math.max(320, weeks.length * 14 + 28), [weeks.length]);
   const quarterControls = viewMode === 'quarter' ? [1, 2, 3, 4] : [];
   const halfControls = viewMode === 'half' ? [1, 2] : [];
+  const shouldUseLandingStackLayout = controlOrder === 'landing' && isNarrowControlLayout;
+  const shouldSwapControlRows = (controlOrder === 'dashboard' && isNarrowControlLayout && !isCompactLayout) || shouldUseLandingStackLayout;
+  const shouldUseCompactGrid = isCompactLayout || shouldUseLandingStackLayout;
 
   const updateTooltipPosition = useCallback((dateStr: string, xp: number, time?: number, transitionMs = 180) => {
     const cell = document.querySelector(`[data-heatmap-date="${dateStr}"]`) as HTMLElement | null;
@@ -336,15 +341,15 @@ export default function HeatmapChart({
 
   return (
     <div className="w-full">
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight text-apple-dark1 dark:text-white">学习热力图</h2>
           <p className="mt-1 text-sm text-apple-gray6 dark:text-apple-dark6">按日期查看经验密度和学习频率</p>
         </div>
 
-        <div className={`flex ${isCompactLayout ? 'w-full flex-col gap-2' : 'flex-wrap items-center justify-end gap-2'}`}>
-          {((controlOrder === 'landing' && isCompactLayout) || !isCompactLayout) && quarterControls.length > 0 && (
-            <div className={`flex ${isCompactLayout ? 'flex-wrap gap-1' : 'items-center gap-1'}`}>
+        <div className={`w-full ${shouldUseCompactGrid ? 'flex flex-col items-end gap-2' : 'flex flex-wrap items-center justify-end gap-2 xl:w-auto'}`}>
+          {!shouldSwapControlRows && ((controlOrder === 'landing' && isCompactLayout) || !isCompactLayout) && quarterControls.length > 0 && (
+            <div className={`flex ${shouldUseCompactGrid ? 'flex-wrap justify-end gap-1' : 'items-center gap-1'}`}>
               {quarterControls.map((quarter) => (
                 <button
                   key={quarter}
@@ -361,13 +366,13 @@ export default function HeatmapChart({
             </div>
           )}
 
-          {((controlOrder === 'landing' && isCompactLayout) || !isCompactLayout) && halfControls.length > 0 && (
-            <div className={`flex ${isCompactLayout ? 'flex-wrap gap-1' : 'items-center gap-1'}`}>
+          {!shouldSwapControlRows && ((controlOrder === 'landing' && isCompactLayout) || !isCompactLayout) && halfControls.length > 0 && (
+            <div className={`flex ${shouldUseCompactGrid ? 'flex-wrap justify-end gap-1' : 'items-center gap-1'}`}>
               {halfControls.map((half) => (
                 <button
                   key={half}
                   onClick={() => setSelectedHalf(half)}
-                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+                  className={`inline-flex min-w-[76px] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                       : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -379,7 +384,7 @@ export default function HeatmapChart({
             </div>
           )}
 
-          <div className={`flex ${isCompactLayout ? 'flex-wrap gap-1' : 'items-center gap-1'}`}>
+          <div className={`flex ${shouldUseCompactGrid ? 'flex-wrap justify-end gap-1' : 'items-center gap-1'}`}>
             {sortedYears.map((year) => (
               <button
                 key={year}
@@ -395,8 +400,44 @@ export default function HeatmapChart({
             ))}
           </div>
 
+          {shouldSwapControlRows && quarterControls.length > 0 && (
+            <div className="flex items-center gap-1">
+              {quarterControls.map((quarter) => (
+                <button
+                  key={`narrow-quarter-${quarter}`}
+                  onClick={() => setSelectedQuarter(quarter)}
+                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+                    quarter === selectedQuarter
+                      ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                  }`}
+                >
+                  Q{quarter}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {shouldSwapControlRows && halfControls.length > 0 && (
+            <div className="flex items-center gap-1">
+              {halfControls.map((half) => (
+                <button
+                  key={`narrow-half-${half}`}
+                  onClick={() => setSelectedHalf(half)}
+                  className={`inline-flex min-w-[76px] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+                    half === selectedHalf
+                      ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                  }`}
+                >
+                  {half === 1 ? '上半年' : '下半年'}
+                </button>
+              ))}
+            </div>
+          )}
+
           {controlOrder === 'dashboard' && isCompactLayout && quarterControls.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap justify-end gap-1">
               {quarterControls.map((quarter) => (
                 <button
                   key={`dashboard-quarter-${quarter}`}
@@ -414,12 +455,12 @@ export default function HeatmapChart({
           )}
 
           {controlOrder === 'dashboard' && isCompactLayout && halfControls.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap justify-end gap-1">
               {halfControls.map((half) => (
                 <button
                   key={`dashboard-half-${half}`}
                   onClick={() => setSelectedHalf(half)}
-                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+                  className={`inline-flex min-w-[76px] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
                       : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
@@ -434,8 +475,8 @@ export default function HeatmapChart({
       </div>
 
       <div className="pb-2">
-        <div className={`relative ${isCompactLayout ? 'overflow-hidden' : 'overflow-x-auto'}`}>
-          <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6" style={{ minWidth: isCompactLayout ? undefined : `${gridMinWidth}px` }}>
+        <div className={`relative ${shouldUseCompactGrid ? 'overflow-hidden' : 'overflow-x-auto'}`}>
+          <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6" style={{ minWidth: shouldUseCompactGrid ? undefined : `${gridMinWidth}px` }}>
             {monthLabels.map((label) => (
               <div
                 key={`${label.month}-${label.weekIndex}`}
@@ -448,10 +489,10 @@ export default function HeatmapChart({
           </div>
 
           <div
-            className={`render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)] ${isCompactLayout ? 'gap-[1px] p-2.5' : 'gap-[1px] p-3 lg:gap-[2px]'}`}
+            className={`render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)] ${shouldUseCompactGrid ? 'gap-[1px] p-2.5' : 'gap-[1px] p-3 lg:gap-[2px]'}`}
             style={{
-              gridTemplateColumns: isCompactLayout ? `12px repeat(${weeks.length}, minmax(0, 1fr))` : `16px repeat(${weeks.length}, minmax(12px, 1fr))`,
-              minWidth: isCompactLayout ? undefined : `${gridMinWidth}px`,
+              gridTemplateColumns: shouldUseCompactGrid ? `12px repeat(${weeks.length}, minmax(0, 1fr))` : `16px repeat(${weeks.length}, minmax(12px, 1fr))`,
+              minWidth: shouldUseCompactGrid ? undefined : `${gridMinWidth}px`,
             }}
           >
             {WEEKDAYS.map((label, index) => (
