@@ -44,7 +44,7 @@ export default function DuoReview({ userData }: DuoReviewProps) {
     <section className="screenshot-solid-surface group relative overflow-hidden rounded-apple-xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)]">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.14),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.1),transparent_34%)] opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.14),transparent_44%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.1),transparent_48%)] opacity-90 transition-opacity duration-200 group-hover:opacity-100 dark:bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.2),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.16),transparent_46%)] dark:opacity-100"
       />
 
       <div className="relative">

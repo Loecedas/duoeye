@@ -86,10 +86,23 @@ const sectionCardClassName =
   'screenshot-solid-panel relative overflow-hidden rounded-[30px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.9)] transition-[transform,background-color,filter] duration-300 will-change-transform hover:-translate-y-1 dark:bg-[rgba(44,44,46,0.92)]';
 const sectionCardStaticClassName =
   'screenshot-solid-panel relative overflow-hidden rounded-[30px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.9)] transition-[transform,background-color,filter] duration-300 will-change-transform hover:-translate-y-1 dark:bg-[rgba(44,44,46,0.92)]';
+const heroGlowClassName =
+  'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(88,204,2,0.12)_0%,transparent_58%),radial-gradient(ellipse_at_bottom_right,rgba(28,176,246,0.1)_0%,transparent_70%),linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,249,252,0.95)_52%,rgba(242,245,249,0.92)_100%)] dark:bg-[radial-gradient(ellipse_at_top_left,rgba(88,204,2,0.2)_0%,transparent_56%),radial-gradient(ellipse_at_bottom_right,rgba(28,176,246,0.18)_0%,transparent_68%),linear-gradient(180deg,rgba(58,58,60,0.96)_0%,rgba(40,40,42,0.95)_52%,rgba(32,32,34,0.98)_100%)]';
+const overviewGlowClassName =
+  'pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_46%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.1),transparent_52%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.2),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.16),transparent_48%)]';
+const featuresGlowClassName =
+  'pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,200,0,0.14),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.1),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,200,0,0.18),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.16),transparent_46%)]';
+const previewGlowClassName =
+  'pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.13),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.1),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.19),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.16),transparent_46%)]';
+const faqGlowClassName =
+  'pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.11),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.1),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.16),transparent_46%)]';
+const pageGlowBackgroundClassName =
+  'pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.08),transparent_28%),linear-gradient(180deg,#fbfbfd_0%,#f5f5f7_46%,#f7f7fa_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.1),transparent_26%),linear-gradient(180deg,rgba(20,20,22,0.98)_0%,rgba(28,28,30,0.96)_48%,rgba(18,18,20,1)_100%)]';
 const badgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-apple-dark6';
 const navTabClassName =
   'inline-flex h-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 px-4 text-xs font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
+const anchorSectionClassName = 'deferred-section mt-6';
 const mobileMenuCompactItemClassName =
   'flex min-h-[50px] items-center gap-2 rounded-[20px] border border-black/5 bg-white/72 px-3 py-2 text-left shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.18)]';
 const mobileMenuExpandedItemClassName =
@@ -465,7 +478,7 @@ export default function LandingHero() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-apple-gray1 text-apple-dark1 transition-colors duration-500 dark:bg-apple-dark1 dark:text-white">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_24%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.08),transparent_22%),linear-gradient(180deg,#fbfbfd_0%,rgba(245,245,247,0.76)_48%,transparent_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_22%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_22%),linear-gradient(180deg,rgba(28,28,30,0.96)_0%,rgba(28,28,30,0.72)_46%,transparent_100%)]" />
+      <div className={pageGlowBackgroundClassName} />
 
       <nav ref={navRef} data-floating-navbar="true" className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
         <div
@@ -600,7 +613,7 @@ export default function LandingHero() {
         <section id="hero" className="grid grid-cols-1 gap-6 xl:grid-cols-12">
           <div className={`${sectionCardClassName} overflow-hidden xl:col-span-7`}>
             <div className="relative h-full p-7 sm:p-8">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(88,204,2,0.1)_0%,transparent_42%),radial-gradient(ellipse_at_bottom_right,rgba(28,176,246,0.1)_0%,transparent_56%),linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,249,252,0.95)_52%,rgba(242,245,249,0.92)_100%)] dark:bg-[radial-gradient(ellipse_at_top_left,rgba(88,204,2,0.14)_0%,transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(28,176,246,0.14)_0%,transparent_54%),linear-gradient(180deg,rgba(58,58,60,0.96)_0%,rgba(40,40,42,0.95)_52%,rgba(32,32,34,0.98)_100%)]" />
+              <div className={heroGlowClassName} />
               <div className="relative">
                 <span className={badgeClassName}>DUOEYE HOME</span>
                 <h1 className="mt-5 max-w-4xl text-[clamp(2.4rem,4vw,4.6rem)] font-semibold tracking-tight text-apple-dark1 dark:text-white">
@@ -647,6 +660,7 @@ export default function LandingHero() {
 
           <div className="xl:col-span-5">
             <div className={`${sectionCardClassName} h-full p-6 sm:p-7`}>
+              <div aria-hidden="true" className={overviewGlowClassName} />
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-semibold text-apple-dark1 dark:text-white">预览概览</div>
@@ -679,8 +693,9 @@ export default function LandingHero() {
           </div>
         </section>
 
-        <section id="features" className="deferred-section mt-6">
+        <section id="features" className={anchorSectionClassName}>
           <div className={`${sectionCardClassName} p-7 sm:p-8`}>
+            <div aria-hidden="true" className={featuresGlowClassName} />
             <div className="max-w-3xl">
               <span className={badgeClassName}>FEATURES</span>
               <h2 className="mt-4 text-[clamp(1.9rem,3vw,3rem)] font-semibold tracking-tight text-apple-dark1 dark:text-white">
@@ -712,8 +727,9 @@ export default function LandingHero() {
           </div>
         </section>
 
-        <section ref={previewSectionRef} id="preview" className="deferred-section mt-6">
+        <section ref={previewSectionRef} id="preview" className={anchorSectionClassName}>
           <div className={`${sectionCardClassName} p-4 sm:p-6`}>
+            <div aria-hidden="true" className={previewGlowClassName} />
             {shouldRenderPreview ? (
               <Suspense
                 fallback={
@@ -745,8 +761,9 @@ export default function LandingHero() {
           </div>
         </section>
 
-        <section id="faq" className="deferred-section mt-6">
+        <section id="faq" className={anchorSectionClassName}>
           <div className={`${sectionCardClassName} p-7 sm:p-8`}>
+            <div aria-hidden="true" className={faqGlowClassName} />
             <div className="max-w-2xl">
               <span className={badgeClassName}>FAQ</span>
               <h2 className="mt-4 text-[clamp(1.8rem,2.8vw,2.8rem)] font-semibold tracking-tight text-apple-dark1 dark:text-white">

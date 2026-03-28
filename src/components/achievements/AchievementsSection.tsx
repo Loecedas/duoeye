@@ -135,6 +135,7 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
 
   return (
     <div className="screenshot-solid-surface relative overflow-hidden rounded-apple-xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] min-[768px]:max-[1023px]:mx-auto min-[768px]:max-[1023px]:max-w-[860px] min-[768px]:max-[1279px]:p-4 dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,200,0,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,200,0,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.14),transparent_46%)]" />
       <div className="mb-4 flex items-center justify-between min-[768px]:max-[1279px]:mb-3">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/80 bg-white/90 shadow-[0_6px_16px_rgba(15,23,42,0.05)] min-[768px]:max-[1279px]:h-8 min-[768px]:max-[1279px]:w-8 min-[768px]:max-[1279px]:rounded-[18px] dark:border-white/10 dark:bg-white/8">

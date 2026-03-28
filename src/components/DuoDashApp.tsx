@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { UserData } from '../types';
 import { Component, type ErrorInfo } from 'react';
-import { toPng } from 'html-to-image';
+import { toCanvas } from 'html-to-image';
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
 import AchievementsSection from './achievements/AchievementsSection';
@@ -26,6 +26,9 @@ import {
 
 const USERNAME_STORAGE_KEY = 'duoeye_username';
 const USERDATA_STORAGE_KEY = 'duoeye_userdata';
+const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
+const MAX_SCREENSHOT_CANVAS_PIXELS = 12_000_000;
+const SCREENSHOT_BASE_PIXEL_RATIO = 1.6;
 
 interface DuoDashAppProps {
   initialUsername?: string;
@@ -39,6 +42,10 @@ function getMonthlyYears(data: Array<{ date: string; xp: number; time?: number }
   return Array.from(new Set(data.map((item) => item.date.slice(0, 4))))
     .filter((year) => /^\d{4}$/.test(year))
     .sort((a, b) => Number(b) - Number(a));
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
 
 type WeeklyRangeMode = 'week' | 'recent7';
@@ -92,6 +99,7 @@ interface DashboardCardProps {
   badge?: string;
   badgeClassName?: string;
   actions?: ReactNode;
+  glowClassName?: string;
   className?: string;
   children: ReactNode;
 }
@@ -110,11 +118,18 @@ interface DashboardSectionsProps {
   animated?: boolean;
 }
 
+interface ScreenshotFile {
+  blob: Blob;
+  extension: 'png' | 'jpg';
+}
+
 const surfaceClassName =
   'render-isolate screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none';
 
 const headerBadgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/20 dark:bg-white/16 dark:text-white/85';
+const pageGlowBackgroundClassName =
+  'absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.08),transparent_28%),linear-gradient(180deg,#fbfbfd_0%,#f5f5f7_46%,#f7f7fa_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.1),transparent_26%),linear-gradient(180deg,rgba(20,20,22,0.98)_0%,rgba(28,28,30,0.96)_48%,rgba(18,18,20,1)_100%)]';
 
 function getHeaderActionClassName(isActive: boolean): string {
   return `inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
@@ -157,6 +172,7 @@ function DashboardCard({
   badge,
   badgeClassName,
   actions,
+  glowClassName,
   className = '',
   children,
 }: DashboardCardProps) {
@@ -164,7 +180,9 @@ function DashboardCard({
     <section data-screenshot-lock="true" className={`group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)] ${className}`}>
       <div
         aria-hidden="true"
-        className="screenshot-soft-glow pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.58),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.04),transparent_30%)]"
+        className={`screenshot-soft-glow pointer-events-none absolute inset-0 ${
+          glowClassName || 'bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.58),transparent_46%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.04),transparent_42%)] dark:bg-none'
+        }`}
       />
 
       <div className="relative flex h-full min-h-[260px] flex-col p-6">
@@ -254,6 +272,7 @@ function DashboardSections({
               icon="📈"
               title="本周经验"
               subtitle={weeklyXpRangeMode === 'week' ? '查看本周每日 XP 分布' : '观察最近 7 天的 XP 变化'}
+              glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(132,204,22,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(132,204,22,0.12),transparent_46%)]"
               actions={<WeeklyRangeActions value={weeklyXpRangeMode} onChange={onSelectWeeklyXpRangeMode} />}
             >
               <WeeklyChart data={weeklyXpData} />
@@ -263,6 +282,7 @@ function DashboardSections({
               icon="⏱"
               title="本周学习时间"
               subtitle={weeklyTimeRangeMode === 'week' ? '查看本周每日学习投入' : '查看最近 7 天的学习投入'}
+              glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.14),transparent_46%)]"
               actions={<WeeklyRangeActions value={weeklyTimeRangeMode} onChange={onSelectWeeklyTimeRangeMode} />}
             >
               <WeeklyTimeChart data={weeklyTimeData} />
@@ -272,6 +292,7 @@ function DashboardSections({
               icon="🗓"
               title="月度经验对比"
               subtitle="支持查看指定年份和近 12 个月"
+              glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.1),transparent_46%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.16),transparent_44%)]"
               className="xl:col-span-2"
               actions={
                 <div className="flex flex-wrap items-center gap-2">
@@ -307,6 +328,7 @@ function DashboardSections({
               icon="📊"
               title="年度经验对比"
               subtitle="按年份查看累计 XP"
+              glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(165,114,247,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(192,132,252,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(165,114,247,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(192,132,252,0.14),transparent_46%)]"
               badge="历史"
               badgeClassName="inline-flex items-center rounded-full bg-[#a572f7]/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-[#7b4bc2] dark:bg-[#a572f7]/15 dark:text-[#d6b8ff]"
             >
@@ -317,6 +339,7 @@ function DashboardSections({
               icon="⌛"
               title="年度学习时间"
               subtitle="按年份查看累计学习时长"
+              glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(255,150,0,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,150,0,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.14),transparent_46%)]"
               badge="分钟"
               badgeClassName="inline-flex items-center rounded-full bg-[#ff9600]/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-[#c47505] dark:bg-[#ff9600]/15 dark:text-[#ffd39a]"
             >
@@ -349,7 +372,7 @@ function DashboardSections({
       <section className={`deferred-section group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(15,23,42,0.1)] dark:hover:shadow-[0_22px_42px_rgba(0,0,0,0.28)] ${animationClass}`} style={animated ? { animationDelay: '0.32s' } : undefined}>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.32),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(28,176,246,0.06),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(28,176,246,0.1),transparent_28%)]"
+          className="pointer-events-none absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.08),transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.18),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.14),transparent_42%)]"
         />
         <div className="relative p-6">
           <RenderBoundary label="学习热力图">
@@ -544,10 +567,11 @@ export default function DuoDashApp({
     return `duoeye-${safeName}-${Date.now()}`;
   }
 
-  function downloadDataUrl(dataUrl: string, fileName: string): void {
+  function downloadScreenshotFile(file: ScreenshotFile, fileName: string): void {
+    const objectUrl = URL.createObjectURL(file.blob);
     const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `${fileName}.png`;
+    link.href = objectUrl;
+    link.download = `${fileName}.${file.extension}`;
     link.target = '_blank';
     link.rel = 'noopener';
     document.body.appendChild(link);
@@ -557,9 +581,11 @@ export default function DuoDashApp({
     window.setTimeout(() => {
       const isLikelyMobileBrowser = window.innerWidth < 1024 || navigator.maxTouchPoints > 0;
       if (isLikelyMobileBrowser && document.visibilityState === 'visible') {
-        window.open(dataUrl, '_blank', 'noopener,noreferrer');
+        window.open(objectUrl, '_blank', 'noopener,noreferrer');
       }
     }, 160);
+
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }
 
   function waitForStableFrame(delayMs = 0): Promise<void> {
@@ -620,6 +646,72 @@ export default function DuoDashApp({
     };
   }
 
+  function canvasToBlob(canvas: HTMLCanvasElement, type: 'image/png' | 'image/jpeg', quality?: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+          return;
+        }
+
+        reject(new Error('截图导出失败'));
+      }, type, quality);
+    });
+  }
+
+  function createScaledCanvas(sourceCanvas: HTMLCanvasElement, scale: number): HTMLCanvasElement {
+    if (scale === 1) return sourceCanvas;
+
+    const width = Math.max(1, Math.round(sourceCanvas.width * scale));
+    const height = Math.max(1, Math.round(sourceCanvas.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('截图导出失败');
+    }
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(sourceCanvas, 0, 0, width, height);
+    return canvas;
+  }
+
+  function getScreenshotPixelRatio(captureWidth: number, captureHeight: number): number {
+    const viewportRatio = Math.max(window.devicePixelRatio || 1, 1);
+    const preferredRatio = Math.min(viewportRatio, SCREENSHOT_BASE_PIXEL_RATIO);
+    const area = Math.max(captureWidth * captureHeight, 1);
+    const areaLimitedRatio = Math.sqrt(MAX_SCREENSHOT_CANVAS_PIXELS / area);
+    return clamp(Math.min(preferredRatio, areaLimitedRatio), 1, SCREENSHOT_BASE_PIXEL_RATIO);
+  }
+
+  async function exportScreenshotWithinLimit(sourceCanvas: HTMLCanvasElement): Promise<ScreenshotFile> {
+    const basePng = await canvasToBlob(sourceCanvas, 'image/png');
+    if (basePng.size <= MAX_SCREENSHOT_BYTES) {
+      return { blob: basePng, extension: 'png' };
+    }
+
+    const estimatedScale = clamp(Math.sqrt(MAX_SCREENSHOT_BYTES / basePng.size) * 0.96, 0.45, 0.92);
+    const scaledCanvas = createScaledCanvas(sourceCanvas, estimatedScale);
+    const scaledPng = await canvasToBlob(scaledCanvas, 'image/png');
+    if (scaledPng.size <= MAX_SCREENSHOT_BYTES) {
+      return { blob: scaledPng, extension: 'png' };
+    }
+
+    const jpegBlob = await canvasToBlob(scaledCanvas, 'image/jpeg', 0.86);
+    if (jpegBlob.size <= MAX_SCREENSHOT_BYTES) {
+      return { blob: jpegBlob, extension: 'jpg' };
+    }
+
+    const fallbackScale = clamp(estimatedScale * 0.86, 0.36, 0.84);
+    const fallbackCanvas = createScaledCanvas(sourceCanvas, fallbackScale);
+    const fallbackBlob = await canvasToBlob(fallbackCanvas, 'image/jpeg', 0.78);
+
+    return { blob: fallbackBlob, extension: 'jpg' };
+  }
+
   async function handleScreenshot(): Promise<void> {
     if (!userData || !pageRef.current || isScreenshotting) return;
 
@@ -638,17 +730,18 @@ export default function DuoDashApp({
       const unlockScreenshotLayout = lockScreenshotLayout(pageNode);
       const captureWidth = Math.ceil(pageNode.getBoundingClientRect().width || window.innerWidth || 0);
       const captureHeight = Math.ceil(pageNode.scrollHeight);
-      let dataUrl = '';
+      const pixelRatio = getScreenshotPixelRatio(captureWidth, captureHeight);
+      let screenshotFile: ScreenshotFile | null = null;
 
       try {
-        dataUrl = await toPng(pageNode, {
+        const canvas = await toCanvas(pageNode, {
           cacheBust: true,
-          pixelRatio: 2,
+          pixelRatio,
           skipAutoScale: true,
           width: captureWidth,
           height: captureHeight,
-          canvasWidth: captureWidth * 2,
-          canvasHeight: captureHeight * 2,
+          canvasWidth: Math.round(captureWidth * pixelRatio),
+          canvasHeight: Math.round(captureHeight * pixelRatio),
           backgroundColor: root.classList.contains('dark') ? '#1c1c1e' : '#f5f5f7',
           filter: (domNode) => !(domNode instanceof HTMLElement && domNode.dataset.screenshotIgnore === 'true'),
           style: {
@@ -659,11 +752,16 @@ export default function DuoDashApp({
             minHeight: `${captureHeight}px`,
           },
         });
+        screenshotFile = await exportScreenshotWithinLimit(canvas);
       } finally {
         unlockScreenshotLayout();
       }
 
-      downloadDataUrl(dataUrl, fileName);
+      if (!screenshotFile) {
+        throw new Error('截图导出失败');
+      }
+
+      downloadScreenshotFile(screenshotFile, fileName);
     } catch (error) {
       console.error('Screenshot failed:', error);
       window.alert('截图失败：' + (error instanceof Error ? error.message : '请刷新后重试。'));
@@ -677,7 +775,7 @@ export default function DuoDashApp({
   if (loading) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_22%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_20%),linear-gradient(180deg,#f8f8fb_0%,#f2f4f7_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_20%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_20%),linear-gradient(180deg,#141416_0%,#1c1c1e_100%)]" />
+        <div className={pageGlowBackgroundClassName} />
         <div className="relative flex flex-col items-center gap-5 px-6">
           <AppIcon className="mb-3 h-32 w-32 animate-bounce sm:h-44 sm:w-44" />
           <div className="text-center">
@@ -692,7 +790,7 @@ export default function DuoDashApp({
   if (!userData) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_22%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_20%),linear-gradient(180deg,#f8f8fb_0%,#f2f4f7_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_20%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_20%),linear-gradient(180deg,#141416_0%,#1c1c1e_100%)]" />
+        <div className={pageGlowBackgroundClassName} />
         <div className="relative text-center">
           <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[30px] border border-white/80 bg-white/88 shadow-[0_14px_32px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/8">
             <span className="text-5xl">📊</span>
@@ -717,7 +815,7 @@ export default function DuoDashApp({
 
   return (
     <div ref={pageRef} data-screenshot-root="true" data-screenshot-lock="true" className="relative min-h-screen overflow-x-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
-      <div className="screenshot-soft-glow pointer-events-none absolute inset-x-0 top-0 h-[360px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_22%),linear-gradient(180deg,#fbfbfd_0%,rgba(245,245,247,0.72)_44%,transparent_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.1),transparent_22%),radial-gradient(circle_at_top_right,rgba(28,176,246,0.1),transparent_22%),linear-gradient(180deg,rgba(28,28,30,0.94)_0%,rgba(28,28,30,0.72)_42%,transparent_100%)]" />
+      <div className={`screenshot-soft-glow pointer-events-none ${pageGlowBackgroundClassName}`} />
 
       {isScreenshotting ? (
         <div data-screenshot-ignore="true" className="fixed right-6 top-24 z-[70] rounded-[24px] border border-black/5 bg-white px-5 py-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-[rgba(28,28,30,0.96)]">
