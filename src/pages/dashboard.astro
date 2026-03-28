@@ -1,8 +1,31 @@
 ---
 import DuoDashApp from '../components/DuoDashApp';
 import Layout from '../layouts/Layout.astro';
+import {
+  DuolingoDataError,
+  getDuolingoUserData,
+  normalizeUsername,
+} from '../services/duolingoDataLoader';
+import type { UserData } from '../types';
+
+const initialUsername = normalizeUsername(Astro.url.searchParams.get('username'));
+let initialUserData: UserData | null = null;
+let initialLoadError = '';
+
+if (initialUsername) {
+  try {
+    initialUserData = await getDuolingoUserData(initialUsername);
+  } catch (error) {
+    initialLoadError = error instanceof DuolingoDataError ? error.message : '获取学习数据失败';
+  }
+}
 ---
 
 <Layout title="DuoEye - 仪表盘">
-  <DuoDashApp client:only="react" />
+  <DuoDashApp
+    client:only="react"
+    initialUsername={initialUsername}
+    initialUserData={initialUserData}
+    initialLoadError={initialLoadError}
+  />
 </Layout>

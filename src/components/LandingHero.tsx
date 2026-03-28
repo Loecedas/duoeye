@@ -11,6 +11,9 @@ import {
   type ThemeMode,
 } from '../utils/theme';
 
+const USERNAME_STORAGE_KEY = 'duoeye_username';
+const USERDATA_STORAGE_KEY = 'duoeye_userdata';
+
 const heatmapXpScale = [0, 8, 22, 38, 60];
 const heatmapTimeScale = [0, 4, 9, 16, 28];
 
@@ -315,9 +318,11 @@ export default function LandingHero() {
     if (!trimmed) return;
 
     setLoading(true);
-    sessionStorage.setItem('duoeye_username', trimmed);
-    sessionStorage.removeItem('duoeye_userdata');
-    window.location.href = '/dashboard';
+    sessionStorage.setItem(USERNAME_STORAGE_KEY, trimmed);
+    sessionStorage.removeItem(USERDATA_STORAGE_KEY);
+    localStorage.setItem(USERNAME_STORAGE_KEY, trimmed);
+    localStorage.removeItem(USERDATA_STORAGE_KEY);
+    window.location.assign(`/dashboard?username=${encodeURIComponent(trimmed)}`);
   }
 
   function handleThemeChange(mode: ThemeMode) {

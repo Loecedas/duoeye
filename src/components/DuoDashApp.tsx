@@ -22,6 +22,15 @@ import {
   type ThemeMode,
 } from '../utils/theme';
 
+const USERNAME_STORAGE_KEY = 'duoeye_username';
+const USERDATA_STORAGE_KEY = 'duoeye_userdata';
+
+interface DuoDashAppProps {
+  initialUsername?: string;
+  initialUserData?: UserData | null;
+  initialLoadError?: string;
+}
+
 function getMonthlyYears(data: Array<{ date: string; xp: number; time?: number }> | undefined): string[] {
   if (!data?.length) return [];
 
@@ -296,15 +305,19 @@ function DashboardSections({
   );
 }
 
-export default function DuoDashApp() {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [username, setUsername] = useState('');
-  const [loadError, setLoadError] = useState('');
+export default function DuoDashApp({
+  initialUsername = '',
+  initialUserData = null,
+  initialLoadError = '',
+}: DuoDashAppProps) {
+  const [userData, setUserData] = useState<UserData | null>(initialUserData);
+  const [username, setUsername] = useState(initialUsername);
+  const [loadError, setLoadError] = useState(initialLoadError);
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [isScreenshotting, setIsScreenshotting] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialUserData && !initialLoadError && !initialUsername);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedMonthlyYear, setSelectedMonthlyYear] = useState('');
   const [monthlyViewMode, setMonthlyViewMode] = useState<'year' | 'rolling12'>('rolling12');
@@ -320,12 +333,45 @@ export default function DuoDashApp() {
     const timer = window.setTimeout(() => setIsLoaded(true), 120);
 
     async function bootstrap(): Promise<void> {
-      const storedUsername = sessionStorage.getItem('duoeye_username')?.trim() || '';
-      const storedUserData = sessionStorage.getItem('duoeye_userdata');
+      const urlUsername = new URLSearchParams(window.location.search).get('username')?.trim() || '';
+      const sessionUsername = sessionStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
+      const localUsername = localStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
+      const storedUsername = sessionUsername || localUsername;
+      const activeUsername = urlUsername || storedUsername;
+      const sessionUserData = sessionStorage.getItem(USERDATA_STORAGE_KEY);
+      const localUserData = localStorage.getItem(USERDATA_STORAGE_KEY);
+      const storedUserData = sessionUserData || localUserData;
+      const hasServerData = Boolean(initialUserData);
+      const hasServerError = Boolean(initialLoadError);
 
-      setUsername(storedUsername);
+      setUsername(activeUsername);
 
-      if (storedUserData) {
+      if (activeUsername) {
+        sessionStorage.setItem(USERNAME_STORAGE_KEY, activeUsername);
+        localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername);
+      }
+
+      if (hasServerData && initialUserData) {
+        if (isCancelled) return;
+
+        setUserData(initialUserData);
+        setLoadError('');
+        setLoading(false);
+        sessionStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(initialUserData));
+        localStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(initialUserData));
+        return;
+      }
+
+      if (hasServerError) {
+        if (isCancelled) return;
+
+        setUserData(null);
+        setLoadError(initialLoadError);
+        setLoading(false);
+        return;
+      }
+
+      if (storedUserData && (!urlUsername || urlUsername === storedUsername)) {
         try {
           if (isCancelled) return;
 
@@ -334,11 +380,12 @@ export default function DuoDashApp() {
           setLoading(false);
           return;
         } catch {
-          sessionStorage.removeItem('duoeye_userdata');
+          sessionStorage.removeItem(USERDATA_STORAGE_KEY);
+          localStorage.removeItem(USERDATA_STORAGE_KEY);
         }
       }
 
-      if (!storedUsername) {
+      if (!activeUsername) {
         if (isCancelled) return;
 
         setLoading(false);
@@ -346,10 +393,9 @@ export default function DuoDashApp() {
       }
 
       try {
-        const response = await fetch('/api/data', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: storedUsername }),
+        const response = await fetch(`/api/data?username=${encodeURIComponent(activeUsername)}`, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
           signal: controller.signal,
         });
 
@@ -362,11 +408,13 @@ export default function DuoDashApp() {
 
         setUserData(result.data);
         setLoadError('');
-        sessionStorage.setItem('duoeye_userdata', JSON.stringify(result.data));
+        sessionStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(result.data));
+        localStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(result.data));
       } catch (error) {
         if (controller.signal.aborted || isCancelled) return;
 
-        sessionStorage.removeItem('duoeye_userdata');
+        sessionStorage.removeItem(USERDATA_STORAGE_KEY);
+        localStorage.removeItem(USERDATA_STORAGE_KEY);
         setUserData(null);
         setLoadError(error instanceof Error ? error.message : '获取学习数据失败');
       } finally {
@@ -649,9 +697,11 @@ export default function DuoDashApp() {
         onToggleAnimations={toggleAnimations}
         onScreenshot={handleScreenshot}
         onLogout={() => {
-          sessionStorage.removeItem('duoeye_username');
-          sessionStorage.removeItem('duoeye_userdata');
-          window.location.href = '/';
+          sessionStorage.removeItem(USERNAME_STORAGE_KEY);
+          sessionStorage.removeItem(USERDATA_STORAGE_KEY);
+          localStorage.removeItem(USERNAME_STORAGE_KEY);
+          localStorage.removeItem(USERDATA_STORAGE_KEY);
+          window.location.assign('/');
         }}
       />
 
