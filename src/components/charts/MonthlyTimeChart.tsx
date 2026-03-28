@@ -8,16 +8,15 @@ interface MonthlyTimeChartProps {
 export default function MonthlyTimeChart({ data }: MonthlyTimeChartProps) {
   const monthlyData = useMemo(() => {
     const monthMap = new Map<string, number>();
-    const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    const months = ['1鏈?', '2鏈?', '3鏈?', '4鏈?', '5鏈?', '6鏈?', '7鏈?', '8鏈?', '9鏈?', '10鏈?', '11鏈?', '12鏈?'];
     const today = new Date();
-    
-    for (let i = 11; i >= 0; i--) {
+
+    for (let i = 11; i >= 0; i -= 1) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       monthMap.set(months[d.getMonth()], 0);
     }
-    
-    data.forEach(item => {
+
+    data.forEach((item) => {
       const d = new Date(item.date);
       const monthKey = months[d.getMonth()];
       if (monthMap.has(monthKey)) {
@@ -35,7 +34,7 @@ export default function MonthlyTimeChart({ data }: MonthlyTimeChartProps) {
   const formattedTime = useMemo(() => {
     const hours = Math.floor(totalTime / 60);
     const mins = totalTime % 60;
-    return hours > 0 ? `${hours}小时${mins}分钟` : `${mins}分钟`;
+    return hours > 0 ? `${hours}灏忔椂${mins}鍒嗛挓` : `${mins}鍒嗛挓`;
   }, [totalTime]);
 
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -52,19 +51,19 @@ export default function MonthlyTimeChart({ data }: MonthlyTimeChartProps) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#334155' : '#e5e5e5'} />
-            <XAxis 
-              dataKey="date" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fill: isDark ? '#cbd5e1' : '#6b7280', fontSize: 10 }} 
-              dy={5} 
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: isDark ? '#cbd5e1' : '#6b7280', fontSize: 10 }}
+              dy={5}
             />
-            <YAxis 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fill: isDark ? '#cbd5e1' : '#6b7280', fontSize: 10 }} 
-              width={40} 
-              domain={[0, 'auto']} 
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: isDark ? '#cbd5e1' : '#6b7280', fontSize: 10 }}
+              width={40}
+              domain={[0, 'auto']}
             />
             <Tooltip
               contentStyle={{
@@ -73,7 +72,10 @@ export default function MonthlyTimeChart({ data }: MonthlyTimeChartProps) {
                 boxShadow: isDark ? '0 10px 24px rgba(0,0,0,0.45)' : '0 4px 12px rgba(0,0,0,0.1)',
                 backgroundColor: isDark ? '#0f172a' : '#ffffff',
               }}
-              formatter={(value: number) => [`${value} 分钟`, '学习时间']}
+              formatter={(value) => {
+                const numericValue = typeof value === 'number' ? value : Number(value ?? 0);
+                return [`${numericValue} 鍒嗛挓`, '瀛︿範鏃堕棿'] as [string, string];
+              }}
             />
             <Area
               type="monotone"
@@ -87,8 +89,8 @@ export default function MonthlyTimeChart({ data }: MonthlyTimeChartProps) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <div className="text-center text-xs text-apple-gray6 dark:text-slate-400 pb-3">
-        近12个月学习 <span className="font-bold text-duo-purple">{formattedTime}</span>
+      <div className="pb-3 text-center text-xs text-apple-gray6 dark:text-slate-400">
+        杩?2涓湀瀛︿範 <span className="font-bold text-duo-purple">{formattedTime}</span>
       </div>
     </div>
   );

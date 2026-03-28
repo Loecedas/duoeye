@@ -21,7 +21,7 @@ interface MonthlyChartPoint {
   xp: number;
 }
 
-const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+const MONTH_LABELS = ['1鏈?', '2鏈?', '3鏈?', '4鏈?', '5鏈?', '6鏈?', '7鏈?', '8鏈?', '9鏈?', '10鏈?', '11鏈?', '12鏈?'];
 
 function formatRollingMonthLabel(date: Date): string {
   return `${String(date.getFullYear()).slice(-2)}/${date.getMonth() + 1}`;
@@ -29,7 +29,7 @@ function formatRollingMonthLabel(date: Date): string {
 
 function formatRollingMonthLabelForNarrowScreen(value: string): string {
   const month = value.split('/')[1];
-  return month ? `${month}月` : value;
+  return month ? `${month}鏈坄` : value;
 }
 
 export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: MonthlyChartProps) {
@@ -105,7 +105,7 @@ export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: 
   if (data.length === 0) {
     return (
       <div className="flex h-full min-h-[220px] w-full items-center justify-center text-apple-gray6">
-        暂无月度数据
+        鏆傛棤鏈堝害鏁版嵁
       </div>
     );
   }
@@ -142,10 +142,13 @@ export default function MonthlyChart({ data, selectedYear, viewMode = 'year' }: 
               const entry = payload?.[0]?.payload as MonthlyChartPoint | undefined;
               return entry?.date || '';
             }}
-            formatter={(value: number) => [
-              `${value.toLocaleString()} XP`,
-              viewMode === 'rolling12' ? '最近 12 个月' : (selectedYear || '当年'),
-            ]}
+            formatter={(value) => {
+              const numericValue = typeof value === 'number' ? value : Number(value ?? 0);
+              return [
+                `${numericValue.toLocaleString()} XP`,
+                viewMode === 'rolling12' ? '鏈€杩?12 涓湀' : (selectedYear || '褰撳勾'),
+              ] as [string, string];
+            }}
             contentStyle={{
               borderRadius: '12px',
               border: isDark ? '1px solid rgba(71, 85, 105, 0.8)' : 'none',

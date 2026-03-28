@@ -29,7 +29,7 @@ interface HeatmapDay {
   time?: number;
 }
 
-const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+const MONTHS = ['1 月', '2 月', '3 月', '4 月', '5 月', '6 月', '7 月', '8 月', '9 月', '10 月', '11 月', '12 月'];
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
 function toLocalDateStr(date: Date): string {
@@ -88,7 +88,7 @@ export default function HeatmapChart({
   useEffect(() => {
     if (forceViewMode) return;
 
-    let resizeTimer: ReturnType<typeof setTimeout>;
+    let resizeTimer: number | undefined;
 
     function applyResponsiveMode(): void {
       const width = window.innerWidth;
@@ -107,7 +107,9 @@ export default function HeatmapChart({
     }
 
     function handleResize(): void {
-      window.clearTimeout(resizeTimer);
+      if (resizeTimer !== undefined) {
+        window.clearTimeout(resizeTimer);
+      }
       resizeTimer = window.setTimeout(applyResponsiveMode, 150);
     }
 
@@ -116,7 +118,9 @@ export default function HeatmapChart({
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.clearTimeout(resizeTimer);
+      if (resizeTimer !== undefined) {
+        window.clearTimeout(resizeTimer);
+      }
     };
   }, [forceViewMode]);
 
@@ -357,7 +361,7 @@ export default function HeatmapChart({
                   className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     quarter === selectedQuarter
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
                   }`}
                 >
                   Q{quarter}
@@ -375,7 +379,7 @@ export default function HeatmapChart({
                   className={`inline-flex min-w-[76px] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
                   }`}
                 >
                   {half === 1 ? '上半年' : '下半年'}
@@ -392,7 +396,7 @@ export default function HeatmapChart({
                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                   year === selectedYear
                     ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                    : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                    : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
                 }`}
               >
                 {year}
@@ -409,7 +413,7 @@ export default function HeatmapChart({
                   className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     quarter === selectedQuarter
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
                   }`}
                 >
                   Q{quarter}
@@ -427,7 +431,7 @@ export default function HeatmapChart({
                   className={`inline-flex min-w-[76px] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
                   }`}
                 >
                   {half === 1 ? '上半年' : '下半年'}
@@ -445,7 +449,7 @@ export default function HeatmapChart({
                   className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     quarter === selectedQuarter
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
                   }`}
                 >
                   Q{quarter}
@@ -463,7 +467,7 @@ export default function HeatmapChart({
                   className={`inline-flex min-w-[76px] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-transparent dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
                   }`}
                 >
                   {half === 1 ? '上半年' : '下半年'}
@@ -489,7 +493,7 @@ export default function HeatmapChart({
           </div>
 
           <div
-            className={`render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)] ${shouldUseCompactGrid ? 'gap-[1px] p-2.5' : 'gap-[1px] p-3 lg:gap-[2px]'}`}
+            className={`render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-transparent dark:bg-[rgba(44,44,46,0.9)] ${shouldUseCompactGrid ? 'gap-[1px] p-2.5' : 'gap-[1px] p-3 lg:gap-[2px]'}`}
             style={{
               gridTemplateColumns: shouldUseCompactGrid ? `12px repeat(${weeks.length}, minmax(0, 1fr))` : `16px repeat(${weeks.length}, minmax(12px, 1fr))`,
               minWidth: shouldUseCompactGrid ? undefined : `${gridMinWidth}px`,
@@ -537,7 +541,7 @@ export default function HeatmapChart({
                 ref={tooltipRef}
                 className={`fixed z-[9999] w-[190px] rounded-[22px] p-3 ${
                   isDark
-                    ? 'border border-white/10 bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(36,36,38,0.92))] text-white shadow-[0_24px_52px_rgba(0,0,0,0.34)]'
+                    ? 'border border-transparent bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(36,36,38,0.92))] text-white shadow-[0_24px_52px_rgba(0,0,0,0.34)]'
                     : 'border border-black/6 bg-[rgba(250,251,253,0.9)] text-apple-dark1 shadow-[0_18px_38px_rgba(15,23,42,0.12)]'
                 }`}
                 style={{
@@ -552,7 +556,7 @@ export default function HeatmapChart({
                   onClick={() => setTooltip(null)}
                     className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm transition-colors ${
                       isDark
-                        ? 'border border-white/10 bg-[rgba(72,72,74,0.98)] text-apple-dark6 hover:text-white'
+                        ? 'border border-transparent bg-[rgba(72,72,74,0.98)] text-apple-dark6 hover:text-white'
                         : 'border border-black/6 bg-[rgba(255,255,255,0.9)] text-apple-gray6 hover:text-apple-dark1'
                     }`}
                 >
@@ -625,7 +629,7 @@ export default function HeatmapChart({
               document.body,
             )}
 
-          <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-3 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-white/10 dark:bg-[rgba(44,44,46,0.88)] dark:text-apple-dark6">
+          <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-3 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-transparent dark:bg-[rgba(44,44,46,0.88)] dark:text-apple-dark6">
             <div>
               {getViewRangeLabel(viewMode, selectedYear, selectedQuarter, selectedHalf)}，学习{' '}
               <span className="font-bold" style={{ color: DuoColors.featherGreen }}>

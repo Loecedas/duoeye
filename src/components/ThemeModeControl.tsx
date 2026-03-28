@@ -7,7 +7,7 @@ interface ThemeModeControlProps {
 }
 
 const shellClassName =
-  'flex h-11 items-center gap-1 rounded-2xl border border-black/5 bg-white/88 p-1 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] dark:border-white/15 dark:bg-white/12 dark:text-white/72';
+  'flex h-11 items-center gap-1 rounded-2xl border border-black/5 bg-white/88 p-1 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/12 dark:text-white/72';
 
 function SunIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (

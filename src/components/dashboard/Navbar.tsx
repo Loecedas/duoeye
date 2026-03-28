@@ -17,7 +17,11 @@ interface NavbarProps {
 }
 
 const iconButtonClassName =
-  'flex h-10 w-10 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white sm:h-11 sm:w-11';
+  'flex h-10 w-10 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 hover:text-apple-dark1 dark:border-transparent dark:bg-white/12 dark:text-white/72 dark:hover:text-white min-[768px]:h-10 min-[768px]:w-10 min-[1024px]:h-11 min-[1024px]:w-11';
+const compactMenuActionClassName =
+  'flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm font-medium text-apple-dark1 transition-[background-color,transform] duration-200 hover:bg-black/[0.04] dark:text-white dark:hover:bg-white/[0.08]';
+const compactThemeOptionClassName =
+  'flex h-11 items-center justify-center rounded-[16px] border border-black/5 bg-white/88 text-apple-dark1 transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] dark:border-transparent dark:bg-white/10 dark:text-white';
 
 function MenuIcon({ open }: { open: boolean }) {
   return (
@@ -74,15 +78,15 @@ function ExitIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
 function SunIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <circle cx="12" cy="12" r="4" strokeWidth="1.8" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="M12 2.5V5" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="M12 19v2.5" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="M4.93 4.93 6.7 6.7" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="m17.3 17.3 1.77 1.77" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="M2.5 12H5" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="M19 12h2.5" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="m4.93 19.07 1.77-1.77" />
-      <path strokeLinecap="round" strokeWidth="1.8" d="m17.3 6.7 1.77-1.77" />
+      <circle cx="12" cy="12" r="4" strokeWidth={1.8} />
+      <path strokeLinecap="round" strokeWidth={1.8} d="M12 2.5V5" />
+      <path strokeLinecap="round" strokeWidth={1.8} d="M12 19v2.5" />
+      <path strokeLinecap="round" strokeWidth={1.8} d="M4.93 4.93 6.7 6.7" />
+      <path strokeLinecap="round" strokeWidth={1.8} d="m17.3 17.3 1.77 1.77" />
+      <path strokeLinecap="round" strokeWidth={1.8} d="M2.5 12H5" />
+      <path strokeLinecap="round" strokeWidth={1.8} d="M19 12h2.5" />
+      <path strokeLinecap="round" strokeWidth={1.8} d="m4.93 19.07 1.77-1.77" />
+      <path strokeLinecap="round" strokeWidth={1.8} d="m17.3 6.7 1.77-1.77" />
     </svg>
   );
 }
@@ -98,19 +102,11 @@ function MoonIcon({ className = 'h-4 w-4' }: { className?: string }) {
 function SystemIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="12" rx="2" strokeWidth="1.8" />
-      <path d="M8 20h8" strokeLinecap="round" strokeWidth="1.8" />
-      <path d="M12 16v4" strokeLinecap="round" strokeWidth="1.8" />
+      <rect x="3" y="4" width="18" height="12" rx="2" strokeWidth={1.8} />
+      <path d="M8 20h8" strokeLinecap="round" strokeWidth={1.8} />
+      <path d="M12 16v4" strokeLinecap="round" strokeWidth={1.8} />
     </svg>
   );
-}
-
-function getThemeMenuButtonClassName(active: boolean): string {
-  return `flex h-[36px] w-full items-center justify-center rounded-[16px] transition-[transform,box-shadow,color,background-color] duration-200 sm:h-[40px] ${
-    active
-      ? 'bg-[#111827] text-white shadow-[0_10px_22px_rgba(17,24,39,0.16)] dark:bg-white dark:text-apple-dark1'
-      : 'text-apple-dark1 hover:bg-black/[0.04] dark:text-white dark:hover:bg-white/[0.08]'
-  }`;
 }
 
 export default function Navbar({
@@ -192,24 +188,26 @@ export default function Navbar({
     <nav data-floating-navbar="true" className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
       <div
         data-screenshot-lock="true"
-        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5 min-[768px]:flex-row min-[768px]:items-center min-[768px]:justify-between ${
+        className={`screenshot-solid-panel screenshot-disable-blur mx-auto flex max-w-[1560px] flex-col gap-3 overflow-visible rounded-[28px] border border-white/68 px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-5 min-[768px]:flex-row min-[768px]:items-center min-[768px]:justify-between min-[768px]:gap-4 dark:border-transparent ${
           isScrolled
-            ? 'border-white/78 bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-[rgba(44,44,46,0.88)]'
-            : 'border-white/68 bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:border-white/12 dark:bg-[rgba(44,44,46,0.82)]'
+            ? 'bg-[rgba(255,255,255,0.92)] shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:bg-[rgba(44,44,46,0.88)]'
+            : 'bg-[rgba(255,255,255,0.9)] shadow-[0_6px_16px_rgba(15,23,42,0.04)] dark:bg-[rgba(44,44,46,0.82)]'
         }`}
       >
-        <div className="flex min-w-0 items-center justify-between gap-3 overflow-visible py-1">
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-3 overflow-visible py-1">
           <a href="/" className="group flex min-w-0 items-center gap-3 overflow-visible py-1">
             <AppIcon className="h-11 w-11 shrink-0" />
             <div className="min-w-0">
               <div className="flex items-center gap-1 overflow-visible">
                 <DuoWordmark size="xs" className="shrink-0 max-w-full overflow-visible" />
-                <span className="hidden -mx-0.5 shrink-0 text-[11px] font-medium text-apple-gray6/70 dark:text-white/38 min-[768px]:inline">-</span>
-                <div className="hidden min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55 min-[768px]:block">
+                <span className="hidden shrink-0 text-[11px] font-medium text-apple-gray6/70 dark:text-white/38 min-[768px]:inline min-[1024px]:-mx-0.5">
+                  ·
+                </span>
+                <div className="hidden min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55 min-[768px]:block min-[768px]:max-w-[120px] min-[1024px]:max-w-[240px]">
                   @{username || 'duolingo'}
                 </div>
               </div>
-              <div className="min-w-0 truncate text-[11px] text-apple-gray6 dark:text-white/55 min-[768px]:hidden">
+              <div className="min-w-0 max-w-[140px] truncate text-[11px] text-apple-gray6 dark:text-white/55 min-[768px]:hidden sm:max-w-[220px]">
                 @{username || 'duolingo'}
               </div>
             </div>
@@ -218,21 +216,11 @@ export default function Navbar({
           <div className="flex items-center gap-2 min-[768px]:hidden">
             <button
               type="button"
-              onClick={onToggleAnimations}
-              className={iconButtonClassName}
-              title={animationsEnabled ? '关闭动效' : '开启动效'}
-              aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
-            >
-              {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
-            </button>
-
-            <button
-              type="button"
               onClick={onScreenshot}
               disabled={isScreenshotting}
               className={`${iconButtonClassName} disabled:cursor-not-allowed disabled:opacity-55`}
-              title={isScreenshotting ? '正在截图' : '截图'}
-              aria-label={isScreenshotting ? '正在截图' : '截图'}
+              title={isScreenshotting ? 'Capturing screenshot' : 'Capture screenshot'}
+              aria-label={isScreenshotting ? 'Capturing screenshot' : 'Capture screenshot'}
             >
               {isScreenshotting ? (
                 <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -244,38 +232,46 @@ export default function Navbar({
               )}
             </button>
 
-            <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
-              <ExitIcon className="h-4 w-4" />
-            </button>
-
             <div ref={themeMenuRef} className="relative">
               <button
                 type="button"
                 onClick={() => setIsThemeMenuOpen((current) => !current)}
                 className={iconButtonClassName}
-                title={isThemeMenuOpen ? '关闭主题菜单' : '打开主题菜单'}
-                aria-label={isThemeMenuOpen ? '关闭主题菜单' : '打开主题菜单'}
+                title={isThemeMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-label={isThemeMenuOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={isThemeMenuOpen}
               >
                 <MenuIcon open={isThemeMenuOpen} />
               </button>
 
               <div
-                className={`absolute right-0 top-[calc(100%+8px)] w-10 sm:w-11 transition-[opacity,transform] duration-200 ${
-                  isThemeMenuOpen ? 'pointer-events-auto opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-1'
+                className={`absolute right-0 top-[calc(100%+10px)] w-[220px] transition-[opacity,transform] duration-200 ${
+                  isThemeMenuOpen ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none -translate-y-1 opacity-0'
                 }`}
               >
-                <div className="w-full rounded-[20px] border border-white/75 bg-[rgba(255,255,255,0.94)] p-[2px] shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.96)]">
-                  <div className="flex flex-col gap-1">
+                <div className="rounded-[24px] border border-white/75 bg-[rgba(255,255,255,0.96)] p-2 shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:border-transparent dark:bg-[rgba(44,44,46,0.96)]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onToggleAnimations();
+                      setIsThemeMenuOpen(false);
+                    }}
+                    className={compactMenuActionClassName}
+                  >
+                    <span>Motion</span>
+                    {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
+                  </button>
+
+                  <div className="mt-1 grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => {
                         onThemeChange('light');
                         setIsThemeMenuOpen(false);
                       }}
-                      className={getThemeMenuButtonClassName(themeMode === 'light')}
-                      title="浅色"
-                      aria-label="浅色"
+                      className={`${compactThemeOptionClassName} ${themeMode === 'light' ? 'bg-[#111827] text-white shadow-[0_10px_22px_rgba(17,24,39,0.16)] dark:bg-white dark:text-apple-dark1' : ''}`}
+                      title="Light"
+                      aria-label="Light"
                     >
                       <SunIcon />
                     </button>
@@ -285,9 +281,9 @@ export default function Navbar({
                         onThemeChange('dark');
                         setIsThemeMenuOpen(false);
                       }}
-                      className={getThemeMenuButtonClassName(themeMode === 'dark')}
-                      title="深色"
-                      aria-label="深色"
+                      className={`${compactThemeOptionClassName} ${themeMode === 'dark' ? 'bg-[#111827] text-white shadow-[0_10px_22px_rgba(17,24,39,0.16)] dark:bg-white dark:text-apple-dark1' : ''}`}
+                      title="Dark"
+                      aria-label="Dark"
                     >
                       <MoonIcon />
                     </button>
@@ -297,9 +293,9 @@ export default function Navbar({
                         onThemeChange('system');
                         setIsThemeMenuOpen(false);
                       }}
-                      className={getThemeMenuButtonClassName(themeMode === 'system')}
-                      title="跟随系统"
-                      aria-label="跟随系统"
+                      className={`${compactThemeOptionClassName} ${themeMode === 'system' ? 'bg-[#111827] text-white shadow-[0_10px_22px_rgba(17,24,39,0.16)] dark:bg-white dark:text-apple-dark1' : ''}`}
+                      title="System"
+                      aria-label="System"
                     >
                       <div className="relative flex items-center justify-center">
                         <SystemIcon />
@@ -310,19 +306,31 @@ export default function Navbar({
                       </div>
                     </button>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onLogout();
+                      setIsThemeMenuOpen(false);
+                    }}
+                    className={`${compactMenuActionClassName} mt-1`}
+                  >
+                    <span>Exit</span>
+                    <ExitIcon className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="hidden items-center justify-end gap-2 min-[768px]:flex">
+        <div className="hidden shrink-0 items-center justify-end gap-2 min-[768px]:flex min-[1024px]:gap-2.5">
           <button
             type="button"
             onClick={onToggleAnimations}
             className={iconButtonClassName}
-            title={animationsEnabled ? '关闭动效' : '开启动效'}
-            aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
+            title={animationsEnabled ? '关闭动画' : '开启动画'}
+            aria-label={animationsEnabled ? '关闭动画' : '开启动画'}
           >
             {animationsEnabled ? <SparkleIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
           </button>
@@ -345,7 +353,9 @@ export default function Navbar({
             )}
           </button>
 
-          <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={onThemeChange} />
+          <div className="scale-[0.94] origin-right min-[1024px]:scale-100">
+            <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={onThemeChange} />
+          </div>
 
           <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
             <ExitIcon className="h-4 w-4" />
