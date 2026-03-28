@@ -6,6 +6,7 @@ interface HeatmapChartProps {
   data: { date: string; xp: number; time?: number }[];
   forceViewMode?: ViewMode;
   closeTooltipOnScroll?: boolean;
+  controlOrder?: 'landing' | 'dashboard';
 }
 
 type ViewMode = 'quarter' | 'half' | 'year';
@@ -61,13 +62,19 @@ function getViewRangeLabel(viewMode: ViewMode, selectedYear: number, selectedQua
   return `${selectedYear} 全年`;
 }
 
-export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll = false }: HeatmapChartProps) {
+export default function HeatmapChart({
+  data,
+  forceViewMode,
+  closeTooltipOnScroll = false,
+  controlOrder = 'dashboard',
+}: HeatmapChartProps) {
   const now = new Date();
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedQuarter, setSelectedQuarter] = useState(Math.ceil((now.getMonth() + 1) / 3));
   const [selectedHalf, setSelectedHalf] = useState(now.getMonth() < 6 ? 1 : 2);
   const [viewMode, setViewMode] = useState<ViewMode>(forceViewMode || 'year');
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
   const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
   const [tooltipTransitionMs, setTooltipTransitionMs] = useState(180);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -111,6 +118,16 @@ export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll
       window.clearTimeout(resizeTimer);
     };
   }, [forceViewMode]);
+
+  useEffect(() => {
+    function syncCompactLayout(): void {
+      setIsCompactLayout(window.innerWidth <= 420);
+    }
+
+    syncCompactLayout();
+    window.addEventListener('resize', syncCompactLayout);
+    return () => window.removeEventListener('resize', syncCompactLayout);
+  }, []);
 
   useEffect(() => {
     if (!tooltip) return;
@@ -226,6 +243,8 @@ export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll
   const totalXp = useMemo(() => allDates.reduce((sum, item) => sum + Math.max(item.xp, 0), 0), [allDates]);
   const activeDays = useMemo(() => allDates.filter((item) => item.xp > 0).length, [allDates]);
   const gridMinWidth = useMemo(() => Math.max(320, weeks.length * 14 + 28), [weeks.length]);
+  const quarterControls = viewMode === 'quarter' ? [1, 2, 3, 4] : [];
+  const halfControls = viewMode === 'half' ? [1, 2] : [];
 
   const updateTooltipPosition = useCallback((dateStr: string, xp: number, time?: number, transitionMs = 180) => {
     const cell = document.querySelector(`[data-heatmap-date="${dateStr}"]`) as HTMLElement | null;
@@ -323,10 +342,10 @@ export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll
           <p className="mt-1 text-sm text-apple-gray6 dark:text-apple-dark6">按日期查看经验密度和学习频率</p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {viewMode === 'quarter' && (
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4].map((quarter) => (
+        <div className={`flex ${isCompactLayout ? 'w-full flex-col gap-2' : 'flex-wrap items-center justify-end gap-2'}`}>
+          {((controlOrder === 'landing' && isCompactLayout) || !isCompactLayout) && quarterControls.length > 0 && (
+            <div className={`flex ${isCompactLayout ? 'flex-wrap gap-1' : 'items-center gap-1'}`}>
+              {quarterControls.map((quarter) => (
                 <button
                   key={quarter}
                   onClick={() => setSelectedQuarter(quarter)}
@@ -342,9 +361,9 @@ export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll
             </div>
           )}
 
-          {viewMode === 'half' && (
-            <div className="flex items-center gap-1">
-              {[1, 2].map((half) => (
+          {((controlOrder === 'landing' && isCompactLayout) || !isCompactLayout) && halfControls.length > 0 && (
+            <div className={`flex ${isCompactLayout ? 'flex-wrap gap-1' : 'items-center gap-1'}`}>
+              {halfControls.map((half) => (
                 <button
                   key={half}
                   onClick={() => setSelectedHalf(half)}
@@ -360,25 +379,63 @@ export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll
             </div>
           )}
 
-          {sortedYears.map((year) => (
-            <button
-              key={year}
-              onClick={() => setSelectedYear(year)}
-               className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
-                year === selectedYear
-                  ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
-                  : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
-              }`}
-            >
-              {year}
-            </button>
-          ))}
+          <div className={`flex ${isCompactLayout ? 'flex-wrap gap-1' : 'items-center gap-1'}`}>
+            {sortedYears.map((year) => (
+              <button
+                key={year}
+                onClick={() => setSelectedYear(year)}
+                 className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+                  year === selectedYear
+                    ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
+                    : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                }`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+
+          {controlOrder === 'dashboard' && isCompactLayout && quarterControls.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {quarterControls.map((quarter) => (
+                <button
+                  key={`dashboard-quarter-${quarter}`}
+                  onClick={() => setSelectedQuarter(quarter)}
+                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+                    quarter === selectedQuarter
+                      ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                  }`}
+                >
+                  Q{quarter}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {controlOrder === 'dashboard' && isCompactLayout && halfControls.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {halfControls.map((half) => (
+                <button
+                  key={`dashboard-half-${half}`}
+                  onClick={() => setSelectedHalf(half)}
+                  className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
+                    half === selectedHalf
+                      ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
+                      : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
+                  }`}
+                >
+                  {half === 1 ? '上半年' : '下半年'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="pb-2">
-        <div className="relative overflow-x-auto">
-          <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6" style={{ minWidth: `${gridMinWidth}px` }}>
+        <div className={`relative ${isCompactLayout ? 'overflow-hidden' : 'overflow-x-auto'}`}>
+          <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6" style={{ minWidth: isCompactLayout ? undefined : `${gridMinWidth}px` }}>
             {monthLabels.map((label) => (
               <div
                 key={`${label.month}-${label.weekIndex}`}
@@ -391,10 +448,10 @@ export default function HeatmapChart({ data, forceViewMode, closeTooltipOnScroll
           </div>
 
           <div
-            className="render-isolate screenshot-solid-panel screenshot-disable-blur relative grid gap-[1px] overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] lg:gap-[2px] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)]"
+            className={`render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)] ${isCompactLayout ? 'gap-[1px] p-2.5' : 'gap-[1px] p-3 lg:gap-[2px]'}`}
             style={{
-              gridTemplateColumns: `16px repeat(${weeks.length}, minmax(12px, 1fr))`,
-              minWidth: `${gridMinWidth}px`,
+              gridTemplateColumns: isCompactLayout ? `12px repeat(${weeks.length}, minmax(0, 1fr))` : `16px repeat(${weeks.length}, minmax(12px, 1fr))`,
+              minWidth: isCompactLayout ? undefined : `${gridMinWidth}px`,
             }}
           >
             {WEEKDAYS.map((label, index) => (
