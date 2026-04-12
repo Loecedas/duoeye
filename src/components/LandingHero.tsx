@@ -2,6 +2,13 @@ import { Suspense, lazy, startTransition, useEffect, useRef, useState } from 're
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
 import ThemeModeControl from './ThemeModeControl';
+import EmojiIcon from './icons/EmojiIcon';
+import {
+  EmojiModeProvider,
+  EMOJI_ICON_MODE_STORAGE_KEY,
+  resolveEmojiIconMode,
+  type EmojiIconMode,
+} from './icons/EmojiMode';
 import {
   THEME_STORAGE_KEY,
   applyResolvedTheme,
@@ -13,6 +20,11 @@ import {
 
 const USERNAME_STORAGE_KEY = 'duoeye_username';
 const USERDATA_STORAGE_KEY = 'duoeye_userdata';
+
+function getInitialEmojiIconMode(): EmojiIconMode {
+  if (typeof window === 'undefined') return 'emoji';
+  return resolveEmojiIconMode(window.localStorage.getItem(EMOJI_ICON_MODE_STORAGE_KEY));
+}
 
 const heatmapXpScale = [0, 8, 22, 38, 60];
 const heatmapTimeScale = [0, 4, 9, 16, 28];
@@ -43,20 +55,20 @@ const featureCards = [
   {
     title: '年度活跃记录',
     description: '用热力图查看一整年的学习密度，快速看出你的坚持节奏。',
-    tone: 'bg-[#eef8e7] text-[#58cc02] dark:bg-[#58cc02]/12 dark:text-[#9be36d]',
-    icon: BarChartIcon,
+    tone: 'text-[#58cc02] dark:text-[#9be36d]',
+    icon: '📊',
   },
   {
     title: '投入时间分析',
     description: '把学习时长单独拉出来看，更容易识别强度、波动和空档。',
-    tone: 'bg-[#edf7fe] text-[#1cb0f6] dark:bg-[#1cb0f6]/12 dark:text-[#7ed9ff]',
-    icon: ClockIcon,
+    tone: 'text-[#1cb0f6] dark:text-[#7ed9ff]',
+    icon: '⏱️',
   },
   {
     title: '核心数据总览',
     description: '经验、时长、热力图和趋势图放在同一页里，进入就能看重点。',
-    tone: 'bg-[#fff5e8] text-[#ff9600] dark:bg-[#ff9600]/12 dark:text-[#ffd08b]',
-    icon: BoltIcon,
+    tone: 'text-[#ff9600] dark:text-[#ffd08b]',
+    icon: '⚡',
   },
 ];
 
@@ -122,14 +134,16 @@ function formatDateKey(date: Date): string {
 }
 
 function buildLandingHeatmapPreviewData() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const currentYear = new Date().getFullYear();
+  const startDate = new Date(currentYear - 1, 0, 1);
+  const endDate = new Date(currentYear, 11, 31);
+  const entries: Array<{ date: string; xp: number; time: number }> = [];
+  const cursor = new Date(startDate);
 
-  return Array.from({ length: 365 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (364 - index));
-
-    const seed = (index + 1) * 97 + (date.getDay() + 1) * 193;
+  while (cursor <= endDate) {
+    const year = cursor.getFullYear();
+    const dayOfYear = Math.floor((cursor.getTime() - new Date(year, 0, 1).getTime()) / 86400000) + 1;
+    const seed = year * 1000 + dayOfYear * 97 + (cursor.getDay() + 1) * 193;
     const normalized = ((Math.sin(seed * 12.9898) * 43758.5453) % 1 + 1) % 1;
 
     let level = 0;
@@ -138,12 +152,16 @@ function buildLandingHeatmapPreviewData() {
     else if (normalized > 0.4) level = 2;
     else if (normalized > 0.25) level = 1;
 
-    return {
-      date: formatDateKey(date),
+    entries.push({
+      date: formatDateKey(cursor),
       xp: heatmapXpScale[level],
       time: heatmapTimeScale[level],
-    };
-  });
+    });
+
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return entries;
 }
 
 function SearchIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -231,6 +249,33 @@ function PauseIcon({ className = 'h-4 w-4' }: { className?: string }) {
   );
 }
 
+function EmojiModeIcon({
+  mode,
+  className = 'h-4 w-4',
+}: {
+  mode: EmojiIconMode;
+  className?: string;
+}) {
+  if (mode === 'svg') {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <rect x="4" y="4" width="6" height="6" rx="1.5" strokeWidth="1.8" />
+        <circle cx="17" cy="7" r="3" strokeWidth="1.8" />
+        <path d="m8 15 3 5 3-5 3 5 3-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" strokeWidth="1.8" />
+      <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
+      <path d="M8.5 14c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function ThemeCycleIcon({ resolvedTheme }: { resolvedTheme: ResolvedTheme }) {
   if (resolvedTheme === 'dark') {
     return (
@@ -267,11 +312,15 @@ function getThemeLabel(mode: ThemeMode): string {
   return '跟随系统';
 }
 
-function getNavbarActionIconClassName(variant: 'sparkle' | 'pause'): string {
+function getNavbarActionIconClassName(variant: 'sparkle' | 'pause' | 'emoji'): string {
   const base = 'h-4 w-4 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform';
 
   if (variant === 'sparkle') {
     return `${base} group-hover:-translate-y-0.5 group-hover:rotate-12`;
+  }
+
+  if (variant === 'emoji') {
+    return `${base} group-hover:-translate-y-0.5 group-hover:rotate-6`;
   }
 
   return `${base} group-hover:-translate-y-0.5`;
@@ -318,6 +367,7 @@ export default function LandingHero() {
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [emojiIconMode, setEmojiIconMode] = useState<EmojiIconMode>(getInitialEmojiIconMode);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -330,11 +380,13 @@ export default function LandingHero() {
 
   useEffect(() => {
     const storedAnimations = localStorage.getItem('duoeye_animations_enabled');
+    const storedEmojiIconMode = resolveEmojiIconMode(localStorage.getItem(EMOJI_ICON_MODE_STORAGE_KEY));
     const initialThemeMode = resolveThemeMode(localStorage.getItem(THEME_STORAGE_KEY));
     const initialResolvedTheme = getResolvedTheme(initialThemeMode);
 
     setThemeMode(initialThemeMode);
     setResolvedTheme(initialResolvedTheme);
+    setEmojiIconMode(storedEmojiIconMode);
     applyResolvedTheme(initialResolvedTheme);
     if (storedAnimations === 'false') {
       setAnimationsEnabled(false);
@@ -397,6 +449,10 @@ export default function LandingHero() {
     document.documentElement.classList.toggle('animations-off', !animationsEnabled);
     localStorage.setItem('duoeye_animations_enabled', String(animationsEnabled));
   }, [animationsEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem(EMOJI_ICON_MODE_STORAGE_KEY, emojiIconMode);
+  }, [emojiIconMode]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent): void {
@@ -472,13 +528,18 @@ export default function LandingHero() {
     setAnimationsEnabled((current) => !current);
   }
 
+  function toggleEmojiIconMode() {
+    setEmojiIconMode((current) => (current === 'emoji' ? 'svg' : 'emoji'));
+  }
+
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-apple-gray1 text-apple-dark1 transition-colors duration-500 dark:bg-apple-dark1 dark:text-white">
-      <div className={pageGlowBackgroundClassName} />
+    <EmojiModeProvider mode={emojiIconMode}>
+      <div className="relative min-h-screen overflow-x-hidden bg-apple-gray1 text-apple-dark1 transition-colors duration-500 dark:bg-apple-dark1 dark:text-white">
+        <div className={pageGlowBackgroundClassName} />
 
       <nav ref={navRef} data-floating-navbar="true" className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
         <div
@@ -519,6 +580,15 @@ export default function LandingHero() {
               ) : (
                 <PauseIcon className={getNavbarActionIconClassName('pause')} />
               )}
+            </button>
+            <button
+              type="button"
+              onClick={toggleEmojiIconMode}
+              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
+              title={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
+              aria-label={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
+            >
+              <EmojiModeIcon mode={emojiIconMode} className={getNavbarActionIconClassName('emoji')} />
             </button>
             <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={handleThemeChange} />
           </div>
@@ -571,7 +641,7 @@ export default function LandingHero() {
               </a>
             </div>
 
-            <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+            <div className="mt-2.5 grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-3">
               <button
                 type="button"
                 onClick={() => {
@@ -586,6 +656,22 @@ export default function LandingHero() {
                 <div className="mt-1">
                   <div className="text-[17px] font-semibold tracking-tight text-apple-dark1 dark:text-white">动效</div>
                   <div className="mt-0 text-[11px] text-apple-gray6 dark:text-white/62">{animationsEnabled ? '当前开启' : '当前关闭'}</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  toggleEmojiIconMode();
+                  setIsMenuOpen(false);
+                }}
+                className={mobileMenuExpandedItemClassName}
+              >
+                <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  <EmojiModeIcon mode={emojiIconMode} className="h-4 w-4" />
+                </div>
+                <div className="mt-1">
+                  <div className="text-[17px] font-semibold tracking-tight text-apple-dark1 dark:text-white">图标</div>
+                  <div className="mt-0 text-[11px] text-apple-gray6 dark:text-white/62">{emojiIconMode === 'svg' ? '当前 SVG' : '当前 Emoji'}</div>
                 </div>
               </button>
               <button
@@ -661,7 +747,7 @@ export default function LandingHero() {
           <div className="xl:col-span-5">
             <div className={`${sectionCardClassName} h-full p-6 sm:p-7`}>
               <div aria-hidden="true" className={overviewGlowClassName} />
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="text-sm font-semibold text-apple-dark1 dark:text-white">预览概览</div>
                   <div className="mt-1 text-sm text-apple-gray6 dark:text-apple-dark6">和仪表盘同一套视觉语言</div>
@@ -669,7 +755,7 @@ export default function LandingHero() {
                 <span className={badgeClassName}>APPLE STYLE</span>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <HeroMetric label="本周经验" value="1268 XP" accent="#58cc02" />
                 <HeroMetric label="本周时长" value="73 分钟" accent="#1cb0f6" />
                 <HeroMetric label="日均经验" value="88 XP" accent="#ff9600" />
@@ -677,7 +763,7 @@ export default function LandingHero() {
               </div>
 
               <div className="render-isolate mt-4 overflow-hidden rounded-[24px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.82)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-1 dark:bg-[rgba(44,44,46,0.92)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-sm font-semibold text-apple-dark1 dark:text-white">体验重点</div>
                   <span className="rounded-full bg-[#58cc02]/10 px-2.5 py-1 text-[11px] font-semibold text-[#3d8f09] dark:bg-[#58cc02]/15 dark:text-[#b6ef89]">
                     流畅感优先
@@ -707,22 +793,18 @@ export default function LandingHero() {
 
             </div>
             <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-              {featureCards.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <article
-                    key={item.title}
-                    className="render-isolate overflow-hidden rounded-[26px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.88)] p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.07)] dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)]"
-                  >
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.tone}`}>
-                      <Icon />
-                    </div>
-                    <h3 className="mt-5 text-lg font-semibold tracking-tight text-apple-dark1 dark:text-white">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">{item.description}</p>
-                  </article>
-                );
-              })}
+              {featureCards.map((item) => (
+                <article
+                  key={item.title}
+                  className="render-isolate overflow-hidden rounded-[26px] border border-black/[0.06] dark:border-transparent bg-[rgba(255,255,255,0.88)] p-6 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.07)] dark:bg-[rgba(44,44,46,0.92)] dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.22)]"
+                >
+                  <div className={`flex h-12 items-center text-[1.45rem] leading-none ${item.tone}`}>
+                    <EmojiIcon symbol={item.icon} className="inline-flex items-center justify-center leading-none" tone="inherit" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold tracking-tight text-apple-dark1 dark:text-white">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">{item.description}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
@@ -792,7 +874,7 @@ export default function LandingHero() {
             <AppIcon className="h-11 w-11 shrink-0" />
             <DuoWordmark size="xs" className="shrink-0 overflow-visible" />
           </div>
-          <p className="mt-4 w-full max-w-[760px] text-sm leading-7 text-apple-gray6 dark:text-apple-dark6 sm:whitespace-nowrap">
+          <p className="mt-4 w-full max-w-[760px] text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">
             多邻国学习数据可视化工具。输入用户名，快速生成和首页一致风格的数据仪表盘。
           </p>
           <p className="mt-6 text-xs text-apple-gray6/80 dark:text-apple-dark6/80">
@@ -811,6 +893,7 @@ export default function LandingHero() {
       >
         <ArrowUpIcon />
       </button>
-    </div>
+      </div>
+    </EmojiModeProvider>
   );
 }

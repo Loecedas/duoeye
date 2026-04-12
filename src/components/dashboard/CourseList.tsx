@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Course } from '../../types';
+import EmojiIcon, { LanguageBadgeIcon } from '../icons/EmojiIcon';
 
 interface CourseListProps {
   courses: Course[];
@@ -30,7 +31,7 @@ export default function CourseList({ courses }: CourseListProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-duo-blue/20 to-duo-purple/20 flex items-center justify-center">
-            <span className="text-lg">📚</span>
+            <EmojiIcon symbol="📚" className="text-lg" />
           </div>
           <h2 className="text-lg font-semibold">学习课程</h2>
         </div>
@@ -44,15 +45,18 @@ export default function CourseList({ courses }: CourseListProps) {
             className="flex items-center gap-3 p-3 rounded-xl bg-apple-gray2 dark:bg-apple-dark3 transition-all duration-300 hover:scale-[1.02] cursor-pointer group"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <span className="text-2xl transform group-hover:scale-110 transition-transform duration-300">
-              {LANGUAGE_FLAGS[course.learningLanguage] || '🌐'}
-            </span>
+            <LanguageBadgeIcon
+              emoji={LANGUAGE_FLAGS[course.learningLanguage] || '🌐'}
+              languageCode={course.learningLanguage}
+              className="text-2xl transform group-hover:scale-110 transition-transform duration-300"
+              label={course.title}
+            />
             
             <div className="flex-1 min-w-0">
               <div className="font-semibold truncate text-sm">{course.title}</div>
               <div className="flex items-center gap-2 text-xs text-apple-gray6">
                 <span className="flex items-center gap-1">
-                  <span className="text-duo-yellow">👑</span>
+                  <EmojiIcon symbol="👑" className="text-duo-yellow" tone="inherit" />
                   {course.crowns}
                 </span>
               </div>

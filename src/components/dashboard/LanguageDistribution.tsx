@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Course } from '../../types';
+import EmojiIcon from '../icons/EmojiIcon';
 
 interface LanguageDistributionProps {
   courses: Course[];
@@ -69,9 +70,7 @@ export default function LanguageDistribution({ courses, totalXp }: LanguageDistr
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(165,114,247,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.2),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(165,114,247,0.14),transparent_46%)]" />
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/80 bg-white/90 shadow-[0_6px_16px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/8">
-            <span className="text-lg">🌍</span>
-          </div>
+          <EmojiIcon symbol="🌍" className="text-[1.3rem] leading-none" />
           <h2 className="text-lg font-semibold text-apple-dark1 dark:text-white">语言分布</h2>
         </div>
       </div>

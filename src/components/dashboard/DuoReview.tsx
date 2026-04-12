@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { UserData } from '../../types';
+import EmojiIcon from '../icons/EmojiIcon';
 
 interface DuoReviewProps {
   userData: UserData;
@@ -50,8 +51,8 @@ export default function DuoReview({ userData }: DuoReviewProps) {
       <div className="relative">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-xl shadow-[0_6px_16px_rgba(15,23,42,0.05)] transition-transform duration-200 group-hover:scale-[1.03] dark:border-white/10 dark:bg-white/8">
-              🦉
+            <div className="flex h-11 items-center justify-center text-[1.3rem] leading-none transition-transform duration-200 group-hover:scale-[1.03]">
+              <EmojiIcon symbol="🦉" className="text-[1.3rem] leading-none" />
             </div>
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-apple-dark1 dark:text-white">多儿点评</h2>

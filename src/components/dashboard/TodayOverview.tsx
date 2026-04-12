@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { UserData } from '../../types';
+import EmojiIcon from '../icons/EmojiIcon';
 
 interface TodayOverviewProps {
   userData: UserData;
@@ -8,7 +9,7 @@ interface TodayOverviewProps {
 interface PrimaryStat {
   label: string;
   value: string;
-  icon: string;
+  icon: ReactNode;
   valueClass: string;
   panelClass: string;
   darkPanelClass: string;
@@ -37,7 +38,7 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
       {
         label: '今日 XP',
         value: (userData.xpToday || 0).toLocaleString(),
-        icon: '⚡',
+        icon: <EmojiIcon symbol="⚡" className="text-[2rem] leading-none" />,
         valueClass: 'text-[#58cc02]',
         panelClass: 'from-[#f4fbe7] via-[#f8fdf0] to-[#ffffff]',
         darkPanelClass: 'dark:from-[rgba(88,204,2,0.16)] dark:via-[rgba(58,58,60,0.96)] dark:to-[rgba(44,44,46,0.98)]',
@@ -46,7 +47,7 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
       {
         label: '今日学习时间',
         value: formatMinutes(todayTimeMinutes),
-        icon: '⏱',
+        icon: <EmojiIcon symbol="⏱" className="text-[2rem] leading-none" />,
         valueClass: 'text-[#1cb0f6]',
         panelClass: 'from-[#eef8ff] via-[#f6fbff] to-[#ffffff]',
         darkPanelClass: 'dark:from-[rgba(28,176,246,0.16)] dark:via-[rgba(58,58,60,0.96)] dark:to-[rgba(44,44,46,0.98)]',
@@ -55,7 +56,7 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
       {
         label: '今日完成课次',
         value: `${userData.lessonsToday || 0}`,
-        icon: '📚',
+        icon: <EmojiIcon symbol="📚" className="text-[2rem] leading-none" />,
         valueClass: 'text-[#ff8a00]',
         panelClass: 'from-[#fff4ea] via-[#fff8f2] to-[#ffffff]',
         darkPanelClass: 'dark:from-[rgba(255,150,0,0.14)] dark:via-[rgba(58,58,60,0.96)] dark:to-[rgba(44,44,46,0.98)]',
@@ -64,7 +65,7 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
       {
         label: '连续天数',
         value: `${userData.streak}`,
-        icon: '🔥',
+        icon: <EmojiIcon symbol="🔥" className="text-[2rem] leading-none" />,
         valueClass: 'text-[#ff6b00]',
         panelClass: 'from-[#fff1eb] via-[#fff7f3] to-[#ffffff]',
         darkPanelClass: 'dark:from-[rgba(255,107,0,0.14)] dark:via-[rgba(58,58,60,0.96)] dark:to-[rgba(44,44,46,0.98)]',
@@ -114,7 +115,7 @@ export default function TodayOverview({ userData }: TodayOverviewProps) {
         <div className="xl:col-span-4">
           <div className="screenshot-solid-panel group relative h-full overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.12),transparent_46%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.12),transparent_50%),linear-gradient(135deg,#ffffff_0%,#f5f7fb_100%)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.24),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.2),transparent_46%),linear-gradient(135deg,rgba(90,94,98,0.98)_0%,rgba(58,60,66,0.98)_58%,rgba(44,56,68,0.98)_100%)] dark:shadow-[0_20px_44px_rgba(0,0,0,0.24)] dark:hover:shadow-[0_24px_48px_rgba(0,0,0,0.3)]">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/88 px-3 py-1 text-xs font-semibold text-apple-gray6 shadow-sm dark:bg-white/8 dark:text-apple-dark6">
-              <span className="text-sm">📊</span>
+              <EmojiIcon symbol="📊" className="text-sm" />
               今日概览
             </div>
 

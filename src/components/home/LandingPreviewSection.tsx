@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import HeatmapChart from '../dashboard/HeatmapChart';
+import EmojiIcon from '../icons/EmojiIcon';
 
 interface LandingPreviewSectionProps {
   badgeClassName: string;
@@ -74,7 +75,9 @@ function PreviewChartCard({
   return (
     <div className={`${sectionCardClassName} h-full p-6`}>
       <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-apple-dark1 dark:text-white">
-        <span style={{ color }}>{icon}</span>
+        <span className="text-base leading-none" style={{ color }}>
+          {icon}
+        </span>
         <span>{title}</span>
       </div>
       <p className="mb-3 text-sm leading-6 text-apple-gray6 dark:text-apple-dark6">{description}</p>
@@ -104,23 +107,6 @@ function PreviewChartCard({
       </ResponsiveContainer>
       <div className="mt-2 text-center text-xs text-apple-gray6 dark:text-apple-dark6">{footer}</div>
     </div>
-  );
-}
-
-function BoltIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-      <path d="M13 2 5 13h5l-1 9 8-11h-5l1-9Z" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ClockIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
 
@@ -165,7 +151,7 @@ export default function LandingPreviewSection({
             dataKey="xp"
             gradientId="landing-xp-gradient"
             footer={`本周共获得 ${totalXp} XP`}
-            icon={<BoltIcon className="h-4 w-4" />}
+            icon={<EmojiIcon symbol="⚡" className="text-base leading-none" tone="inherit" />}
             referenceLine={averageXp}
             sectionCardClassName={sectionCardClassName}
           />
@@ -181,7 +167,7 @@ export default function LandingPreviewSection({
             dataKey="time"
             gradientId="landing-time-gradient"
             footer={`本周累计投入 ${totalTime} 分钟`}
-            icon={<ClockIcon className="h-4 w-4" />}
+            icon={<EmojiIcon symbol="⏱️" className="text-base leading-none" tone="inherit" />}
             sectionCardClassName={sectionCardClassName}
           />
         </div>

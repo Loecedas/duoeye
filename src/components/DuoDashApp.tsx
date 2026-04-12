@@ -15,6 +15,13 @@ import DuoReview from './dashboard/DuoReview';
 import LanguageDistribution from './dashboard/LanguageDistribution';
 import Navbar from './dashboard/Navbar';
 import TodayOverview from './dashboard/TodayOverview';
+import EmojiIcon from './icons/EmojiIcon';
+import {
+  EmojiModeProvider,
+  EMOJI_ICON_MODE_STORAGE_KEY,
+  resolveEmojiIconMode,
+  type EmojiIconMode,
+} from './icons/EmojiMode';
 import {
   THEME_STORAGE_KEY,
   applyResolvedTheme,
@@ -26,9 +33,26 @@ import {
 
 const USERNAME_STORAGE_KEY = 'duoeye_username';
 const USERDATA_STORAGE_KEY = 'duoeye_userdata';
+const LAST_LOADED_AT_STORAGE_KEY = 'duoeye_last_loaded_at';
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
 const MAX_SCREENSHOT_CANVAS_PIXELS = 12_000_000;
 const SCREENSHOT_BASE_PIXEL_RATIO = 1.6;
+
+function getInitialEmojiIconMode(): EmojiIconMode {
+  if (typeof window === 'undefined') return 'emoji';
+  return resolveEmojiIconMode(window.localStorage.getItem(EMOJI_ICON_MODE_STORAGE_KEY));
+}
+
+function readStoredLoadedAt(): number | null {
+  if (typeof window === 'undefined') return null;
+
+  const rawValue =
+    window.sessionStorage.getItem(LAST_LOADED_AT_STORAGE_KEY) ||
+    window.localStorage.getItem(LAST_LOADED_AT_STORAGE_KEY);
+  const parsedValue = Number(rawValue);
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) return null;
+  return parsedValue;
+}
 
 interface DuoDashAppProps {
   initialUsername?: string;
@@ -54,6 +78,7 @@ interface RenderBoundaryProps {
   label: string;
   children: ReactNode;
   className?: string;
+  fallback?: ReactNode;
 }
 
 interface RenderBoundaryState {
@@ -76,6 +101,10 @@ class RenderBoundary extends Component<RenderBoundaryProps, RenderBoundaryState>
       return this.props.children;
     }
 
+    if (this.props.fallback) {
+      return this.props.fallback;
+    }
+
     return (
       <div
         className={
@@ -93,7 +122,7 @@ class RenderBoundary extends Component<RenderBoundaryProps, RenderBoundaryState>
 }
 
 interface DashboardCardProps {
-  icon: string;
+  icon: ReactNode;
   title: string;
   subtitle?: string;
   badge?: string;
@@ -188,7 +217,7 @@ function DashboardCard({
       <div className="relative flex h-full min-h-[260px] flex-col p-6">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-xl shadow-[0_6px_16px_rgba(15,23,42,0.05)] transition-transform duration-200 group-hover:scale-[1.03] dark:border-white/20 dark:bg-white/92 dark:text-apple-dark1">
+            <div className="flex h-11 items-center justify-center text-[1.35rem] leading-none transition-transform duration-200 group-hover:scale-[1.03]">
               {icon}
             </div>
             <div>
@@ -269,7 +298,7 @@ function DashboardSections({
         <div className="xl:col-span-8">
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <DashboardCard
-              icon="📈"
+              icon={<EmojiIcon symbol="📈" className="text-[1.35rem] leading-none" />}
               title="本周经验"
               subtitle={weeklyXpRangeMode === 'week' ? '查看本周每日 XP 分布' : '观察最近 7 天的 XP 变化'}
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(132,204,22,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(88,204,2,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(132,204,22,0.12),transparent_46%)]"
@@ -279,7 +308,7 @@ function DashboardSections({
             </DashboardCard>
 
             <DashboardCard
-              icon="⏱"
+              icon={<EmojiIcon symbol="⏱" className="text-[1.35rem] leading-none" />}
               title="本周学习时间"
               subtitle={weeklyTimeRangeMode === 'week' ? '查看本周每日学习投入' : '查看最近 7 天的学习投入'}
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.14),transparent_46%)]"
@@ -289,7 +318,7 @@ function DashboardSections({
             </DashboardCard>
 
             <DashboardCard
-              icon="🗓"
+              icon={<EmojiIcon symbol="🗓" className="text-[1.35rem] leading-none" />}
               title="月度经验对比"
               subtitle="支持查看指定年份和近 12 个月"
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.1),transparent_46%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.16),transparent_44%)]"
@@ -325,7 +354,7 @@ function DashboardSections({
             </DashboardCard>
 
             <DashboardCard
-              icon="📊"
+              icon={<EmojiIcon symbol="📊" className="text-[1.35rem] leading-none" />}
               title="年度经验对比"
               subtitle="按年份查看累计 XP"
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(165,114,247,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(192,132,252,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(165,114,247,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(192,132,252,0.14),transparent_46%)]"
@@ -336,7 +365,7 @@ function DashboardSections({
             </DashboardCard>
 
             <DashboardCard
-              icon="⌛"
+              icon={<EmojiIcon symbol="⌛" className="text-[1.35rem] leading-none" />}
               title="年度学习时间"
               subtitle="按年份查看累计学习时长"
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(255,150,0,0.14),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,150,0,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.14),transparent_46%)]"
@@ -395,7 +424,10 @@ export default function DuoDashApp({
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [emojiIconMode, setEmojiIconMode] = useState<EmojiIconMode>(getInitialEmojiIconMode);
   const [isScreenshotting, setIsScreenshotting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastLoadedAt, setLastLoadedAt] = useState<number | null>(() => (initialUserData ? Date.now() : readStoredLoadedAt()));
   const [loading, setLoading] = useState(Boolean(initialUsername) && !initialUserData && !initialLoadError);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedMonthlyYear, setSelectedMonthlyYear] = useState('');
@@ -405,10 +437,63 @@ export default function DuoDashApp({
   const pageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  function applyDashboardState(nextUserData: UserData, loadedAt: number | null): void {
+    setUserData(nextUserData);
+    setLoadError('');
+    setLastLoadedAt(loadedAt);
+  }
+
+  function persistDashboardState(nextUserData: UserData, loadedAt = Date.now()): void {
+    applyDashboardState(nextUserData, loadedAt);
+    sessionStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(nextUserData));
+    localStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(nextUserData));
+    sessionStorage.setItem(LAST_LOADED_AT_STORAGE_KEY, String(loadedAt));
+    localStorage.setItem(LAST_LOADED_AT_STORAGE_KEY, String(loadedAt));
+  }
+
+  function clearStoredDashboardState(): void {
+    sessionStorage.removeItem(USERDATA_STORAGE_KEY);
+    localStorage.removeItem(USERDATA_STORAGE_KEY);
+    sessionStorage.removeItem(LAST_LOADED_AT_STORAGE_KEY);
+    localStorage.removeItem(LAST_LOADED_AT_STORAGE_KEY);
+  }
+
+  async function fetchDashboardData(activeUsername: string, signal?: AbortSignal): Promise<UserData> {
+    const response = await fetch(`/api/data?username=${encodeURIComponent(activeUsername)}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal,
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(typeof result?.error === 'string' ? result.error : '获取学习数据失败');
+    }
+
+    return result.data;
+  }
+
+  async function reloadDashboardData(): Promise<void> {
+    const activeUsername = username.trim();
+    if (!activeUsername || isRefreshing) return;
+
+    setIsRefreshing(true);
+
+    try {
+      const nextUserData = await fetchDashboardData(activeUsername);
+      persistDashboardState(nextUserData);
+    } catch (error) {
+      window.alert('重新加载失败：' + (error instanceof Error ? error.message : '请稍后重试。'));
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
+
   useEffect(() => {
     let isCancelled = false;
     const controller = new AbortController();
     const storedAnimations = localStorage.getItem('duoeye_animations_enabled');
+    const storedEmojiIconMode = resolveEmojiIconMode(localStorage.getItem(EMOJI_ICON_MODE_STORAGE_KEY));
     const timer = window.setTimeout(() => setIsLoaded(true), 120);
 
     async function bootstrap(): Promise<void> {
@@ -433,11 +518,8 @@ export default function DuoDashApp({
       if (hasServerData && initialUserData) {
         if (isCancelled) return;
 
-        setUserData(initialUserData);
-        setLoadError('');
+        persistDashboardState(initialUserData);
         setLoading(false);
-        sessionStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(initialUserData));
-        localStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(initialUserData));
         return;
       }
 
@@ -446,6 +528,7 @@ export default function DuoDashApp({
 
         setUserData(null);
         setLoadError(initialLoadError);
+        setLastLoadedAt(null);
         setLoading(false);
         return;
       }
@@ -454,48 +537,35 @@ export default function DuoDashApp({
         try {
           if (isCancelled) return;
 
-          setUserData(JSON.parse(storedUserData));
-          setLoadError('');
+          applyDashboardState(JSON.parse(storedUserData), readStoredLoadedAt());
           setLoading(false);
           return;
         } catch {
-          sessionStorage.removeItem(USERDATA_STORAGE_KEY);
-          localStorage.removeItem(USERDATA_STORAGE_KEY);
+          clearStoredDashboardState();
         }
       }
 
       if (!activeUsername) {
         if (isCancelled) return;
 
+        setLastLoadedAt(null);
         setLoading(false);
         return;
       }
 
       try {
-        const response = await fetch(`/api/data?username=${encodeURIComponent(activeUsername)}`, {
-          method: 'GET',
-          headers: { Accept: 'application/json' },
-          signal: controller.signal,
-        });
-
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(typeof result?.error === 'string' ? result.error : '获取学习数据失败');
-        }
+        const nextUserData = await fetchDashboardData(activeUsername, controller.signal);
 
         if (isCancelled) return;
 
-        setUserData(result.data);
-        setLoadError('');
-        sessionStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(result.data));
-        localStorage.setItem(USERDATA_STORAGE_KEY, JSON.stringify(result.data));
+        persistDashboardState(nextUserData);
       } catch (error) {
         if (controller.signal.aborted || isCancelled) return;
 
-        sessionStorage.removeItem(USERDATA_STORAGE_KEY);
-        localStorage.removeItem(USERDATA_STORAGE_KEY);
+        clearStoredDashboardState();
         setUserData(null);
         setLoadError(error instanceof Error ? error.message : '获取学习数据失败');
+        setLastLoadedAt(null);
       } finally {
         if (isCancelled) return;
         setLoading(false);
@@ -511,6 +581,7 @@ export default function DuoDashApp({
     const initialResolvedTheme = getResolvedTheme(initialThemeMode);
     setThemeMode(initialThemeMode);
     setResolvedTheme(initialResolvedTheme);
+    setEmojiIconMode(storedEmojiIconMode);
     applyResolvedTheme(initialResolvedTheme);
     bootstrap();
 
@@ -525,6 +596,10 @@ export default function DuoDashApp({
     document.documentElement.classList.toggle('animations-off', !animationsEnabled);
     localStorage.setItem('duoeye_animations_enabled', String(animationsEnabled));
   }, [animationsEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem(EMOJI_ICON_MODE_STORAGE_KEY, emojiIconMode);
+  }, [emojiIconMode]);
 
   useEffect(() => {
     const years = getMonthlyYears(userData?.yearlyXpHistory);
@@ -559,6 +634,10 @@ export default function DuoDashApp({
 
   function toggleAnimations(): void {
     setAnimationsEnabled((current) => !current);
+  }
+
+  function toggleEmojiIconMode(): void {
+    setEmojiIconMode((current) => (current === 'emoji' ? 'svg' : 'emoji'));
   }
 
   function getScreenshotFileName(): string {
@@ -774,48 +853,53 @@ export default function DuoDashApp({
 
   if (loading) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
-        <div className={pageGlowBackgroundClassName} />
-        <div className="relative flex flex-col items-center gap-5 px-6">
-          <AppIcon className="mb-3 h-32 w-32 animate-bounce sm:h-44 sm:w-44" />
-          <div className="text-center">
-            <p className="text-xl font-bold text-apple-dark1 dark:text-white sm:text-2xl">正在获取学习数据...</p>
-            <p className="mt-2 text-sm text-apple-gray6 dark:text-apple-dark6">界面会在几秒内准备好</p>
+      <EmojiModeProvider mode={emojiIconMode}>
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
+          <div className={pageGlowBackgroundClassName} />
+          <div className="relative flex flex-col items-center gap-5 px-6">
+            <AppIcon className="mb-3 h-32 w-32 animate-bounce sm:h-44 sm:w-44" />
+            <div className="text-center">
+              <p className="text-xl font-bold text-apple-dark1 dark:text-white sm:text-2xl">正在获取学习数据...</p>
+              <p className="mt-2 text-sm text-apple-gray6 dark:text-apple-dark6">界面会在几秒内准备好</p>
+            </div>
           </div>
         </div>
-      </div>
+      </EmojiModeProvider>
     );
   }
 
   if (!userData) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
-        <div className={pageGlowBackgroundClassName} />
-        <div className="relative text-center">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[30px] border border-white/80 bg-white/88 shadow-[0_14px_32px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/8">
-            <span className="text-5xl">📊</span>
+      <EmojiModeProvider mode={emojiIconMode}>
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
+          <div className={pageGlowBackgroundClassName} />
+          <div className="relative text-center">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[30px] border border-white/80 bg-white/88 shadow-[0_14px_32px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/8">
+              <EmojiIcon symbol="📊" className="text-5xl" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-apple-dark1 dark:text-white">
+              {loadError ? '学习数据加载失败' : '还没有可展示的数据'}
+            </h1>
+            <p className="mt-2 text-sm text-apple-gray6 dark:text-apple-dark6">
+              {loadError || '先回到首页输入用户名，再生成学习面板。'}
+            </p>
+            {username ? <p className="mt-2 text-xs text-apple-gray6/80 dark:text-apple-dark6/80">@{username}</p> : null}
+            <a
+              href="/"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#111827] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] transition-colors duration-200 dark:bg-white dark:text-apple-dark1"
+            >
+              返回首页
+            </a>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-apple-dark1 dark:text-white">
-            {loadError ? '学习数据加载失败' : '还没有可展示的数据'}
-          </h1>
-          <p className="mt-2 text-sm text-apple-gray6 dark:text-apple-dark6">
-            {loadError || '先回到首页输入用户名，再生成学习面板。'}
-          </p>
-          {username ? <p className="mt-2 text-xs text-apple-gray6/80 dark:text-apple-dark6/80">@{username}</p> : null}
-          <a
-            href="/"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#111827] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(17,24,39,0.14)] transition-colors duration-200 dark:bg-white dark:text-apple-dark1"
-          >
-            返回首页
-          </a>
         </div>
-      </div>
+      </EmojiModeProvider>
     );
   }
 
   return (
-    <div ref={pageRef} data-screenshot-root="true" data-screenshot-lock="true" className="relative min-h-screen overflow-x-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
-      <div className={`screenshot-soft-glow pointer-events-none ${pageGlowBackgroundClassName}`} />
+    <EmojiModeProvider mode={emojiIconMode}>
+      <div ref={pageRef} data-screenshot-root="true" data-screenshot-lock="true" className="relative min-h-screen overflow-x-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
+        <div className={`screenshot-soft-glow pointer-events-none ${pageGlowBackgroundClassName}`} />
 
       {isScreenshotting ? (
         <div data-screenshot-ignore="true" className="fixed right-6 top-24 z-[70] rounded-[24px] border border-black/5 bg-white px-5 py-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-[rgba(28,28,30,0.96)]">
@@ -829,61 +913,89 @@ export default function DuoDashApp({
         </div>
       ) : null}
 
-      <RenderBoundary
-        label="导航栏"
-        className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8"
-      >
-        <Navbar
-          username={username}
-          themeMode={themeMode}
-          resolvedTheme={resolvedTheme}
-          animationsEnabled={animationsEnabled}
-          isScreenshotting={isScreenshotting}
-          onThemeChange={handleThemeChange}
-          onToggleAnimations={toggleAnimations}
-          onScreenshot={handleScreenshot}
-          onLogout={() => {
-            sessionStorage.removeItem(USERNAME_STORAGE_KEY);
-            sessionStorage.removeItem(USERDATA_STORAGE_KEY);
-            localStorage.removeItem(USERNAME_STORAGE_KEY);
-            localStorage.removeItem(USERDATA_STORAGE_KEY);
-            window.location.assign('/');
-          }}
-        />
-      </RenderBoundary>
+        <RenderBoundary
+          label="导航栏"
+          className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8"
+          fallback={
+            <div className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
+              <div className="mx-auto flex max-w-[1560px] items-center justify-between rounded-[28px] border border-black/5 bg-[rgba(255,255,255,0.92)] px-4 py-3.5 shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[rgba(44,44,46,0.9)]">
+                <a href="/" className="flex min-w-0 items-center gap-3">
+                  <AppIcon className="h-11 w-11 shrink-0" />
+                  <div className="min-w-0">
+                    <DuoWordmark size="xs" className="shrink-0 overflow-visible" />
+                    <div className="mt-1 text-xs text-apple-gray6 dark:text-white/55">导航栏加载失败，可先返回首页</div>
+                  </div>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 px-4 text-sm font-semibold text-apple-dark1 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-white/12 dark:text-white"
+                >
+                  刷新
+                </button>
+              </div>
+            </div>
+          }
+        >
+          <Navbar
+            username={username}
+            themeMode={themeMode}
+            resolvedTheme={resolvedTheme}
+            animationsEnabled={animationsEnabled}
+            emojiIconMode={emojiIconMode}
+            isScreenshotting={isScreenshotting}
+            isRefreshing={isRefreshing}
+            lastLoadedAt={lastLoadedAt}
+            onThemeChange={handleThemeChange}
+            onToggleAnimations={toggleAnimations}
+            onToggleEmojiIconMode={toggleEmojiIconMode}
+            onRefresh={reloadDashboardData}
+            onScreenshot={handleScreenshot}
+            onLogout={() => {
+              sessionStorage.removeItem(USERNAME_STORAGE_KEY);
+              sessionStorage.removeItem(USERDATA_STORAGE_KEY);
+              sessionStorage.removeItem(LAST_LOADED_AT_STORAGE_KEY);
+              localStorage.removeItem(USERNAME_STORAGE_KEY);
+              localStorage.removeItem(USERDATA_STORAGE_KEY);
+              localStorage.removeItem(LAST_LOADED_AT_STORAGE_KEY);
+              window.location.assign('/');
+            }}
+          />
+        </RenderBoundary>
 
-      <main ref={contentRef} data-screenshot-lock="true" className="relative mx-auto max-w-[1560px] px-4 pb-10 pt-40 sm:px-6 sm:pt-32 lg:px-8 lg:pt-32">
-        <DashboardSections
-          userData={userData}
-          isLoaded={isLoaded}
-          selectedMonthlyYear={selectedMonthlyYear}
-          monthlyViewMode={monthlyViewMode}
-          weeklyXpRangeMode={weeklyXpRangeMode}
-          weeklyTimeRangeMode={weeklyTimeRangeMode}
-          onSelectMonthlyYear={(year) => {
-            setSelectedMonthlyYear(year);
-            setMonthlyViewMode('year');
-          }}
-          onSelectRollingMonths={() => setMonthlyViewMode('rolling12')}
-          onSelectWeeklyXpRangeMode={setWeeklyXpRangeMode}
-          onSelectWeeklyTimeRangeMode={setWeeklyTimeRangeMode}
-        />
-      </main>
+        <main ref={contentRef} data-screenshot-lock="true" className="relative mx-auto max-w-[1560px] px-4 pb-10 pt-40 sm:px-6 sm:pt-32 lg:px-8 lg:pt-32">
+          <DashboardSections
+            userData={userData}
+            isLoaded={isLoaded}
+            selectedMonthlyYear={selectedMonthlyYear}
+            monthlyViewMode={monthlyViewMode}
+            weeklyXpRangeMode={weeklyXpRangeMode}
+            weeklyTimeRangeMode={weeklyTimeRangeMode}
+            onSelectMonthlyYear={(year) => {
+              setSelectedMonthlyYear(year);
+              setMonthlyViewMode('year');
+            }}
+            onSelectRollingMonths={() => setMonthlyViewMode('rolling12')}
+            onSelectWeeklyXpRangeMode={setWeeklyXpRangeMode}
+            onSelectWeeklyTimeRangeMode={setWeeklyTimeRangeMode}
+          />
+        </main>
 
-      <footer className="render-isolate screenshot-solid-panel screenshot-disable-blur relative z-10 border-t border-black/5 bg-white/78 py-12 dark:border-white/10 dark:bg-[rgba(20,20,22,0.82)]">
-        <div data-screenshot-lock="true" className="mx-auto flex w-full max-w-[1560px] flex-col items-center overflow-visible px-4 text-center sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 overflow-visible py-1">
-            <AppIcon className="h-11 w-11 shrink-0" />
-            <DuoWordmark size="xs" className="shrink-0 overflow-visible" />
+        <footer className="render-isolate screenshot-solid-panel screenshot-disable-blur relative z-10 border-t border-black/5 bg-white/78 py-12 dark:border-white/10 dark:bg-[rgba(20,20,22,0.82)]">
+          <div data-screenshot-lock="true" className="mx-auto flex w-full max-w-[1560px] flex-col items-center overflow-visible px-4 text-center sm:px-6 lg:px-8">
+            <div className="flex items-center gap-1 overflow-visible py-1">
+              <AppIcon className="h-11 w-11 shrink-0" />
+              <DuoWordmark size="xs" className="shrink-0 overflow-visible" />
+            </div>
+            <p className="mt-4 w-full max-w-[760px] text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">
+              多邻国学习数据可视化工具。输入用户名，快速生成和首页一致风格的数据仪表盘。
+            </p>
+            <p className="mt-6 text-xs text-apple-gray6/80 dark:text-apple-dark6/80">
+              © {new Date().getFullYear()} DuoEye · 非官方第三方工具
+            </p>
           </div>
-          <p className="mt-4 w-full max-w-[760px] text-sm leading-7 text-apple-gray6 dark:text-apple-dark6 sm:whitespace-nowrap">
-            多邻国学习数据可视化工具。输入用户名，快速生成和首页一致风格的数据仪表盘。
-          </p>
-          <p className="mt-6 text-xs text-apple-gray6/80 dark:text-apple-dark6/80">
-            © {new Date().getFullYear()} DuoEye · 非官方第三方工具
-          </p>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </EmojiModeProvider>
   );
 }
