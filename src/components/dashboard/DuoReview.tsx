@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { UserData } from '../../types';
 import EmojiIcon from '../icons/EmojiIcon';
 
@@ -11,11 +11,7 @@ export default function DuoReview({ userData }: DuoReviewProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAnalysis();
-  }, [userData]);
-
-  async function fetchAnalysis(): Promise<void> {
+  const fetchAnalysis = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -39,7 +35,11 @@ export default function DuoReview({ userData }: DuoReviewProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [userData]);
+
+  useEffect(() => {
+    fetchAnalysis();
+  }, [fetchAnalysis]);
 
   return (
     <section className="screenshot-solid-surface group relative overflow-hidden rounded-apple-xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)]">
@@ -73,7 +73,7 @@ export default function DuoReview({ userData }: DuoReviewProps) {
           </span>
         </div>
 
-        <div className="screenshot-solid-panel relative min-h-[136px] rounded-[24px] border border-white/70 bg-white/88 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors duration-200 group-hover:border-white/90 group-hover:bg-white/92 dark:border-0 dark:[background-clip:border-box] dark:bg-white/6 dark:shadow-none dark:group-hover:bg-white/8">
+        <div className="screenshot-solid-panel relative h-[136px] rounded-[24px] border border-white/70 bg-white/88 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors duration-200 group-hover:border-white/90 group-hover:bg-white/92 dark:border-0 dark:[background-clip:border-box] dark:bg-white/6 dark:shadow-none dark:group-hover:bg-white/8">
           {error ? (
             <div className="space-y-3">
               <p className="text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">{error}</p>
