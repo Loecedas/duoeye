@@ -170,7 +170,7 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-5 gap-2 max-[520px]:grid-cols-4 max-[520px]:gap-1.5 min-[768px]:max-[1279px]:grid-cols-5 min-[768px]:max-[1279px]:gap-2 xl:grid-cols-5">
+      <div className="grid flex-1 grid-cols-5 gap-2 max-[520px]:grid-cols-4 max-[520px]:gap-1.5 md:grid-cols-4 lg:grid-cols-5 md:gap-2.5 xl:grid-cols-5">
         {allAchievements.map((achievement) => {
           const isUnlocked = unlocked.some((item) => item.id === achievement.id);
           const color = CATEGORY_COLORS[achievement.category] || 'from-gray-400 to-gray-500';

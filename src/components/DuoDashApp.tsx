@@ -268,7 +268,7 @@ function DashboardSections({
 
   return (
     <div data-screenshot-lock="true" className={`${animationClass} space-y-6`}>
-      <section data-screenshot-lock="true" className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section data-screenshot-lock="true" className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6">
             DUOEYE DASHBOARD
@@ -296,7 +296,7 @@ function DashboardSections({
 
       <div className={`grid grid-cols-1 gap-6 xl:grid-cols-12 ${animationClass}`} style={animated ? { animationDelay: '0.14s' } : undefined}>
         <div className="xl:col-span-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <DashboardCard
               icon={<EmojiIcon symbol="📈" className="text-[1.35rem] leading-none" />}
               title="本周经验"
@@ -322,7 +322,7 @@ function DashboardSections({
               title="月度经验对比"
               subtitle="支持查看指定年份和近 12 个月"
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.1),transparent_46%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.16),transparent_44%)]"
-              className="lg:col-span-2"
+              className="md:col-span-2"
               actions={
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -384,7 +384,7 @@ function DashboardSections({
             </RenderBoundary>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:contents">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:contents">
             <div className={animationClass} style={animated ? { animationDelay: '0.24s' } : undefined}>
               <RenderBoundary label="成就">
                 <AchievementsSection userData={userData} />
