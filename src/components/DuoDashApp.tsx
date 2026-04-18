@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { UserData } from '../types';
 import { Component, type ErrorInfo } from 'react';
 import { toCanvas } from 'html-to-image';
@@ -296,7 +296,7 @@ function DashboardSections({
 
       <div className={`grid grid-cols-1 gap-6 xl:grid-cols-12 ${animationClass}`} style={animated ? { animationDelay: '0.14s' } : undefined}>
         <div className="xl:col-span-8">
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <DashboardCard
               icon={<EmojiIcon symbol="📈" className="text-[1.35rem] leading-none" />}
               title="本周经验"
@@ -322,7 +322,7 @@ function DashboardSections({
               title="月度经验对比"
               subtitle="支持查看指定年份和近 12 个月"
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.1),transparent_46%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.16),transparent_44%)]"
-              className="xl:col-span-2"
+              className="lg:col-span-2"
               actions={
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -363,7 +363,7 @@ function DashboardSections({
             >
               <YearlyChart data={userData.yearlyXpHistory || []} />
             </DashboardCard>
-
+ 
             <DashboardCard
               icon={<EmojiIcon symbol="⌛" className="text-[1.35rem] leading-none" />}
               title="年度学习时间"
@@ -384,16 +384,18 @@ function DashboardSections({
             </RenderBoundary>
           </div>
 
-          <div className={animationClass} style={animated ? { animationDelay: '0.24s' } : undefined}>
-            <RenderBoundary label="成就">
-              <AchievementsSection userData={userData} />
-            </RenderBoundary>
-          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:contents">
+            <div className={animationClass} style={animated ? { animationDelay: '0.24s' } : undefined}>
+              <RenderBoundary label="成就">
+                <AchievementsSection userData={userData} />
+              </RenderBoundary>
+            </div>
 
-          <div className={animationClass} style={animated ? { animationDelay: '0.28s' } : undefined}>
-            <RenderBoundary label="AI 总结">
-              <DuoReview userData={userData} />
-            </RenderBoundary>
+            <div className={animationClass} style={animated ? { animationDelay: '0.28s' } : undefined}>
+              <RenderBoundary label="AI 总结">
+                <DuoReview userData={userData} />
+              </RenderBoundary>
+            </div>
           </div>
         </aside>
       </div>

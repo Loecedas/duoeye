@@ -543,7 +543,7 @@ export default function Navbar({
               <div className="mt-1 text-[12px] font-semibold tracking-tight text-apple-dark1 max-[430px]:text-[11px] dark:text-white">图标</div>
             </button>
 
-            <button type="button" onClick={onLogout} className={compactMenuItemClassName}>
+            <button type="button" onClick={onLogout} className={`${compactMenuItemClassName} col-span-2`}>
               <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] max-[430px]:h-7 max-[430px]:w-7 max-[430px]:rounded-[14px] dark:border-white/10 dark:bg-white/10 dark:text-white">
                 <ExitIcon className="h-4 w-4" />
               </div>

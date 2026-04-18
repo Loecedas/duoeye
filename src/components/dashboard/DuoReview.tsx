@@ -42,13 +42,13 @@ export default function DuoReview({ userData }: DuoReviewProps) {
   }, [fetchAnalysis]);
 
   return (
-    <section className="screenshot-solid-surface group relative overflow-hidden rounded-apple-xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)]">
+    <section className="screenshot-solid-surface h-full flex flex-col group relative overflow-hidden rounded-apple-xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)]">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.14),transparent_44%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.1),transparent_48%)] opacity-90 transition-opacity duration-200 group-hover:opacity-100 dark:bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.2),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.16),transparent_46%)] dark:opacity-100"
       />
 
-      <div className="relative">
+      <div className="relative flex-1 flex flex-col">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className="flex h-11 items-center justify-center text-[1.3rem] leading-none transition-transform duration-200 group-hover:scale-[1.03]">
@@ -73,7 +73,7 @@ export default function DuoReview({ userData }: DuoReviewProps) {
           </span>
         </div>
 
-        <div className="screenshot-solid-panel relative h-[136px] rounded-[24px] border border-white/70 bg-white/88 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors duration-200 group-hover:border-white/90 group-hover:bg-white/92 dark:border-0 dark:[background-clip:border-box] dark:bg-white/6 dark:shadow-none dark:group-hover:bg-white/8">
+        <div className="screenshot-solid-panel relative min-h-[136px] flex-1 rounded-[24px] border border-white/70 bg-white/88 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors duration-200 group-hover:border-white/90 group-hover:bg-white/92 dark:border-0 dark:[background-clip:border-box] dark:bg-white/6 dark:shadow-none dark:group-hover:bg-white/8">
           {error ? (
             <div className="space-y-3">
               <p className="text-sm leading-7 text-apple-gray6 dark:text-apple-dark6">{error}</p>

@@ -148,7 +148,7 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
   }, [selectedAchievement]);
 
   return (
-    <div className="screenshot-solid-surface relative overflow-hidden rounded-apple-xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] max-[520px]:p-4 min-[768px]:max-[1023px]:mx-auto min-[768px]:max-[1023px]:max-w-[860px] min-[768px]:max-[1279px]:p-4 dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]">
+    <div className="screenshot-solid-surface h-full flex flex-col relative overflow-hidden rounded-apple-xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] p-6 shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)] max-[520px]:p-4 min-[768px]:max-[1023px]:mx-auto min-[768px]:max-[1023px]:max-w-[860px] min-[768px]:max-[1279px]:p-4 dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,200,0,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,200,0,0.2),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.14),transparent_46%)]" />
       <div className="mb-4 flex items-center justify-between max-[520px]:mb-3 min-[768px]:max-[1279px]:mb-3">
         <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-2 max-[520px]:grid-cols-4 max-[520px]:gap-1.5 min-[768px]:max-[1279px]:grid-cols-7 min-[768px]:max-[1279px]:gap-1.5 xl:grid-cols-5">
+      <div className="grid flex-1 grid-cols-5 gap-2 max-[520px]:grid-cols-4 max-[520px]:gap-1.5 min-[768px]:max-[1279px]:grid-cols-5 min-[768px]:max-[1279px]:gap-2 xl:grid-cols-5">
         {allAchievements.map((achievement) => {
           const isUnlocked = unlocked.some((item) => item.id === achievement.id);
           const color = CATEGORY_COLORS[achievement.category] || 'from-gray-400 to-gray-500';
