@@ -793,25 +793,83 @@ export default function DuoDashApp({
     return { blob: fallbackBlob, extension: 'jpg' };
   }
 
+  function identifyDeviceType(): 'mobile' | 'tablet' | 'laptop' | 'desktop' {
+    const width = window.innerWidth;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    if (width < 768) return 'mobile';
+    if (width < 1024) return 'tablet';
+    if (width <= 1536) return 'laptop';
+    return isTouch ? 'tablet' : 'desktop';
+  }
+
+  function getStandardizedCaptureDimensions(currentWidth: number, type: 'mobile' | 'tablet' | 'laptop' | 'desktop') {
+    if (type === 'mobile') {
+      return { width: currentWidth < 414 ? 393 : 430 };
+    }
+    if (type === 'tablet') {
+      return { width: 768 };
+    }
+    if (type === 'laptop') {
+      // 笔记本强制规范化为 1024 宽
+      // 941 是用户要求的理想高度参考值，如果内容较多则按比例及内容实际长度
+      return { width: 1024, targetHeight: 941 };
+    }
+    return { width: Math.min(currentWidth, 1560) };
+  }
+
   async function handleScreenshot(): Promise<void> {
     if (!userData || !pageRef.current || isScreenshotting) return;
 
     const root = document.documentElement;
+    const pageNode = pageRef.current;
     const fileName = getScreenshotFileName();
     const hadAnimationsDisabled = root.classList.contains('animations-off');
     const hadScreenshotMode = root.classList.contains('screenshot-mode');
+
+    // 识别并计算标准化尺寸
+    const deviceType = identifyDeviceType();
+    const { width: targetWidth } = getStandardizedCaptureDimensions(window.innerWidth, deviceType);
 
     try {
       root.classList.add('animations-off');
       root.classList.add('screenshot-mode');
       setIsScreenshotting(true);
-      await waitForStableFrame(360);
 
-      const pageNode = pageRef.current;
+      // --- [鲁棒性增强: 原始样式备份序列] ---
+      const originalPageStyle = pageNode.getAttribute('style');
+      const navbar = document.querySelector('[data-floating-navbar="true"]') as HTMLElement | null;
+      const originalNavbarStyle = navbar?.getAttribute('style') || null;
+
+      // 临时应用标准化宽度以触发布局重绘
+      pageNode.style.width = `${targetWidth}px`;
+      pageNode.style.minWidth = `${targetWidth}px`;
+      pageNode.style.maxWidth = `${targetWidth}px`;
+      pageNode.style.margin = '0 auto';
+      pageNode.style.position = 'relative';
+
+      // 针对固定定位的导航栏也要强制同步宽度并居中，防止在 1024 导出时出现 1440 的导航栏
+      if (navbar) {
+        navbar.style.width = `${targetWidth}px`;
+        navbar.style.left = '50%';
+        navbar.style.right = 'auto';
+        navbar.style.transform = 'translateX(-50%)';
+      }
+
+      // 等待布局和图片资源稳定
+      await waitForStableFrame(500);
+
+      // 在标准化后的布局上通过 lockScreenshotLayout 锁定所有卡片尺寸
       const unlockScreenshotLayout = lockScreenshotLayout(pageNode);
-      const captureWidth = Math.ceil(pageNode.getBoundingClientRect().width || window.innerWidth || 0);
+      
+      // 重新测量高度：在目标宽度下的实际内容高度
+      const captureWidth = targetWidth;
       const captureHeight = Math.ceil(pageNode.scrollHeight);
-      const pixelRatio = getScreenshotPixelRatio(captureWidth, captureHeight);
+      
+      // 智能识别笔记本高度：如果实际高度接近 941 或处于笔记本模式，优化输出比例
+      const finalCaptureHeight = (deviceType === 'laptop' && captureHeight < 1100) ? Math.max(captureHeight, 941) : captureHeight;
+
+      const pixelRatio = getScreenshotPixelRatio(captureWidth, finalCaptureHeight);
       let screenshotFile: ScreenshotFile | null = null;
 
       try {
@@ -820,9 +878,9 @@ export default function DuoDashApp({
           pixelRatio,
           skipAutoScale: true,
           width: captureWidth,
-          height: captureHeight,
+          height: finalCaptureHeight,
           canvasWidth: Math.round(captureWidth * pixelRatio),
-          canvasHeight: Math.round(captureHeight * pixelRatio),
+          canvasHeight: Math.round(finalCaptureHeight * pixelRatio),
           backgroundColor: root.classList.contains('dark') ? '#1c1c1e' : '#f5f5f7',
           filter: (domNode) => !(domNode instanceof HTMLElement && domNode.dataset.screenshotIgnore === 'true'),
           style: {
@@ -830,12 +888,27 @@ export default function DuoDashApp({
             width: `${captureWidth}px`,
             minWidth: `${captureWidth}px`,
             maxWidth: `${captureWidth}px`,
-            minHeight: `${captureHeight}px`,
+            minHeight: `${finalCaptureHeight}px`,
           },
         });
         screenshotFile = await exportScreenshotWithinLimit(canvas);
       } finally {
         unlockScreenshotLayout();
+        
+        // --- [鲁棒性增强: 样式完全恢复序列] ---
+        if (originalPageStyle === null) {
+          pageNode.removeAttribute('style');
+        } else {
+          pageNode.setAttribute('style', originalPageStyle);
+        }
+
+        if (navbar) {
+          if (originalNavbarStyle === null) {
+            navbar.removeAttribute('style');
+          } else {
+            navbar.setAttribute('style', originalNavbarStyle);
+          }
+        }
       }
 
       if (!screenshotFile) {
