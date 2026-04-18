@@ -267,7 +267,7 @@ function DashboardSections({
       : (userData.dailyTimeHistory || []).map((item) => ({ date: item.date, time: item.time }));
 
   return (
-    <div data-screenshot-lock="true" className={`${animationClass} space-y-6`}>
+    <div data-screenshot-lock="true" className={`${animationClass} space-y-8`}>
       <section data-screenshot-lock="true" className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/8 dark:text-apple-dark6">
@@ -294,9 +294,9 @@ function DashboardSections({
         </RenderBoundary>
       </div>
 
-      <div className={`grid grid-cols-1 gap-6 xl:grid-cols-12 ${animationClass}`} style={animated ? { animationDelay: '0.14s' } : undefined}>
+      <div className={`grid grid-cols-1 gap-8 xl:grid-cols-12 ${animationClass}`} style={animated ? { animationDelay: '0.14s' } : undefined}>
         <div className="xl:col-span-8">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <DashboardCard
               icon={<EmojiIcon symbol="📈" className="text-[1.35rem] leading-none" />}
               title="本周经验"
@@ -377,14 +377,14 @@ function DashboardSections({
           </div>
         </div>
 
-        <aside className="space-y-6 xl:col-span-4">
+        <aside className="flex flex-col gap-8 xl:col-span-4">
           <div className={animationClass} style={animated ? { animationDelay: '0.2s' } : undefined}>
             <RenderBoundary label="语言分布">
               <LanguageDistribution courses={userData.courses} totalXp={userData.totalXp} />
             </RenderBoundary>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:contents">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-1">
             <div className={animationClass} style={animated ? { animationDelay: '0.24s' } : undefined}>
               <RenderBoundary label="成就">
                 <AchievementsSection userData={userData} />
@@ -811,10 +811,13 @@ export default function DuoDashApp({
       return { width: 768 };
     }
     if (type === 'laptop') {
-      // 笔记本强制规范化为 1024 宽
-      // 941 是用户要求的理想高度参考值，如果内容较多则按比例及内容实际长度
-      return { width: 1024, targetHeight: 941 };
+      // 对于笔记本，保持原始宽度，避免强制 1024 导致界面变窄
+      return { width: currentWidth };
     }
+  
+  
+  
+
     return { width: Math.min(currentWidth, 1560) };
   }
 
@@ -848,8 +851,8 @@ export default function DuoDashApp({
       pageNode.style.margin = '0 auto';
       pageNode.style.position = 'relative';
 
-      // 针对固定定位的导航栏也要强制同步宽度并居中，防止在 1024 导出时出现 1440 的导航栏
-      if (navbar) {
+      // 对于笔记本（宽度 1024）导出时，不强制修改导航栏宽度，保持其 100% 自适应，以避免偏移
+      if (navbar && deviceType !== 'laptop') {
         navbar.style.width = `${targetWidth}px`;
         navbar.style.left = '50%';
         navbar.style.right = 'auto';
