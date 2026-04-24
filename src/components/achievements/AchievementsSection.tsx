@@ -21,7 +21,6 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'daily_xp_1000', title: '爆发日', description: '单日最高达到 1,000 XP', icon: '👑', category: 'xp' },
   { id: 'lang_3', title: '语言探索者', description: '学习 3 门语言', icon: '🌍', category: 'special' },
   { id: 'lang_5', title: '多语言者', description: '学习 5 门语言', icon: '🔒', category: 'special' },
-  { id: 'plus', title: '超级会员', description: '开通 Super 会员', icon: '✨', category: 'special' },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -45,7 +44,6 @@ const ACHIEVEMENT_CARD_STYLES: Record<string, string> = {
   daily_xp_1000: 'from-[#f5d54b] via-[#e6c12d] to-[#cfa317]',
   lang_3: 'from-[#b879f1] via-[#cf63cb] to-[#f04d8e]',
   lang_5: 'from-[#c8c8cc] via-[#d9d9df] to-[#eeeeef]',
-  plus: 'from-[#b56df1] via-[#cb61da] to-[#ef5aa6]',
 };
 
 function getAchievementCardIconClassName(symbol: string, mode: 'emoji' | 'svg'): string {
@@ -116,9 +114,6 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
         case 'lang_5':
           isUnlocked = userData.courses.length >= 5;
           break;
-        case 'plus':
-          isUnlocked = userData.isPlus;
-          break;
       }
 
       if (isUnlocked) {
@@ -130,7 +125,7 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
     });
 
     return { unlocked: unlockedList, locked: lockedList };
-  }, [maxDailyXp, userData.courses.length, userData.isPlus, userData.streak, userData.totalXp]);
+  }, [maxDailyXp, userData.courses.length, userData.streak, userData.totalXp]);
 
   const allAchievements = [...unlocked, ...locked];
   const selectedUnlocked = selectedAchievement ? unlocked.some((achievement) => achievement.id === selectedAchievement.id) : false;
