@@ -1,4 +1,6 @@
 ---
+import { ViewTransitions } from 'astro:transitions';
+
 interface Props {
   title: string;
 }
@@ -11,31 +13,45 @@ const { title } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="DuoEye - 多邻国学习数据仪表盘" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
       (() => {
-        try {
-          const savedTheme = localStorage.getItem('duoeye-theme');
-          const themeMode =
-            savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system'
-              ? savedTheme
-              : 'system';
-          const resolvedTheme =
-            themeMode === 'system'
-              ? window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light'
-              : themeMode;
-          document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
-        } catch {
-          document.documentElement.classList.remove('dark');
+        function applyTheme() {
+          try {
+            const savedTheme = localStorage.getItem('duoeye-theme');
+            const themeMode = savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system' ? savedTheme : 'system';
+            const isDark = themeMode === 'system' 
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches 
+              : themeMode === 'dark';
+            
+            const root = document.documentElement;
+            if (isDark) {
+              root.classList.add('dark');
+              root.style.backgroundColor = '#1c1c1e';
+              root.style.colorScheme = 'dark';
+            } else {
+              root.classList.remove('dark');
+              root.style.backgroundColor = '#f5f5f7';
+              root.style.colorScheme = 'light';
+            }
+
+            const savedEmojiMode = localStorage.getItem('duoeye_emoji_icon_mode');
+            if (savedEmojiMode === 'svg') {
+              root.classList.add('duo-mode-svg');
+            } else {
+              root.classList.remove('duo-mode-svg');
+            }
+          } catch (e) {}
         }
+        applyTheme();
+        document.addEventListener('astro:after-swap', applyTheme);
       })();
     </script>
+    <ViewTransitions />
+    <meta name="description" content="DuoEye - 多邻国学习数据仪表盘" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen font-sans antialiased text-apple-dark1 transition-colors dark:text-white">
+  <body class="min-h-screen font-sans antialiased text-apple-dark1 dark:text-white">
     <slot />
   </body>
 </html>
@@ -59,6 +75,9 @@ const { title } = Astro.props;
     --duo-orange: #FF9600;
   }
 
+  html.duo-mode-svg .duo-emoji-native { display: none !important; }
+  html:not(.duo-mode-svg) .duo-emoji-svg { display: none !important; }
+
   html.dark {
     color-scheme: dark;
   }
@@ -69,6 +88,7 @@ const { title } = Astro.props;
     -moz-osx-font-smoothing: grayscale;
     background: #f5f5f7;
     scroll-padding-top: 8rem;
+    scroll-behavior: smooth;
   }
 
   html.dark {

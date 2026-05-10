@@ -153,7 +153,7 @@ interface ScreenshotFile {
 }
 
 const surfaceClassName =
-  'render-isolate screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-0 dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none';
+  'render-isolate screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-transparent dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none';
 
 const headerBadgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/20 dark:bg-white/16 dark:text-white/85';
@@ -175,22 +175,22 @@ interface WeeklyRangeActionsProps {
 
 function WeeklyRangeActions({ value, onChange }: WeeklyRangeActionsProps) {
   return (
-    <>
+    <div className="flex items-center gap-1.5 md:max-xl:gap-1">
       <button
         type="button"
         onClick={() => onChange('recent7')}
-        className={`${getHeaderActionClassName(value === 'recent7')} min-w-[76px]`}
+        className={`${getHeaderActionClassName(value === 'recent7')} min-w-[78px] md:max-xl:min-w-[72px] md:max-xl:px-2 md:max-xl:text-[11px]`}
       >
         最近七天
       </button>
       <button
         type="button"
         onClick={() => onChange('week')}
-        className={`${getHeaderActionClassName(value === 'week')} min-w-[58px]`}
+        className={`${getHeaderActionClassName(value === 'week')} min-w-[54px] md:max-xl:min-w-[48px] md:max-xl:px-2 md:max-xl:text-[11px]`}
       >
         本周
       </button>
-    </>
+    </div>
   );
 }
 
@@ -324,11 +324,11 @@ function DashboardSections({
               glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.1),transparent_46%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.16),transparent_44%)]"
               className="md:col-span-2"
               actions={
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-1.5 md:max-xl:gap-1">
                   <button
                     type="button"
                     onClick={onSelectRollingMonths}
-                    className={getHeaderActionClassName(monthlyViewMode === 'rolling12')}
+                    className={`${getHeaderActionClassName(monthlyViewMode === 'rolling12')} md:max-xl:px-2 md:max-xl:text-[11px]`}
                   >
                     近 12 个月
                   </button>
@@ -338,7 +338,7 @@ function DashboardSections({
                       key={year}
                       type="button"
                       onClick={() => onSelectMonthlyYear(year)}
-                      className={getHeaderActionClassName(monthlyViewMode === 'year' && selectedMonthlyYear === year)}
+                      className={`${getHeaderActionClassName(monthlyViewMode === 'year' && selectedMonthlyYear === year)} md:max-xl:px-2 md:max-xl:text-[11px]`}
                     >
                       {year}
                     </button>
@@ -423,8 +423,19 @@ export default function DuoDashApp({
   const [userData, setUserData] = useState<UserData | null>(initialUserData);
   const [username, setUsername] = useState(initialUsername);
   const [loadError, setLoadError] = useState(initialLoadError);
-  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined') return 'system';
+    return resolveThemeMode(localStorage.getItem(THEME_STORAGE_KEY));
+  });
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
+    if (typeof window === 'undefined') return 'light';
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const mode = resolveThemeMode(savedTheme);
+    if (mode === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return mode;
+  });
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [emojiIconMode, setEmojiIconMode] = useState<EmojiIconMode>(getInitialEmojiIconMode);
   const [isScreenshotting, setIsScreenshotting] = useState(false);
@@ -500,9 +511,8 @@ export default function DuoDashApp({
 
     async function bootstrap(): Promise<void> {
       const urlUsername = new URLSearchParams(window.location.search).get('username')?.trim() || '';
-      const sessionUsername = sessionStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
-      const localUsername = localStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
-      const storedUsername = sessionUsername || localUsername;
+      const sessionUsername = sessionStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || localStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
+      const storedUsername = sessionUsername || localStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
       const activeUsername = urlUsername || storedUsername;
       const sessionUserData = sessionStorage.getItem(USERDATA_STORAGE_KEY);
       const localUserData = localStorage.getItem(USERDATA_STORAGE_KEY);
@@ -601,6 +611,7 @@ export default function DuoDashApp({
 
   useEffect(() => {
     localStorage.setItem(EMOJI_ICON_MODE_STORAGE_KEY, emojiIconMode);
+    document.documentElement.classList.toggle('duo-mode-svg', emojiIconMode === 'svg');
   }, [emojiIconMode]);
 
   useEffect(() => {
@@ -811,13 +822,8 @@ export default function DuoDashApp({
       return { width: 768 };
     }
     if (type === 'laptop') {
-      // 对于笔记本，保持原始宽度，避免强制 1024 导致界面变窄
       return { width: currentWidth };
     }
-  
-  
-  
-
     return { width: Math.min(currentWidth, 1560) };
   }
 
@@ -851,8 +857,9 @@ export default function DuoDashApp({
       pageNode.style.margin = '0 auto';
       pageNode.style.position = 'relative';
 
-      // 对于笔记本（宽度 1024）导出时，不强制修改导航栏宽度，保持其 100% 自适应，以避免偏移
-      if (navbar && deviceType !== 'laptop') {
+      // 统一处理导航栏位置：强制使用 absolute 定位并居中，解决在 fixed 定位下截图产生的偏移问题
+      if (navbar) {
+        navbar.style.position = 'absolute';
         navbar.style.width = `${targetWidth}px`;
         navbar.style.left = '50%';
         navbar.style.right = 'auto';
@@ -932,7 +939,7 @@ export default function DuoDashApp({
   if (loading) {
     return (
       <EmojiModeProvider mode={emojiIconMode}>
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 dark:bg-apple-dark1">
           <div className={pageGlowBackgroundClassName} />
           <div className="relative flex flex-col items-center gap-5 px-6">
             <AppIcon className="mb-3 h-32 w-32 animate-bounce sm:h-44 sm:w-44" />
@@ -949,7 +956,7 @@ export default function DuoDashApp({
   if (!userData) {
     return (
       <EmojiModeProvider mode={emojiIconMode}>
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-apple-gray1 dark:bg-apple-dark1">
           <div className={pageGlowBackgroundClassName} />
           <div className="relative text-center">
             <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[30px] border border-white/80 bg-white/88 shadow-[0_14px_32px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/8">
@@ -976,7 +983,7 @@ export default function DuoDashApp({
 
   return (
     <EmojiModeProvider mode={emojiIconMode}>
-      <div ref={pageRef} data-screenshot-root="true" data-screenshot-lock="true" className="relative min-h-screen overflow-x-hidden bg-apple-gray1 transition-colors duration-500 dark:bg-apple-dark1">
+      <div ref={pageRef} data-screenshot-root="true" data-screenshot-lock="true" className="relative min-h-screen overflow-x-hidden bg-apple-gray1 dark:bg-apple-dark1">
         <div className={`screenshot-soft-glow pointer-events-none ${pageGlowBackgroundClassName}`} />
 
       {isScreenshotting ? (

@@ -1,4 +1,5 @@
 import { Suspense, lazy, startTransition, useEffect, useRef, useState } from 'react';
+import { navigate } from 'astro:transitions/client';
 import AppIcon from './AppIcon';
 import DuoWordmark from './DuoWordmark';
 import ThemeModeControl from './ThemeModeControl';
@@ -113,7 +114,17 @@ const pageGlowBackgroundClassName =
 const badgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-transparent dark:bg-white/10 dark:text-apple-dark6';
 const navTabClassName =
-  'inline-flex h-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 px-4 text-xs font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
+  'inline-flex h-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 px-4 text-xs font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] hover:text-apple-dark1 active:scale-95 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:text-white';
+
+const navGroupShellClassName =
+  'flex h-11 items-center gap-1 rounded-2xl border border-black/5 bg-white/88 p-1 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] dark:border-white/15 dark:bg-white/12 dark:text-white/72';
+
+const navGroupItemClassName =
+  'flex h-9 flex-col items-center justify-center rounded-xl px-2.5 text-[10px] font-bold tracking-tight leading-[1.1] transition-all duration-200 hover:-translate-y-0.5 hover:bg-black/[0.04] hover:text-apple-dark1 active:scale-95 dark:hover:bg-white/[0.08] dark:hover:text-white whitespace-pre-line text-center';
+
+const navGroupIconItemClassName =
+  'flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-black/[0.04] hover:text-apple-dark1 active:scale-95 dark:hover:bg-white/[0.08] dark:hover:text-white';
+
 const anchorSectionClassName = 'deferred-section mt-6';
 const mobileMenuCompactItemClassName =
   'flex min-h-[50px] items-center gap-2 rounded-[20px] border border-black/5 bg-white/72 px-3 py-2 text-left shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.18)]';
@@ -249,30 +260,21 @@ function PauseIcon({ className = 'h-4 w-4' }: { className?: string }) {
   );
 }
 
-function EmojiModeIcon({
-  mode,
-  className = 'h-4 w-4',
-}: {
-  mode: EmojiIconMode;
-  className?: string;
-}) {
-  if (mode === 'svg') {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+function EmojiModeIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <>
+      <svg className={`${className} duo-emoji-native`} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" strokeWidth="1.8" />
+        <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none" />
+        <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
+        <path d="M8.5 14c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+      <svg className={`${className} duo-emoji-svg`} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
         <rect x="4" y="4" width="6" height="6" rx="1.5" strokeWidth="1.8" />
         <circle cx="17" cy="7" r="3" strokeWidth="1.8" />
         <path d="m8 15 3 5 3-5 3 5 3-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-    );
-  }
-
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" strokeWidth="1.8" />
-      <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
-      <path d="M8.5 14c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
+    </>
   );
 }
 
@@ -364,8 +366,19 @@ function HeroMetric({
 export default function LandingHero() {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined') return 'system';
+    return resolveThemeMode(localStorage.getItem(THEME_STORAGE_KEY));
+  });
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
+    if (typeof window === 'undefined') return 'light';
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const mode = resolveThemeMode(savedTheme);
+    if (mode === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return mode;
+  });
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [emojiIconMode, setEmojiIconMode] = useState<EmojiIconMode>(getInitialEmojiIconMode);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -452,6 +465,7 @@ export default function LandingHero() {
 
   useEffect(() => {
     localStorage.setItem(EMOJI_ICON_MODE_STORAGE_KEY, emojiIconMode);
+    document.documentElement.classList.toggle('duo-mode-svg', emojiIconMode === 'svg');
   }, [emojiIconMode]);
 
   useEffect(() => {
@@ -516,7 +530,7 @@ export default function LandingHero() {
     sessionStorage.removeItem(USERDATA_STORAGE_KEY);
     localStorage.setItem(USERNAME_STORAGE_KEY, trimmed);
     localStorage.removeItem(USERDATA_STORAGE_KEY);
-    window.location.assign(`/dashboard?username=${encodeURIComponent(trimmed)}`);
+    navigate(`/dashboard?username=${encodeURIComponent(trimmed)}`);
   }
 
   function handleThemeChange(mode: ThemeMode) {
@@ -538,7 +552,7 @@ export default function LandingHero() {
 
   return (
     <EmojiModeProvider mode={emojiIconMode}>
-      <div className="relative min-h-screen overflow-x-hidden bg-apple-gray1 text-apple-dark1 transition-colors duration-500 dark:bg-apple-dark1 dark:text-white">
+      <div className="relative min-h-screen overflow-x-hidden bg-apple-gray1 text-apple-dark1 dark:bg-apple-dark1 dark:text-white">
         <div className={pageGlowBackgroundClassName} />
 
       <nav ref={navRef} data-floating-navbar="true" className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
@@ -557,7 +571,8 @@ export default function LandingHero() {
           </a>
 
           <div className="hidden items-center gap-2 min-[768px]:flex">
-            <div className="flex items-center gap-1.5 min-[900px]:gap-2">
+            {/* Tablet View: Grouped Navigation */}
+            <div className="flex items-center min-[768px]:max-[1023px]:hidden gap-1.5 min-[900px]:gap-2">
               <a href="#features" className={navTabClassName}>
                 功能亮点
               </a>
@@ -568,28 +583,76 @@ export default function LandingHero() {
                 常见问题
               </a>
             </div>
-            <button
-              type="button"
-              onClick={toggleAnimations}
-              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
-              title={animationsEnabled ? '关闭动效' : '开启动效'}
-              aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
-            >
-              {animationsEnabled ? (
-                <SparkleIcon className={getNavbarActionIconClassName('sparkle')} />
-              ) : (
-                <PauseIcon className={getNavbarActionIconClassName('pause')} />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={toggleEmojiIconMode}
-              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
-              title={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
-              aria-label={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
-            >
-              <EmojiModeIcon mode={emojiIconMode} className={getNavbarActionIconClassName('emoji')} />
-            </button>
+
+            <div className="hidden min-[768px]:max-[1023px]:flex items-center">
+              <div className={`${navGroupShellClassName} gap-0`}>
+                <a href="#features" className={`${navGroupItemClassName} px-3.5`}>
+                  {'功能\n亮点'}
+                </a>
+                <div className="h-4 w-[1px] bg-black/10 dark:bg-white/15" />
+                <a href="#preview" className={`${navGroupItemClassName} px-3.5`}>
+                  {'数据\n预览'}
+                </a>
+                <div className="h-4 w-[1px] bg-black/10 dark:bg-white/15" />
+                <a href="#faq" className={`${navGroupItemClassName} px-3.5`}>
+                  {'常见\n问题'}
+                </a>
+              </div>
+            </div>
+
+            {/* Tablet View: Grouped Action Toggles */}
+            <div className="flex items-center min-[768px]:max-[1023px]:hidden gap-2">
+              <button
+                type="button"
+                onClick={toggleAnimations}
+                className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
+                title={animationsEnabled ? '关闭动效' : '开启动效'}
+                aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
+              >
+                {animationsEnabled ? (
+                  <SparkleIcon className={getNavbarActionIconClassName('sparkle')} />
+                ) : (
+                  <PauseIcon className={getNavbarActionIconClassName('pause')} />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={toggleEmojiIconMode}
+                className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/88 text-apple-gray6 shadow-[0_6px_14px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,color,background-color,border-color] duration-200 hover:text-apple-dark1 dark:border-white/15 dark:bg-white/12 dark:text-white/72 dark:hover:text-white"
+                title={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
+                aria-label={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
+              >
+                <EmojiModeIcon className={getNavbarActionIconClassName('emoji')} />
+              </button>
+            </div>
+
+            <div className="hidden min-[768px]:max-[1023px]:flex items-center">
+              <div className={navGroupShellClassName}>
+                <button
+                  type="button"
+                  onClick={toggleAnimations}
+                  className={navGroupIconItemClassName}
+                  title={animationsEnabled ? '关闭动效' : '开启动效'}
+                  aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
+                >
+                  {animationsEnabled ? (
+                    <SparkleIcon className={getNavbarActionIconClassName('sparkle')} />
+                  ) : (
+                    <PauseIcon className={getNavbarActionIconClassName('pause')} />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleEmojiIconMode}
+                  className={navGroupIconItemClassName}
+                  title={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
+                  aria-label={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
+                >
+                  <EmojiModeIcon className={getNavbarActionIconClassName('emoji')} />
+                </button>
+              </div>
+            </div>
+
             <ThemeModeControl mode={themeMode} resolvedTheme={resolvedTheme} onChange={handleThemeChange} />
           </div>
 
@@ -667,7 +730,7 @@ export default function LandingHero() {
                 className={mobileMenuExpandedItemClassName}
               >
                 <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/10 dark:text-white">
-                  <EmojiModeIcon mode={emojiIconMode} className="h-4 w-4" />
+                  <EmojiModeIcon className="h-4 w-4" />
                 </div>
                 <div className="mt-1">
                   <div className="text-[17px] font-semibold tracking-tight text-apple-dark1 dark:text-white">图标</div>

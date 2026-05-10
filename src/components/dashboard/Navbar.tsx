@@ -108,30 +108,21 @@ function RefreshIcon({ className = 'h-4 w-4' }: { className?: string }) {
   );
 }
 
-function EmojiModeIcon({
-  mode,
-  className = 'h-4 w-4',
-}: {
-  mode: EmojiIconMode;
-  className?: string;
-}) {
-  if (mode === 'svg') {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+function EmojiModeIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <>
+      <svg className={`${className} duo-emoji-native`} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" strokeWidth="1.8" />
+        <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none" />
+        <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
+        <path d="M8.5 14c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+      <svg className={`${className} duo-emoji-svg`} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
         <rect x="4" y="4" width="6" height="6" rx="1.5" strokeWidth="1.8" />
         <circle cx="17" cy="7" r="3" strokeWidth="1.8" />
         <path d="m8 15 3 5 3-5 3 5 3-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-    );
-  }
-
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" strokeWidth="1.8" />
-      <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
-      <path d="M8.5 14c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
+    </>
   );
 }
 
@@ -374,7 +365,7 @@ export default function Navbar({
               title={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
               aria-label={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
             >
-              <EmojiModeIcon mode={emojiIconMode} className={getNavbarActionIconClassName('emoji')} />
+              <EmojiModeIcon className={getNavbarActionIconClassName('emoji')} />
             </button>
 
             <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
@@ -538,7 +529,7 @@ export default function Navbar({
               className={compactMenuItemClassName}
             >
               <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[15px] border border-black/5 bg-white/92 text-apple-dark1 shadow-[0_4px_12px_rgba(15,23,42,0.04)] max-[430px]:h-7 max-[430px]:w-7 max-[430px]:rounded-[14px] dark:border-white/10 dark:bg-white/10 dark:text-white">
-                <EmojiModeIcon mode={emojiIconMode} className="h-4 w-4" />
+                <EmojiModeIcon className="h-4 w-4" />
               </div>
               <div className="mt-1 text-[12px] font-semibold tracking-tight text-apple-dark1 max-[430px]:text-[11px] dark:text-white">图标</div>
             </button>
@@ -619,7 +610,7 @@ export default function Navbar({
             title={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
             aria-label={emojiIconMode === 'svg' ? '切换到 Emoji 图标' : '切换到 SVG 图标'}
           >
-            <EmojiModeIcon mode={emojiIconMode} className={getNavbarActionIconClassName('emoji')} />
+            <EmojiModeIcon className={getNavbarActionIconClassName('emoji')} />
           </button>
 
           <button type="button" onClick={onLogout} className={iconButtonClassName} title="退出" aria-label="退出">
