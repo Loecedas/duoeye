@@ -15,6 +15,7 @@ import DuoReview from './dashboard/DuoReview';
 import LanguageDistribution from './dashboard/LanguageDistribution';
 import Navbar from './dashboard/Navbar';
 import TodayOverview from './dashboard/TodayOverview';
+import SubjectDistribution from './dashboard/SubjectDistribution';
 import EmojiIcon from './icons/EmojiIcon';
 import {
   EmojiModeProvider,
@@ -295,6 +296,7 @@ function DashboardSections({
       </div>
 
       <div className={`grid grid-cols-1 gap-8 xl:grid-cols-12 ${animationClass}`} style={animated ? { animationDelay: '0.14s' } : undefined}>
+        {/* Main Column: XP/Time Charts */}
         <div className="xl:col-span-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <DashboardCard
@@ -377,27 +379,41 @@ function DashboardSections({
           </div>
         </div>
 
-        <aside className="flex flex-col gap-8 xl:col-span-4">
-          <div className={animationClass} style={animated ? { animationDelay: '0.2s' } : undefined}>
-            <RenderBoundary label="语言分布">
-              <LanguageDistribution courses={userData.courses} totalXp={userData.totalXp} />
-            </RenderBoundary>
-          </div>
-
+        {/* Sidebar Column */}
+        <aside className="flex flex-col gap-8 xl:col-span-4 xl:row-span-2 xl:h-full">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-1">
-            <div className={animationClass} style={animated ? { animationDelay: '0.24s' } : undefined}>
+            <div className={animationClass} style={animated ? { animationDelay: '0.2s' } : undefined}>
               <RenderBoundary label="成就">
                 <AchievementsSection userData={userData} />
               </RenderBoundary>
             </div>
 
-            <div className={animationClass} style={animated ? { animationDelay: '0.28s' } : undefined}>
+            <div className={animationClass} style={animated ? { animationDelay: '0.24s' } : undefined}>
               <RenderBoundary label="AI 总结">
                 <DuoReview userData={userData} />
               </RenderBoundary>
             </div>
           </div>
+
+          <div className={`${animationClass} flex-grow`} style={animated ? { animationDelay: '0.28s' } : undefined}>
+            <RenderBoundary label="语言分布">
+              <LanguageDistribution courses={userData.courses} totalXp={userData.totalXp} />
+            </RenderBoundary>
+          </div>
         </aside>
+
+        {/* Other Courses: Placed after aside to ensure stacking order on non-xl */}
+        <div className="xl:col-span-8">
+          <DashboardCard
+            icon={<EmojiIcon symbol="🧭" className="text-[1.35rem] leading-none" />}
+            title="其他课程"
+            subtitle="查看你的非语言类科目学习详情"
+            className="h-full"
+            glowClassName="bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.12),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(165,114,247,0.08),transparent_48%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(28,176,246,0.18),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(165,114,247,0.12),transparent_46%)]"
+          >
+            <SubjectDistribution courses={userData.courses} totalXp={userData.totalXp} />
+          </DashboardCard>
+        </div>
       </div>
 
       <section className={`deferred-section group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(15,23,42,0.1)] dark:hover:shadow-[0_22px_42px_rgba(0,0,0,0.28)] ${animationClass}`} style={animated ? { animationDelay: '0.32s' } : undefined}>
