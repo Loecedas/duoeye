@@ -143,12 +143,14 @@ export async function getDuolingoUserData(rawUsername: unknown): Promise<UserDat
 
   const userId = userData.id || userData.user_id || userData.tracking_properties?.user_id;
 
+  // --- End Ameba API Support ---
+
   if (userId && DUOLINGO_JWT) {
     const authHeaders: HeadersInit = {
       ...headers,
       Authorization: `Bearer ${DUOLINGO_JWT}`,
     };
-    const [xpResult, leaderboardResult] = await Promise.all([
+    const [xpResult, leaderboardResult, amebaResult] = await Promise.all([
       fetchWithTimeout(
         `${DUOLINGO_BASE_URL}/2017-06-30/users/${userId}/xp_summaries?startDate=1970-01-01`,
         authHeaders,
@@ -156,6 +158,11 @@ export async function getDuolingoUserData(rawUsername: unknown): Promise<UserDat
       ),
       fetchWithTimeout(
         `${DUOLINGO_BASE_URL}/2017-06-30/users/${userId}/leaderboards?active=true`,
+        authHeaders,
+        10000,
+      ),
+      fetchWithTimeout(
+        `${DUOLINGO_BASE_URL}/2023-05-23/users/${userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties`,
         authHeaders,
         10000,
       ),
@@ -167,6 +174,27 @@ export async function getDuolingoUserData(rawUsername: unknown): Promise<UserDat
 
     if (leaderboardResult.data) {
       userData._leaderboardHistory = leaderboardResult.data;
+    }
+
+    if (amebaResult.data) {
+      // The API might return { users: [...] }, { user: { ... } }, or the user object directly.
+      userData._amebaData = 
+        amebaResult.data.users?.[0] || 
+        amebaResult.data.user || 
+        amebaResult.data;
+    }
+  } else if (userId) {
+    // If no JWT, still try to fetch Ameba data (might be public)
+    const amebaResult = await fetchWithTimeout(
+      `${DUOLINGO_BASE_URL}/2023-05-23/users/${userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties`,
+      headers,
+      8000
+    );
+    if (amebaResult.data) {
+      userData._amebaData = 
+        amebaResult.data.users?.[0] || 
+        amebaResult.data.user || 
+        amebaResult.data;
     }
   }
 

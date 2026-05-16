@@ -58,11 +58,17 @@ const TITLE_ALIASES: Record<string, string> = {
 };
 
 function resolveLanguageLabel(course: Course): string {
+  const subject = String(course.subject || '').toLowerCase();
+  if (subject) {
+    if (subject === 'chess') return '国际象棋';
+    if (subject === 'math') return '数学';
+    if (subject === 'music') return '音乐';
+  }
   return LANGUAGE_NAMES[course.learningLanguage] || TITLE_ALIASES[course.title] || course.title;
 }
 
 export default function LanguageDistribution({ courses, totalXp }: LanguageDistributionProps) {
-  const sortedCourses = useMemo(() => [...courses].sort((a, b) => b.xp - a.xp).slice(0, 4), [courses]);
+  const sortedCourses = useMemo(() => [...courses].sort((a, b) => b.xp - a.xp), [courses]);
   const colors = ['#58CC02', '#1CB0F6', '#A572F7', '#FF9600', '#FF4B4B'];
 
   return (
@@ -71,7 +77,7 @@ export default function LanguageDistribution({ courses, totalXp }: LanguageDistr
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <EmojiIcon symbol="🌍" className="text-[1.3rem] leading-none" />
-          <h2 className="text-lg font-semibold text-apple-dark1 dark:text-white">语言分布</h2>
+          <h2 className="text-lg font-semibold text-apple-dark1 dark:text-white">课程分布</h2>
         </div>
       </div>
 
@@ -111,14 +117,6 @@ export default function LanguageDistribution({ courses, totalXp }: LanguageDistr
           );
         })}
       </div>
-
-      {courses.length > 4 ? (
-        <div className="mt-4 border-t border-apple-gray3 pt-4 dark:border-apple-dark4">
-          <div className="text-sm text-apple-gray6 dark:text-apple-dark6">
-            还有 <span className="font-semibold">{courses.length - 4}</span> 门语言正在学习
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -186,26 +186,67 @@ export function transformDuolingoData(rawData: DuolingoRawUser): UserData {
     ?? rawData.tracking_properties?.gems ?? rawData.lingots ?? rawData.rupees ?? 0;
 
   let totalXp = rawData.total_xp ?? rawData.totalXp ?? 0;
-  if (totalXp === 0) totalXp = sumPoints(rawData.languages);
-  if (totalXp === 0 && rawData.language_data) totalXp = sumPoints(Object.values(rawData.language_data));
-  if (totalXp === 0) totalXp = sumPoints(rawData.courses);
 
   const dailyGoal = rawData.dailyGoal ?? rawData.daily_goal ?? rawData.xpGoal ?? 0;
   const creationTs = rawData.creation_date || rawData.creationDate;
 
   let courses: Course[] = [];
 
-  if (rawData.courses?.length) {
-    courses = rawData.courses
-      .filter((c: any) => (c.xp || 0) > 0 || c.current_learning)
-      .map(c => ({
-        title: c.title,
-        xp: c.xp,
+  // --- Ameba Data Parsing (New Subjects Support) ---
+  const amebaData = rawAny._amebaData;
+  if (amebaData?.courses?.length) {
+    courses = amebaData.courses.map((c: any) => {
+      const subject = String(c.subject || '').toLowerCase();
+      let title = c.title;
+      if (subject) {
+        if (subject === 'chess') title = '国际象棋';
+        else if (subject === 'math') title = '数学';
+        else if (subject === 'music') title = '音乐';
+      }
+
+      // Time spent extraction (from Ameba structure)
+      let timeSpent = c.timeSpent || c.duration || 0;
+      // If duration is in ms, convert to seconds
+      if (timeSpent > 1000000) timeSpent = Math.floor(timeSpent / 1000);
+
+      return {
+        title: title || c.learningLanguage || subject,
+        xp: c.xp || c.points || 0,
         fromLanguage: c.fromLanguage,
         learningLanguage: c.learningLanguage,
         crowns: c.crowns || 0,
-        id: c.id
-      }));
+        id: c.id || c.courseId,
+        subject: subject,
+        timeSpent: Math.floor(timeSpent / 60), // Store in minutes
+      };
+    });
+  }
+
+  // Fallback and legacy courses (Merge with Ameba courses if not already present)
+  if (rawData.courses?.length) {
+    rawData.courses.forEach((c: any) => {
+      const exists = courses.some(ac => 
+        (ac.id && c.id && ac.id === c.id) || 
+        (ac.learningLanguage === c.learningLanguage && ac.fromLanguage === c.fromLanguage)
+      );
+      if (!exists && ((c.xp || c.points || 0) > 0 || c.current_learning)) {
+        const subject = String(c.subject || '').toLowerCase();
+        let title = c.title;
+        if (subject === 'chess') title = '国际象棋';
+        else if (subject === 'math') title = '数学';
+        else if (subject === 'music') title = '音乐';
+
+        courses.push({
+          title: title || c.learningLanguage,
+          xp: c.xp || c.points || 0,
+          fromLanguage: c.fromLanguage,
+          learningLanguage: c.learningLanguage,
+          crowns: c.crowns || 0,
+          id: c.id,
+          subject: subject
+        });
+      }
+    });
   }
 
   if (rawAny.languages?.length) {
@@ -251,6 +292,11 @@ export function transformDuolingoData(rawData: DuolingoRawUser): UserData {
           learningLanguage: langDetail.learning_language || langCode,
         };
       });
+  }
+
+  const coursesXpSum = courses.reduce((sum, c) => sum + (c.xp || 0), 0);
+  if (totalXp < coursesXpSum || totalXp === 0) {
+    totalXp = coursesXpSum;
   }
 
   let learningLanguage = "None";
@@ -356,6 +402,14 @@ export function transformDuolingoData(rawData: DuolingoRawUser): UserData {
     totalMinutes = Math.floor(totalSeconds / 60);
     hasRealTimeData = totalSeconds > 0;
   }
+
+  // If we don't have real-time data from summaries, or if courses have more time recorded
+  const coursesTimeMinutes = courses.reduce((sum, c) => sum + (c.timeSpent || 0), 0);
+  if (coursesTimeMinutes > totalMinutes) {
+    totalMinutes = coursesTimeMinutes;
+    hasRealTimeData = true;
+  }
+
   const estimatedLearningTime = hasRealTimeData
     ? `${Math.floor(totalMinutes / 60)}小时 ${totalMinutes % 60}分钟`
     : '暂无数据';
