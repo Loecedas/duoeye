@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -18,7 +18,7 @@ interface YearData {
   xp: number;
 }
 
-export default function YearlyChart({ data }: YearlyChartProps) {
+function YearlyChart({ data }: YearlyChartProps) {
   const yearlyData = useMemo<YearData[]>(() => {
     const yearMap = new Map<string, number>();
 
@@ -105,3 +105,5 @@ export default function YearlyChart({ data }: YearlyChartProps) {
     </div>
   );
 }
+
+export default memo(YearlyChart);

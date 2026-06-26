@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -39,7 +39,7 @@ function formatMinutes(totalMinutes: number): string {
   return hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
 }
 
-export default function MonthlyChart({
+function MonthlyChart({
   data,
   selectedYear,
   viewMode = 'year',
@@ -200,3 +200,5 @@ export default function MonthlyChart({
     </div>
   );
 }
+
+export default memo(MonthlyChart);

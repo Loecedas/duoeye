@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { DuoColors } from '../../styles/duolingoColors';
 import { getBrowserTimeZone, getDateKeyInTimeZone } from '../../utils/timezone';
@@ -54,7 +54,7 @@ function getViewRangeLabel(viewMode: ViewMode, selectedYear: number, selectedQua
   return `${selectedYear} 全年`;
 }
 
-export default function HeatmapChart({
+function HeatmapChart({
   data,
   forceViewMode,
   closeTooltipOnScroll = false,
@@ -626,3 +626,5 @@ export default function HeatmapChart({
     </div>
   );
 }
+
+export default memo(HeatmapChart);

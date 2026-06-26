@@ -294,6 +294,7 @@ function DashboardSections({
   })();
   const monthlyYears = getMonthlyYears(userData.yearlyXpHistory, registrationYear);
   const [isMonthlyYearPanelOpen, setIsMonthlyYearPanelOpen] = useState(false);
+  const [isMonthlyViewSwitching, setIsMonthlyViewSwitching] = useState(false);
   const [monthlyMetric, setMonthlyMetric] = useState<'xp' | 'time'>('xp');
   const monthlyYearPanelRef = useRef<HTMLDivElement>(null);
   const animationClass = animated ? (isLoaded ? 'animate-fade-in-up' : 'opacity-0') : '';
@@ -308,6 +309,38 @@ function DashboardSections({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMonthlyYearPanelOpen]);
+
+  useEffect(() => {
+    if (!isMonthlyViewSwitching) return;
+
+    let timeoutId = 0;
+    let frameId = 0;
+    let nestedFrameId = 0;
+
+    frameId = window.requestAnimationFrame(() => {
+      nestedFrameId = window.requestAnimationFrame(() => {
+        timeoutId = window.setTimeout(() => setIsMonthlyViewSwitching(false), 220);
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.cancelAnimationFrame(nestedFrameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [isMonthlyViewSwitching, monthlyViewMode]);
+
+  const handleSelectRollingMonths = () => {
+    setIsMonthlyYearPanelOpen(false);
+    setIsMonthlyViewSwitching(true);
+    onSelectRollingMonths();
+  };
+
+  const handleToggleMonthlyYearPanel = () => {
+    if (isMonthlyViewSwitching) return;
+    setIsMonthlyYearPanelOpen((open) => !open);
+  };
+
   const weeklyXpData =
     weeklyXpRangeMode === 'week'
       ? userData.weeklyXpHistory || []
@@ -391,7 +424,7 @@ function DashboardSections({
 
                   <button
                     type="button"
-                    onClick={onSelectRollingMonths}
+                    onClick={handleSelectRollingMonths}
                     className={`${getHeaderActionClassName(monthlyViewMode === 'rolling12')} md:max-xl:px-2 md:max-xl:text-[11px]`}
                   >
                     近 12 个月
@@ -402,12 +435,13 @@ function DashboardSections({
                     <div ref={monthlyYearPanelRef} className="relative">
                       <button
                         type="button"
-                        onClick={() => setIsMonthlyYearPanelOpen((o) => !o)}
+                        onClick={handleToggleMonthlyYearPanel}
+                        aria-disabled={isMonthlyViewSwitching}
                         className={`inline-flex w-[72px] items-center justify-between rounded-[12px] border px-3 py-2 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                           isMonthlyYearPanelOpen || (monthlyViewMode === 'year')
                             ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] dark:bg-white dark:text-apple-dark1'
                             : 'border-black/5 bg-white/72 text-apple-gray6 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:text-apple-dark1 dark:border-white/10 dark:bg-white/10 dark:text-apple-dark6 dark:hover:shadow-[0_8px_18px_rgba(0,0,0,0.22)] dark:hover:text-white'
-                        }`}
+                        } ${isMonthlyViewSwitching ? 'pointer-events-none opacity-60' : ''}`}
                       >
                         <span>{monthlyViewMode === 'year' ? selectedMonthlyYear : monthlyYears[0]}</span>
                         <svg

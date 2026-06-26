@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -13,7 +13,7 @@ interface YearlyTimeChartProps {
   data: Array<{ date: string; xp: number; time?: number }>;
 }
 
-export default function YearlyTimeChart({ data }: YearlyTimeChartProps) {
+function YearlyTimeChart({ data }: YearlyTimeChartProps) {
   const yearlyData = useMemo(() => {
     const yearMap = new Map<string, number>();
 
@@ -101,3 +101,5 @@ export default function YearlyTimeChart({ data }: YearlyTimeChartProps) {
     </div>
   );
 }
+
+export default memo(YearlyTimeChart);
