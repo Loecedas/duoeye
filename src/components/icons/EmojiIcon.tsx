@@ -1,4 +1,5 @@
 import { useId, type CSSProperties, type ReactNode } from 'react';
+import { useEmojiIconMode } from './EmojiMode';
 
 interface EmojiIconProps {
   symbol: string;
@@ -700,6 +701,7 @@ export default function EmojiIcon({
   label,
   tone = 'intrinsic',
 }: EmojiIconProps) {
+  const mode = useEmojiIconMode();
   const glyph = <Glyph symbol={symbol} />;
   
   if (!glyph) {
@@ -716,10 +718,10 @@ export default function EmojiIcon({
 
   return (
     <Wrapper className={getFrameClassName(className)} label={label} style={style}>
-      <span className={`${getContentClassName()} duo-emoji-native`}>
+      <span className={`${getContentClassName()} ${mode === 'emoji' ? 'inline-flex' : 'hidden'} duo-emoji-native`}>
         <span className="block leading-none" style={tone === 'intrinsic' ? { color: 'initial' } : undefined}>{symbol}</span>
       </span>
-      <span className={`${getContentClassName()} duo-emoji-svg`}>
+      <span className={`${getContentClassName()} ${mode === 'svg' ? 'inline-flex' : 'hidden'} duo-emoji-svg`}>
         {glyph}
       </span>
     </Wrapper>
@@ -732,10 +734,12 @@ export function LanguageBadgeIcon({
   className = 'inline-flex items-center justify-center leading-none',
   label,
 }: LanguageBadgeIconProps) {
+  const mode = useEmojiIconMode();
+
   return (
     <Wrapper className={`${className} inline-flex items-center justify-center leading-none`} label={label}>
-      <span className="duo-emoji-native block">{emoji}</span>
-      <span className="duo-emoji-svg inline-flex min-w-[1.6em] items-center justify-center rounded-[0.45em] border border-current/16 bg-current/8 px-[0.22em] py-[0.12em] text-[0.42em] font-black uppercase tracking-[0.12em] text-current">
+      <span className={`${mode === 'emoji' ? 'block' : 'hidden'} duo-emoji-native`}>{emoji}</span>
+      <span className={`${mode === 'svg' ? 'inline-flex' : 'hidden'} duo-emoji-svg min-w-[1.6em] items-center justify-center rounded-[0.45em] border border-current/16 bg-current/8 px-[0.22em] py-[0.12em] text-[0.42em] font-black uppercase tracking-[0.12em] text-current`}>
         {languageCode.slice(0, 2) || '?'}
       </span>
     </Wrapper>

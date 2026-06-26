@@ -79,7 +79,7 @@ export default function DuoWordmark({ size = 'md', className = '' }: DuoWordmark
         x="0"
         y={style.duoY}
         fill={`url(#${duoGradientId})`}
-        fontFamily='-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif'
+        fontFamily='SimSun, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif'
         fontSize={style.duoSize}
         fontWeight="650"
         letterSpacing={size === 'xs' ? '-1.15' : '-1.5'}
@@ -91,7 +91,7 @@ export default function DuoWordmark({ size = 'md', className = '' }: DuoWordmark
         y={style.eyeY}
         fill={`url(#${eyeGradientId})`}
         filter={`url(#${shadowId})`}
-        fontFamily='-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif'
+        fontFamily='SimSun, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif'
         fontSize={style.eyeSize}
         fontWeight="800"
         letterSpacing={size === 'xs' ? '-1.6' : '-2'}

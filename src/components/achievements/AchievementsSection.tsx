@@ -20,7 +20,7 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'daily_xp_500', title: '火力全开', description: '单日最高达到 500 XP', icon: '💥', category: 'xp' },
   { id: 'daily_xp_1000', title: '爆发日', description: '单日最高达到 1,000 XP', icon: '👑', category: 'xp' },
   { id: 'lang_3', title: '语言探索者', description: '学习 3 门语言', icon: '🌍', category: 'special' },
-  { id: 'lang_5', title: '多语言者', description: '学习 5 门语言', icon: '🔒', category: 'special' },
+  { id: 'lang_5', title: '多语言者', description: '学习 5 门语言', icon: '🧭', category: 'special' },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {

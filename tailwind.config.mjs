@@ -35,10 +35,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Helvetica', 'Arial', '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', '"微软雅黑"', 'sans-serif'],
+        sans: ['SimSun', '"Songti SC"', '"STSong"', '"Noto Serif CJK SC"', '"Source Han Serif SC"', 'serif'],
       },
       boxShadow: {
-        'apple': '0 4px 24px rgba(0, 0, 0, 0.06)',
+        apple: '0 4px 24px rgba(0, 0, 0, 0.06)',
         'apple-lg': '0 8px 32px rgba(0, 0, 0, 0.08)',
         'apple-xl': '0 12px 48px rgba(0, 0, 0, 0.12)',
         'apple-dark': '0 4px 24px rgba(0, 0, 0, 0.3)',
@@ -46,7 +46,7 @@ export default {
         'glow-blue': '0 0 40px rgba(28, 176, 246, 0.3)',
       },
       borderRadius: {
-        'apple': '20px',
+        apple: '20px',
         'apple-lg': '28px',
         'apple-xl': '36px',
       },
@@ -58,8 +58,8 @@ export default {
         'slide-in-left': 'slideInLeft 0.4s ease-out forwards',
         'slide-in-right': 'slideInRight 0.4s ease-out forwards',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'float': 'float 6s ease-in-out infinite',
-        'shimmer': 'shimmer 2s linear infinite',
+        float: 'float 6s ease-in-out infinite',
+        shimmer: 'shimmer 2s linear infinite',
         'bounce-subtle': 'bounceSubtle 2s infinite',
       },
       keyframes: {
@@ -101,7 +101,7 @@ export default {
         },
       },
       backdropBlur: {
-        'xs': '2px',
+        xs: '2px',
       },
     },
   },
