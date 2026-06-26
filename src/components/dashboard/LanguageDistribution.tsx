@@ -8,6 +8,7 @@ import {
   getCourseMinutes,
   getCoursesTotalMinutes,
 } from '../../utils/courseMetrics';
+import { getLanguageCourses } from '../../utils/languageCourses';
 
 interface LanguageDistributionProps {
   courses: Course[];
@@ -136,9 +137,7 @@ function resolveLanguageLabel(course: Course): ReactNode {
 export default function LanguageDistribution({ courses, totalXp }: LanguageDistributionProps) {
   const sortedCourses = useMemo(
     () =>
-      courses
-        .filter((course) => !['chess', 'math', 'music'].includes(String(course.subject || '').toLowerCase()))
-        .sort((a, b) => b.xp - a.xp),
+      getLanguageCourses(courses).sort((a, b) => b.xp - a.xp),
     [courses],
   );
   const totalTime = useMemo(() => getCoursesTotalMinutes(courses), [courses]);
