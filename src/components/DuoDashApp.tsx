@@ -186,7 +186,7 @@ interface ScreenshotFile {
 }
 
 const surfaceClassName =
-  'render-isolate screenshot-solid-surface relative overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-transparent dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none';
+  'render-isolate screenshot-solid-surface relative rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,249,252,0.94))] shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-transparent dark:[background-clip:border-box] dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.92),rgba(28,28,30,0.96))] dark:shadow-none';
 
 const headerBadgeClassName =
   'inline-flex items-center rounded-full border border-black/5 bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-apple-gray6 shadow-[0_4px_12px_rgba(15,23,42,0.04)] dark:border-white/20 dark:bg-white/16 dark:text-white/85';
@@ -242,7 +242,7 @@ function DashboardCard({
     <section data-screenshot-lock="true" className={`group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_18px_36px_rgba(0,0,0,0.26)] ${className}`}>
       <div
         aria-hidden="true"
-        className={`screenshot-soft-glow pointer-events-none absolute inset-0 ${
+        className={`screenshot-soft-glow pointer-events-none absolute inset-0 rounded-[inherit] ${
           glowClassName || 'bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.58),transparent_46%),radial-gradient(circle_at_bottom_right,rgba(28,176,246,0.04),transparent_42%)] dark:bg-none'
         }`}
       />
@@ -453,7 +453,7 @@ function DashboardSections({
                       </button>
 
                       <div
-                        className={`absolute right-0 top-[calc(100%+6px)] z-30 w-[72px] overflow-hidden rounded-[18px] border border-black/10 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.15)] transition-[opacity,transform,max-height] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/10 dark:bg-[#2c2c2e] ${
+                        className={`absolute right-0 top-[calc(100%+6px)] z-30 w-[72px] overflow-y-auto overflow-x-hidden rounded-[18px] border border-black/10 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.15)] transition-[opacity,transform,max-height] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/10 dark:bg-[#2c2c2e] ${
                           isMonthlyYearPanelOpen ? 'max-h-[320px] opacity-100 translate-y-0' : 'pointer-events-none max-h-0 opacity-0 -translate-y-2'
                         }`}
                       >
@@ -551,7 +551,7 @@ function DashboardSections({
       <section className={`deferred-section group ${surfaceClassName} transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(15,23,42,0.1)] dark:hover:shadow-[0_22px_42px_rgba(0,0,0,0.28)] ${animationClass}`} style={animated ? { animationDelay: '0.32s' } : undefined}>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(88,204,2,0.08),transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(88,204,2,0.14),transparent_42%)]"
+          className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-100 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(88,204,2,0.08),transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(88,204,2,0.14),transparent_42%)]"
         />
         <div className="relative p-6">
           <RenderBoundary label="学习热力图">

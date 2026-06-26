@@ -414,7 +414,7 @@ function HeatmapChart({
 
             {/* Vertical dropdown panel – same width as trigger */}
             <div
-              className={`absolute right-0 top-[calc(100%+6px)] z-30 w-[72px] overflow-hidden rounded-[18px] border border-black/10 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.15)] transition-[opacity,transform,max-height] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/10 dark:bg-[#2c2c2e] ${
+              className={`absolute right-0 top-[calc(100%+6px)] z-30 w-[72px] overflow-y-auto overflow-x-hidden rounded-[18px] border border-black/10 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.15)] transition-[opacity,transform,max-height] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/10 dark:bg-[#2c2c2e] ${
                 isYearPanelOpen ? 'max-h-[320px] opacity-100 translate-y-0' : 'pointer-events-none max-h-0 opacity-0 -translate-y-2'
               }`}
             >
