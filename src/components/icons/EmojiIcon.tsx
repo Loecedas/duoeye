@@ -692,30 +692,32 @@ function Glyph({ symbol }: { symbol: string }) {
         <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
           <defs>
             <SharpPlasticFilter id={`${uid}-p`} />
-            <linearGradient id={`${uid}-music-shell`} x1="20" y1="12" x2="44" y2="52" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#D98AFF" />
-              <stop offset="0.5" stopColor="#A855F7" />
-              <stop offset="1" stopColor="#7E3BFF" />
-            </linearGradient>
-            <linearGradient id={`${uid}-music-core`} x1="26" y1="20" x2="38" y2="46" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#F5EBFF" />
-              <stop offset="1" stopColor="#E0B3FF" />
+            <linearGradient id={`${uid}-music-shell`} x1="25" y1="10" x2="51" y2="51.5" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#F3E8FF" />
+              <stop offset="0.3" stopColor="#D8B4FE" />
+              <stop offset="0.7" stopColor="#A855F7" />
+              <stop offset="1" stopColor="#7E22CE" />
             </linearGradient>
           </defs>
+          
+          {/* Main body of the music note (Single unified path) */}
           <path
             filter={`url(#${uid}-p)`}
-            d="M22 18h4v20.3c-.6-.2-1.3-.3-2-.3-4.4 0-8 2.7-8 6s3.6 6 8 6 8-2.7 8-6V22.4l16-4v14.9c-.6-.2-1.3-.3-2-.3-4.4 0-8 2.7-8 6s3.6 6 8 6 8-2.7 8-6V12c0-1.1-.9-2-2-2h-.8L22 16.5V18Z"
+            d="M 25,16 L 51,10.5 L 51,40 C 51,40 50,45.5 43,45.5 C 36,45.5 36,40 43,40 C 47,40 47,18.5 47,18.5 L 29,22.5 L 29,46 C 29,46 28,51.5 21,51.5 C 14,51.5 14,46 21,46 C 25,46 25,16 25,16 Z"
             fill={`url(#${uid}-music-shell)`}
-            stroke="#4D1E99"
-            strokeWidth="0.5"
+            stroke="#3B0764"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
           />
-          <path
-            d="M23.5 19.5v18.8c1.5-1.2 3.5-2 5.5-2v-16l16-4V29c1.5-1.2 3.5-2 5.5-2v-15l-27 4.5Z"
-            fill={`url(#${uid}-music-core)`}
-            opacity="0.3"
-          />
-          <path d="M23 20.5l19-4.5" stroke="white" strokeOpacity="0.5" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M23 22v20M43 18v20" stroke="white" strokeOpacity="0.2" strokeWidth="1.5" strokeLinecap="round" />
+          
+          {/* Crisp Highlight Lines */}
+          <path d="M 26,17.2 L 50,12.1" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.8" />
+          <path d="M 26,18.5 V 45" stroke="white" strokeWidth="0.8" strokeLinecap="round" strokeOpacity="0.45" />
+          <path d="M 48,13 V 39" stroke="white" strokeWidth="0.8" strokeLinecap="round" strokeOpacity="0.45" />
+          
+          {/* Shiny Reflections on Note Heads */}
+          <ellipse cx="20" cy="48" rx="2" ry="1.5" transform="rotate(-15 20 48)" fill="white" fillOpacity="0.75" />
+          <ellipse cx="42" cy="42.5" rx="2" ry="1.5" transform="rotate(-15 42 42.5)" fill="white" fillOpacity="0.75" />
         </svg>
       );
     case '\u{1F9ED}':
