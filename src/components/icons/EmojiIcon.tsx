@@ -161,26 +161,79 @@ function Glyph({ symbol }: { symbol: string }) {
         <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
           <defs>
             <PlasticFilter id={`${uid}-p`} />
-            <linearGradient id={`${uid}-rocket-body`} x1="27" y1="10" x2="46" y2="35" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#E6EDFF" />
-              <stop offset="0.5" stopColor="#7E9EFF" />
-              <stop offset="1" stopColor="#4D5FFF" />
+            <linearGradient id={`${uid}-rocket-body`} x1="24" y1="10" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FFFFFF" />
+              <stop offset="0.3" stopColor="#F8FAFC" />
+              <stop offset="0.75" stopColor="#E2E8F0" />
+              <stop offset="1" stopColor="#CBD5E1" />
             </linearGradient>
-            <linearGradient id={`${uid}-rocket-wing`} x1="17" y1="28" x2="35" y2="48" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#FF7A5C" />
-              <stop offset="1" stopColor="#E6394A" />
+            <linearGradient id={`${uid}-rocket-nose`} x1="25" y1="10" x2="39" y2="24" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FF6B6B" />
+              <stop offset="0.5" stopColor="#FF4B4B" />
+              <stop offset="1" stopColor="#DC2626" />
             </linearGradient>
-            <linearGradient id={`${uid}-rocket-flame`} x1="18" y1="44" x2="30" y2="57" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#FFF4D1" />
-              <stop offset="0.5" stopColor="#FFB300" />
-              <stop offset="1" stopColor="#E65100" />
+            <linearGradient id={`${uid}-rocket-wing`} x1="18" y1="37" x2="24" y2="46" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FF8C00" />
+              <stop offset="1" stopColor="#E63900" />
             </linearGradient>
+            <linearGradient id={`${uid}-rocket-wing-right`} x1="40" y1="37" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FF8C00" />
+              <stop offset="1" stopColor="#E63900" />
+            </linearGradient>
+            <linearGradient id={`${uid}-rocket-flame-outer`} x1="29" y1="48" x2="35" y2="60" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FF9600" />
+              <stop offset="0.5" stopColor="#FF4B4B" />
+              <stop offset="1" stopColor="#D91A1A" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id={`${uid}-rocket-flame-inner`} x1="30.5" y1="48" x2="33.5" y2="56" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FFF9C4" />
+              <stop offset="0.6" stopColor="#FFEB3B" />
+              <stop offset="1" stopColor="#FF9800" stopOpacity="0" />
+            </linearGradient>
+            <radialGradient id={`${uid}-porthole-glow`} cx="32" cy="26" r="3.5" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(1)">
+              <stop stopColor="#A5F3FC" />
+              <stop offset="0.7" stopColor="#0EA5E9" />
+              <stop offset="1" stopColor="#0369A1" />
+            </radialGradient>
           </defs>
-          <path filter={`url(#${uid}-p)`} d="M41.7 10c6.2 1.3 11.1 6.2 12.3 12.4.7 3.8.5 7.8-1.3 11.3-1.9 3.8-4.9 7.1-8.7 10L31 56l-3.2-13.1c-2.9-2.9-5.7-6.4-7.1-10-1.5-3.8-1.4-7.7-.3-11.5 1.8-5.8 6.4-10.4 12.2-12.2 3.1-.9 6.3-1.1 9.1.8Z" fill={`url(#${uid}-rocket-body)`} stroke="#3D4BB3" strokeWidth="0.5" />
-          <path d="M29.2 43.2 17 47l3.8-12.3 8.4 8.5ZM47.7 24.5 57 20.3l-4.2 9.3-5.1-5.1Z" fill={`url(#${uid}-rocket-wing)`} />
-          <circle cx="39.7" cy="24.5" r="5.2" fill="white" stroke="#DDE7FF" strokeWidth="0.5" />
-          <path d="M24.4 46.6c-1.8 3.6-1 7.5 1.9 10.5 3-2.8 3.9-6.8 2.1-10.3l-2-4-2 3.8Z" fill={`url(#${uid}-rocket-flame)`} />
-          <path d="M35.2 14.8c3.4-.9 7-.6 10 1" stroke="white" strokeOpacity="0.5" strokeWidth="2.5" strokeLinecap="round" />
+          
+          <g transform="translate(32, 32) rotate(45) translate(-32, -32)">
+            {/* Flames */}
+            <path d="M 29,48 C 26,52 28,58 32,60 C 36,58 38,52 35,48 Q 32,50 29,48 Z" fill={`url(#${uid}-rocket-flame-outer)`} />
+            <path d="M 30.5,48 C 29,51 30.5,55 32,56 C 33.5,55 35,51 33.5,48 Q 32,49 30.5,48 Z" fill={`url(#${uid}-rocket-flame-inner)`} />
+            
+            {/* Fins / Wings */}
+            <path filter={`url(#${uid}-p)`} d="M 24,37 C 20,38 18,42 18,46 C 18,47 19,47 21,46 L 24,43 Z" fill={`url(#${uid}-rocket-wing)`} stroke="#B32D00" strokeWidth="0.4" />
+            <path filter={`url(#${uid}-p)`} d="M 40,37 C 44,38 46,42 46,46 C 46,47 45,47 43,46 L 40,43 Z" fill={`url(#${uid}-rocket-wing-right)`} stroke="#B32D00" strokeWidth="0.4" />
+            
+            {/* Engine Nozzle */}
+            <path d="M 28,44 L 36,44 L 35,48 L 29,48 Z" fill="#475569" stroke="#334155" strokeWidth="0.4" />
+            
+            {/* Rocket Body */}
+            <path
+              filter={`url(#${uid}-p)`}
+              d="M 24,44 C 24,30 25,18 32,10 C 39,18 40,30 40,44 Q 32,46.5 24,44 Z"
+              fill={`url(#${uid}-rocket-body)`}
+              stroke="#64748B"
+              strokeWidth="0.4"
+            />
+            
+            {/* Nosecone */}
+            <path
+              d="M 25.2,24 C 27.5,17 29.5,10 32,10 C 34.5,10 36.5,17 38.8,24 Q 32,26.5 25.2,24 Z"
+              fill={`url(#${uid}-rocket-nose)`}
+              stroke="#B91C1C"
+              strokeWidth="0.4"
+            />
+            
+            {/* Highlight Line */}
+            <path d="M 26,38 C 25.3,29 27.3,19 31.2,13" stroke="white" strokeOpacity="0.45" strokeWidth="1" strokeLinecap="round" fill="none" />
+            
+            {/* Porthole */}
+            <circle cx="32" cy="26" r="5" fill="#E2E8F0" stroke="#475569" strokeWidth="0.6" />
+            <circle cx="32" cy="26" r="3.6" fill={`url(#${uid}-porthole-glow)`} />
+            <path d="M 30.2,25.2 A 1.8 1.8 0 0 1 33.5,24" stroke="white" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+          </g>
         </svg>
       );
     case '\u{1F3AF}':
