@@ -70,8 +70,8 @@ export default function SubjectDistribution({ courses, totalXp }: SubjectDistrib
                   累计学习进度
                 </span>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-white/10">
-                <EmojiIcon symbol={resolveSubjectIcon(course.subject)} className="text-xl" />
+              <div className="flex h-10 w-10 items-center justify-center">
+                <EmojiIcon symbol={resolveSubjectIcon(course.subject)} className="text-3xl" />
               </div>
             </div>
 
