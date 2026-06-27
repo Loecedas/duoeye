@@ -32,3 +32,8 @@ npm-debug.log*
 # Local agent instructions
 AGENTS.md
 .codex/
+
+# Temporary diff files
+diff.txt
+diff_utf8.txt
+diff*.txt
