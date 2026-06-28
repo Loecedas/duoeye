@@ -9,7 +9,6 @@ const adapter = process.env.NETLIFY ? netlify() : vercel();
 export default defineConfig({
   output: 'server',
   adapter: adapter,
-  cacheDir: './.astro-cache',
   image: {
     service: passthroughImageService(),
   },
