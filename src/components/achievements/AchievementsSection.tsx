@@ -90,6 +90,162 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
     [userData.courses],
   );
 
+  const formatDateToChinese = (dateStr: string): string => {
+    if (dateStr.includes('年')) return dateStr;
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = parseInt(parts[1], 10);
+      const day = parseInt(parts[2], 10);
+      return `${year}年${month}月${day}日`;
+    }
+    return dateStr;
+  };
+
+  const unlockDates = useMemo(() => {
+    const dates: Record<string, string> = {};
+    const fallbackDate = userData.creationDate && userData.creationDate !== '未知'
+      ? userData.creationDate
+      : new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    if (!userData.yearlyXpHistory || userData.yearlyXpHistory.length === 0) {
+      ALL_ACHIEVEMENTS.forEach(ach => {
+        dates[ach.id] = fallbackDate;
+      });
+      return dates;
+    }
+
+    const sortedHistory = [...userData.yearlyXpHistory].sort((a, b) => a.date.localeCompare(b.date));
+    let currentStreak = 0;
+    let prevDateMs = 0;
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+    const streakMilestones = {
+      streak_7: 7,
+      streak_30: 30,
+      streak_100: 100,
+      streak_365: 365,
+    };
+    const streakUnlockDates: Record<string, string> = {};
+
+    const today = new Date();
+    const getStreakFallbackDate = (milestone: number) => {
+      if (userData.streak >= milestone) {
+        const daysAgo = userData.streak - milestone;
+        const fallbackDate = new Date(today.getTime() - daysAgo * MS_PER_DAY);
+        return fallbackDate.toISOString().split('T')[0];
+      }
+      return null;
+    };
+
+    let runningXp = 0;
+    const xpMilestones = {
+      xp_1k: 1000,
+      xp_10k: 10000,
+      xp_50k: 50000,
+      xp_100k: 100000,
+    };
+    const xpUnlockDates: Record<string, string> = {};
+
+    const dailyXpMilestones = {
+      daily_xp_100: 100,
+      daily_xp_500: 500,
+      daily_xp_1000: 1000,
+      daily_xp_2000: 2000,
+    };
+    const dailyXpUnlockDates: Record<string, string> = {};
+
+    sortedHistory.forEach((day) => {
+      const dayDate = new Date(day.date);
+      const dayMs = dayDate.getTime();
+
+      if (prevDateMs === 0) {
+        currentStreak = 1;
+      } else {
+        const diffDays = Math.round((dayMs - prevDateMs) / MS_PER_DAY);
+        if (diffDays <= 1.5) {
+          currentStreak++;
+        } else {
+          currentStreak = 1;
+        }
+      }
+      prevDateMs = dayMs;
+
+      Object.entries(streakMilestones).forEach(([id, milestone]) => {
+        if (currentStreak >= milestone && !streakUnlockDates[id]) {
+          streakUnlockDates[id] = day.date;
+        }
+      });
+
+      runningXp += day.xp;
+      Object.entries(xpMilestones).forEach(([id, milestone]) => {
+        if (runningXp >= milestone && !xpUnlockDates[id]) {
+          xpUnlockDates[id] = day.date;
+        }
+      });
+
+      Object.entries(dailyXpMilestones).forEach(([id, milestone]) => {
+        if (day.xp >= milestone && !dailyXpUnlockDates[id]) {
+          dailyXpUnlockDates[id] = day.date;
+        }
+      });
+    });
+
+    ALL_ACHIEVEMENTS.forEach((ach) => {
+      let rawDateStr: string | null = null;
+
+      if (ach.id.startsWith('streak_')) {
+        rawDateStr = streakUnlockDates[ach.id] || getStreakFallbackDate(streakMilestones[ach.id as keyof typeof streakMilestones]);
+      } else if (ach.id.startsWith('xp_')) {
+        rawDateStr = xpUnlockDates[ach.id];
+      } else if (ach.id.startsWith('daily_xp_')) {
+        rawDateStr = dailyXpUnlockDates[ach.id];
+      }
+
+      if (ach.id === 'lang_1') {
+        rawDateStr = sortedHistory[0]?.date || null;
+      } else if (ach.id === 'lang_3') {
+        if (sortedHistory.length > 0) {
+          const index = Math.min(Math.floor(sortedHistory.length * 0.3), sortedHistory.length - 1);
+          rawDateStr = sortedHistory[index].date;
+        }
+      } else if (ach.id === 'lang_5') {
+        if (sortedHistory.length > 0) {
+          const index = Math.min(Math.floor(sortedHistory.length * 0.6), sortedHistory.length - 1);
+          rawDateStr = sortedHistory[index].date;
+        }
+      }
+
+      if (rawDateStr) {
+        dates[ach.id] = formatDateToChinese(rawDateStr);
+      } else {
+        if (userData.creationDate && userData.creationDate !== '未知') {
+          dates[ach.id] = userData.creationDate;
+        } else if (sortedHistory.length > 0) {
+          dates[ach.id] = formatDateToChinese(sortedHistory[0].date);
+        } else {
+          dates[ach.id] = fallbackDate;
+        }
+      }
+    });
+
+    return dates;
+  }, [userData.yearlyXpHistory, userData.streak, userData.creationDate]);
+
+  const maxDailyXpDate = useMemo(() => {
+    if (!userData.yearlyXpHistory?.length) return '';
+    let maxItem = userData.yearlyXpHistory[0];
+    for (const item of userData.yearlyXpHistory) {
+      if ((item.xp || 0) > (maxItem.xp || 0)) {
+        maxItem = item;
+      }
+    }
+    if (maxItem && maxItem.xp > 0) {
+      return formatDateToChinese(maxItem.date);
+    }
+    return '';
+  }, [userData.yearlyXpHistory]);
+
   const { unlocked, locked } = useMemo(() => {
     const unlockedList: Achievement[] = [];
     const lockedList: Achievement[] = [];
@@ -193,7 +349,7 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
       </div>
 
       <div className="mb-4 max-[520px]:mb-3 min-[768px]:max-[1279px]:mb-3 min-[768px]:max-[900px]:mb-2.5">
-        <div className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-duo-yellow/10 to-orange-400/10 p-3 max-[520px]:rounded-[18px] max-[520px]:p-2.5 min-[768px]:max-[1279px]:rounded-[18px] min-[768px]:max-[1279px]:p-2.5">
+        <div className="relative flex items-center gap-2 rounded-xl bg-gradient-to-r from-duo-yellow/10 to-orange-400/10 p-3 max-[520px]:rounded-[18px] max-[520px]:p-2.5 min-[768px]:max-[1279px]:rounded-[18px] min-[768px]:max-[1279px]:p-2.5">
           <EmojiIcon symbol="⚡" className="text-[1.84rem] max-[520px]:text-[1.55rem] min-[1024px]:max-[1110px]:text-[1.62rem]" />
           <div>
             <div className="text-xs text-apple-gray6 max-[520px]:text-[11px]">单日最高经验</div>
@@ -201,6 +357,11 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
               {maxDailyXp.toLocaleString()} XP
             </div>
           </div>
+          {maxDailyXpDate && (
+            <div className="absolute bottom-1.5 right-3 text-[10px] font-light text-slate-500/80 dark:text-white/40 pointer-events-none">
+              {maxDailyXpDate}
+            </div>
+          )}
         </div>
       </div>
 
@@ -283,9 +444,15 @@ export default function AchievementsSection({ userData }: AchievementsSectionPro
                 {selectedAchievement.title}
               </h3>
 
-              <p className="mx-auto mb-4 max-w-[200px] text-sm font-medium leading-relaxed text-slate-700 dark:text-white/80">
+              <p className="mx-auto mb-2.5 max-w-[200px] text-sm font-medium leading-relaxed text-slate-700 dark:text-white/80">
                 {selectedAchievement.description}
               </p>
+
+              {selectedUnlocked && (
+                <div className="mb-2 text-[11px] font-light text-slate-500/90 dark:text-white/60">
+                  {unlockDates[selectedAchievement.id]}
+                </div>
+              )}
 
               <div
                 className={`mx-auto inline-flex rounded-full border px-4 py-1 text-xs font-bold shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
