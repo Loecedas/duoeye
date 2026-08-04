@@ -3,9 +3,26 @@ import { ViewTransitions } from 'astro:transitions';
 
 interface Props {
   title: string;
+  description?: string;
 }
 
-const { title } = Astro.props;
+const { 
+  title, 
+  description = "DuoEye - 一个基于 Astro + React 的多邻国学习数据分析仪表盘，提供详尽的今日概览、学习趋势分析、年度热力图、成就徽章点亮、语种精力分布以及 AI 导师个性化学习点评。" 
+} = Astro.props;
+
+const siteUrl = import.meta.env.SITE_URL || Astro.url.origin;
+const canonicalURL = new URL(Astro.url.pathname, siteUrl).toString();
+
+// Google 搜索结果中展示的网站结构化数据 (JSON-LD WebSite)
+// 这对于确保搜索引擎（尤其是 Google）能够正确读取和在搜索结果中显示网站的名字标签 (DuoEye) 至关重要。
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "DuoEye",
+  "alternateName": ["多邻国学习数据仪表盘", "DuoEye多邻国仪表盘", "DuoEye Duolingo Dashboard"],
+  "url": siteUrl
+};
 ---
 
 <!doctype html>
@@ -47,14 +64,43 @@ const { title } = Astro.props;
       })();
     </script>
     <ViewTransitions />
-    <meta name="description" content="DuoEye - 多邻国学习数据仪表盘" />
+    
+    <!-- SEO & Indexing Optimization -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- App Name for Browsers & Mobile Shortcuts -->
+    <meta name="application-name" content="DuoEye" />
+    <meta name="apple-mobile-web-app-title" content="DuoEye" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="DuoEye" />
+    <meta property="og:image" content={new URL('/android-chrome-512x512.png', siteUrl).toString()} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL('/android-chrome-512x512.png', siteUrl).toString()} />
+
+    <!-- Favicons & Mobile Icons -->
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <title>{title}</title>
+
+    <!-- Structured Data (JSON-LD) for Search Results Name Label -->
+    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
   </head>
   <body class="min-h-screen font-sans antialiased text-apple-dark1 dark:text-white">
     <slot />
