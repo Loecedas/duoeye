@@ -1,7 +1,9 @@
 import type { APIRoute } from 'astro';
 
-export const GET: APIRoute = async ({ url }) => {
-  const siteUrl = import.meta.env.SITE_URL || url.origin;
+export const GET: APIRoute = async ({ url, request }) => {
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host;
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const siteUrl = import.meta.env.SITE_URL || `${protocol}://${host}`;
   const robots = `User-agent: *
 Allow: /
 

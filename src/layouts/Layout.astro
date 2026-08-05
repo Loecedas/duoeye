@@ -11,7 +11,9 @@ const {
   description = "DuoEye - 一个基于 Astro + React 的多邻国学习数据分析仪表盘，提供详尽的今日概览、学习趋势分析、年度热力图、成就徽章点亮、语种精力分布以及 AI 导师个性化学习点评。" 
 } = Astro.props;
 
-const siteUrl = import.meta.env.SITE_URL || Astro.url.origin;
+const host = Astro.request.headers.get('x-forwarded-host') || Astro.request.headers.get('host') || Astro.url.host;
+const protocol = Astro.request.headers.get('x-forwarded-proto') || 'https';
+const siteUrl = import.meta.env.SITE_URL || `${protocol}://${host}`;
 const canonicalURL = new URL(Astro.url.pathname, siteUrl).toString();
 
 // Google 搜索结果中展示的网站结构化数据 (JSON-LD WebSite)
