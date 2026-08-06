@@ -4,11 +4,13 @@ import { ViewTransitions } from 'astro:transitions';
 interface Props {
   title: string;
   description?: string;
+  robots?: string;
 }
 
 const { 
   title, 
-  description = "DuoEye - 一个基于 Astro + React 的多邻国学习数据分析仪表盘，提供详尽的今日概览、学习趋势分析、年度热力图、成就徽章点亮、语种精力分布以及 AI 导师个性化学习点评。" 
+  description = "DuoEye - 一个基于 Astro + React 的多邻国学习数据分析仪表盘，提供详尽的今日概览、学习趋势分析、年度热力图、成就徽章点亮、语种精力分布以及 AI 导师个性化学习点评。",
+  robots = "index, follow"
 } = Astro.props;
 
 const host = Astro.request.headers.get('x-forwarded-host') || Astro.request.headers.get('host') || Astro.url.host;
@@ -72,7 +74,7 @@ const websiteSchema = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={robots} />
     
     <!-- App Name for Browsers & Mobile Shortcuts -->
     <meta name="application-name" content="DuoEye" />

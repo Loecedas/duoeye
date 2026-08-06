@@ -9,8 +9,7 @@ export const GET: APIRoute = async ({ url, request }) => {
   // Since dashboard requires a username parameter (e.g. /dashboard?username=xxx),
   // we index the homepage and the main dashboard template.
   const pages = [
-    { path: '', changefreq: 'daily', priority: '1.0' },
-    { path: 'dashboard', changefreq: 'weekly', priority: '0.8' }
+    { path: '', changefreq: 'daily', priority: '1.0' }
   ];
 
   const xmlUrls = pages.map(page => {

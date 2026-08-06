@@ -6,7 +6,7 @@ import { normalizeUsername } from '../services/duolingoDataLoader';
 const initialUsername = normalizeUsername(Astro.url.searchParams.get('username'));
 ---
 
-<Layout title="DuoEye - 仪表盘">
+<Layout title="DuoEye - 仪表盘" robots="noindex, nofollow">
   <DuoDashApp
     client:load
     initialUsername={initialUsername}
