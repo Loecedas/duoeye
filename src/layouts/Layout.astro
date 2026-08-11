@@ -1,5 +1,5 @@
 ---
-import { ViewTransitions } from 'astro:transitions';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title: string;
@@ -68,7 +68,7 @@ const websiteSchema = {
         document.addEventListener('astro:after-swap', applyTheme);
       })();
     </script>
-    <ViewTransitions />
+    <ClientRouter />
     
     <!-- SEO & Indexing Optimization -->
     <title>{title}</title>
