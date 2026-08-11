@@ -35,7 +35,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['SimSun', '"Songti SC"', '"STSong"', '"Noto Serif CJK SC"', '"Source Han Serif SC"', 'serif'],
+        sans: ['"Times New Roman"', 'SimSun', '"Songti SC"', '"STSong"', '"Noto Serif CJK SC"', '"Source Han Serif SC"', 'serif'],
       },
       boxShadow: {
         apple: '0 4px 24px rgba(0, 0, 0, 0.06)',
