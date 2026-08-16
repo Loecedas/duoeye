@@ -35,7 +35,7 @@ function getStartOfDayInTimezone(date: Date, timeZone: string = DEFAULT_TIMEZONE
     formatters.startOfDay.set(normalizedTimeZone, formatter);
   }
   const parts = formatter.formatToParts(date);
-  const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT+08:00';
+  const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT+00:00';
   const offsetMatch = offsetPart.match(/([+-])(\d+)(?::(\d+))?/);
   const offset = offsetMatch
     ? `${offsetMatch[1]}${offsetMatch[2].padStart(2, '0')}:${(offsetMatch[3] || '0').padStart(2, '0')}`

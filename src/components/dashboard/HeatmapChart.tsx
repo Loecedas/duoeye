@@ -54,6 +54,92 @@ function getViewRangeLabel(viewMode: ViewMode, selectedYear: number, selectedQua
   return `${selectedYear} 全年`;
 }
 
+interface RenderGridData {
+  allDates: HeatmapDay[];
+  weeks: HeatmapDay[][];
+  monthLabels: { month: string; weekIndex: number }[];
+  totalXp: number;
+  totalTime: number;
+  activeDays: number;
+}
+
+function buildGridDataForDateRange(
+  startDate: Date,
+  endDate: Date,
+  targetWeeks: number,
+  xpMap: Map<string, number>,
+  timeMap: Map<string, number | undefined>,
+  timeZone: string,
+): RenderGridData {
+  const dates: HeatmapDay[] = [];
+  const cursor = new Date(startDate);
+
+  while (cursor <= endDate) {
+    const dateStr = toLocalDateStr(cursor, timeZone);
+    dates.push({
+      date: new Date(cursor),
+      dateStr,
+      xp: xpMap.get(dateStr) || 0,
+      time: timeMap.get(dateStr),
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const weeksData: HeatmapDay[][] = [];
+  const firstWeekPadding = dates[0]?.date.getDay() || 0;
+  let currentWeek: HeatmapDay[] = [];
+
+  for (let i = 0; i < firstWeekPadding; i += 1) {
+    currentWeek.push({ date: new Date(0), dateStr: '', xp: -1 });
+  }
+
+  for (const item of dates) {
+    currentWeek.push(item);
+    if (currentWeek.length === 7) {
+      weeksData.push(currentWeek);
+      currentWeek = [];
+    }
+  }
+
+  if (currentWeek.length) {
+    while (currentWeek.length < 7) {
+      currentWeek.push({ date: new Date(0), dateStr: '', xp: -1 });
+    }
+    weeksData.push(currentWeek);
+  }
+
+  const labels: { month: string; weekIndex: number }[] = [];
+  let previousMonth = -1;
+
+  weeksData.forEach((week, weekIndex) => {
+    const validDay = week.find((item) => item.xp >= 0 && item.date.getTime() > 0);
+    if (!validDay) return;
+
+    const month = validDay.date.getMonth();
+    if (month === previousMonth) return;
+
+    labels.push({ month: MONTHS[month], weekIndex });
+    previousMonth = month;
+  });
+
+  while (weeksData.length < targetWeeks) {
+    weeksData.push(Array.from({ length: 7 }, () => ({ date: new Date(0), dateStr: '', xp: -1 })));
+  }
+
+  const totalXp = dates.reduce((sum, item) => sum + Math.max(item.xp, 0), 0);
+  const totalTime = dates.reduce((sum, item) => sum + Math.max(item.time ?? 0, 0), 0);
+  const activeDays = dates.filter((item) => item.xp > 0).length;
+
+  return {
+    allDates: dates,
+    weeks: weeksData,
+    monthLabels: labels,
+    totalXp,
+    totalTime,
+    activeDays,
+  };
+}
+
 function HeatmapChart({
   data,
   forceViewMode,
@@ -74,6 +160,9 @@ function HeatmapChart({
   const tooltipFrameRef = useRef<number | null>(null);
   const yearPanelRef = useRef<HTMLDivElement>(null);
   const activeCellRef = useRef<HTMLElement | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const scrollTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     setTooltip(null);
@@ -117,7 +206,6 @@ function HeatmapChart({
       }
     };
   }, [forceViewMode]);
-
 
   useEffect(() => {
     if (!tooltip && !isYearPanelOpen) return;
@@ -172,92 +260,184 @@ function HeatmapChart({
     if (!years.length) years.push(currentYear);
 
     return { xpMap: xpByDate, timeMap: timeByDate, sortedYears: years };
-  }, [data]);
+  }, [data, registrationYear]);
 
-  const { allDates, weeks, monthLabels, maxXp } = useMemo(() => {
-    const startMonth = viewMode === 'quarter' ? (selectedQuarter - 1) * 3 : viewMode === 'half' ? (selectedHalf - 1) * 6 : 0;
-    const monthCount = viewMode === 'quarter' ? 3 : viewMode === 'half' ? 6 : 12;
-    const startDate = new Date(selectedYear, startMonth, 1);
-    const endDate = new Date(selectedYear, startMonth + monthCount, 0);
-
-    const dates: HeatmapDay[] = [];
-    const cursor = new Date(startDate);
-
-    while (cursor <= endDate) {
-      const dateStr = toLocalDateStr(cursor, timeZone);
-      dates.push({
-        date: new Date(cursor),
-        dateStr,
-        xp: xpMap.get(dateStr) || 0,
-        time: timeMap.get(dateStr),
-      });
+  const yearMaxXp = useMemo(() => {
+    const start = new Date(selectedYear, 0, 1);
+    const end = new Date(selectedYear, 12, 0);
+    let max = 50;
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      const dStr = toLocalDateStr(cursor, timeZone);
+      const xp = xpMap.get(dStr) || 0;
+      if (xp > max) max = xp;
       cursor.setDate(cursor.getDate() + 1);
     }
+    return max;
+  }, [selectedYear, timeZone, xpMap]);
 
-    const calculatedMaxXp = Math.max(...dates.map((item) => item.xp), 50);
-    const weeksData: HeatmapDay[][] = [];
-    const firstWeekPadding = dates[0]?.date.getDay() || 0;
-    let currentWeek: HeatmapDay[] = [];
-
-    for (let i = 0; i < firstWeekPadding; i += 1) {
-      currentWeek.push({ date: new Date(0), dateStr: '', xp: -1 });
-    }
-
-    for (const item of dates) {
-      currentWeek.push(item);
-      if (currentWeek.length === 7) {
-        weeksData.push(currentWeek);
-        currentWeek = [];
-      }
-    }
-
-    if (currentWeek.length) {
-      while (currentWeek.length < 7) {
-        currentWeek.push({ date: new Date(0), dateStr: '', xp: -1 });
-      }
-      weeksData.push(currentWeek);
-    }
-
-    const labels: { month: string; weekIndex: number }[] = [];
-    let previousMonth = -1;
-
-    weeksData.forEach((week, weekIndex) => {
-      const validDay = week.find((item) => item.xp >= 0 && item.date.getTime() > 0);
-      if (!validDay) return;
-
-      const month = validDay.date.getMonth();
-      if (month === previousMonth) return;
-
-      labels.push({ month: MONTHS[month], weekIndex });
-      previousMonth = month;
+  const allQuarters = useMemo(() => {
+    return [1, 2, 3, 4].map((q) => {
+      const startMonth = (q - 1) * 3;
+      const startDate = new Date(selectedYear, startMonth, 1);
+      const endDate = new Date(selectedYear, startMonth + 3, 0);
+      return {
+        quarter: q,
+        ...buildGridDataForDateRange(startDate, endDate, 14, xpMap, timeMap, timeZone),
+      };
     });
+  }, [selectedYear, xpMap, timeMap, timeZone]);
 
-    const targetWeeks = viewMode === 'quarter' ? 14 : viewMode === 'half' ? 28 : 54;
+  const allHalves = useMemo(() => {
+    return [1, 2].map((h) => {
+      const startMonth = (h - 1) * 6;
+      const startDate = new Date(selectedYear, startMonth, 1);
+      const endDate = new Date(selectedYear, startMonth + 6, 0);
+      return {
+        half: h,
+        ...buildGridDataForDateRange(startDate, endDate, 28, xpMap, timeMap, timeZone),
+      };
+    });
+  }, [selectedYear, xpMap, timeMap, timeZone]);
 
-    while (weeksData.length < targetWeeks) {
-      weeksData.push(Array.from({ length: 7 }, () => ({ date: new Date(0), dateStr: '', xp: -1 })));
+  const yearGridData = useMemo(() => {
+    if (viewMode !== 'year') return null;
+    const startDate = new Date(selectedYear, 0, 1);
+    const endDate = new Date(selectedYear, 12, 0);
+    return buildGridDataForDateRange(startDate, endDate, 54, xpMap, timeMap, timeZone);
+  }, [viewMode, selectedYear, xpMap, timeMap, timeZone]);
+
+  const currentQuarterData = allQuarters[selectedQuarter - 1] || allQuarters[0];
+  const currentHalfData = allHalves[selectedHalf - 1] || allHalves[0];
+  const activeDisplayData =
+    viewMode === 'quarter'
+      ? currentQuarterData
+      : viewMode === 'half'
+        ? currentHalfData
+        : (yearGridData || currentHalfData);
+
+  const totalXp = activeDisplayData.totalXp;
+  const totalTime = activeDisplayData.totalTime;
+  const activeDays = activeDisplayData.activeDays;
+
+  const allDates = useMemo(() => {
+    if (viewMode === 'quarter') {
+      return allQuarters.flatMap((q) => q.allDates);
     }
+    if (viewMode === 'half') {
+      return allHalves.flatMap((h) => h.allDates);
+    }
+    return yearGridData?.allDates || [];
+  }, [viewMode, allQuarters, allHalves, yearGridData]);
 
-    return {
-      allDates: dates,
-      weeks: weeksData,
-      monthLabels: labels,
-      maxXp: calculatedMaxXp,
-    };
-  }, [selectedHalf, selectedQuarter, selectedYear, timeMap, timeZone, viewMode, xpMap]);
-
-  const totalXp = useMemo(() => allDates.reduce((sum, item) => sum + Math.max(item.xp, 0), 0), [allDates]);
-  const totalTime = useMemo(() => allDates.reduce((sum, item) => sum + Math.max(item.time ?? 0, 0), 0), [allDates]);
-  const activeDays = useMemo(() => allDates.filter((item) => item.xp > 0).length, [allDates]);
   const minCellWidth = useMemo(() => (viewMode === 'quarter' ? 10 : 12), [viewMode]);
   const gridMinWidth = useMemo(() => {
     if (viewMode === 'quarter') {
-      return weeks.length * 10 + 20; // 14 weeks * 10px + 20px = 160px min-width, easily fits on mobile screens
+      return 14 * 10 + 20;
     }
-    return Math.max(320, weeks.length * 14 + 28);
-  }, [weeks.length, viewMode]);
+    if (viewMode === 'half') {
+      return 28 * 12 + 20;
+    }
+    const weekCount = yearGridData?.weeks.length || 54;
+    return Math.max(320, weekCount * 14 + 28);
+  }, [yearGridData?.weeks.length, viewMode]);
+
   const quarterControls = viewMode === 'quarter' ? [1, 2, 3, 4] : [];
   const halfControls = viewMode === 'half' ? [1, 2] : [];
+
+  const handleQuarterClick = useCallback((quarter: number) => {
+    setTooltip(null);
+    setSelectedQuarter(quarter);
+    if (carouselRef.current) {
+      isProgrammaticScrollRef.current = true;
+      const container = carouselRef.current;
+      const targetLeft = (quarter - 1) * container.clientWidth;
+      container.scrollTo({
+        left: targetLeft,
+        behavior: 'smooth',
+      });
+      if (scrollTimeoutRef.current !== null) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 450);
+    }
+  }, []);
+
+  const handleHalfClick = useCallback((half: number) => {
+    setTooltip(null);
+    setSelectedHalf(half);
+    if (carouselRef.current) {
+      isProgrammaticScrollRef.current = true;
+      const container = carouselRef.current;
+      const targetLeft = (half - 1) * container.clientWidth;
+      container.scrollTo({
+        left: targetLeft,
+        behavior: 'smooth',
+      });
+      if (scrollTimeoutRef.current !== null) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 450);
+    }
+  }, []);
+
+  const handleCarouselScroll = useCallback(() => {
+    setTooltip(null);
+    if (isProgrammaticScrollRef.current || !carouselRef.current) return;
+    const container = carouselRef.current;
+    const width = container.clientWidth;
+    if (width <= 0) return;
+    const scrollLeft = container.scrollLeft;
+    const index = Math.round(scrollLeft / width);
+
+    if (viewMode === 'quarter') {
+      const newQuarter = Math.min(4, Math.max(1, index + 1));
+      if (newQuarter !== selectedQuarter) {
+        setSelectedQuarter(newQuarter);
+      }
+    } else if (viewMode === 'half') {
+      const newHalf = Math.min(2, Math.max(1, index + 1));
+      if (newHalf !== selectedHalf) {
+        setSelectedHalf(newHalf);
+      }
+    }
+  }, [selectedQuarter, selectedHalf, viewMode]);
+
+  // Keep carousel aligned with selected quarter or half when year or viewMode changes
+  useEffect(() => {
+    if (!carouselRef.current) return;
+    const container = carouselRef.current;
+    if (viewMode === 'quarter') {
+      const targetLeft = (selectedQuarter - 1) * container.clientWidth;
+      if (Math.abs(container.scrollLeft - targetLeft) > 5) {
+        container.scrollLeft = targetLeft;
+      }
+    } else if (viewMode === 'half') {
+      const targetLeft = (selectedHalf - 1) * container.clientWidth;
+      if (Math.abs(container.scrollLeft - targetLeft) > 5) {
+        container.scrollLeft = targetLeft;
+      }
+    }
+  }, [selectedYear, viewMode]);
+
+  // Keep carousel position on resize
+  useEffect(() => {
+    function handleResizeScroll() {
+      if (!carouselRef.current) return;
+      const container = carouselRef.current;
+      if (viewMode === 'quarter') {
+        container.scrollLeft = (selectedQuarter - 1) * container.clientWidth;
+      } else if (viewMode === 'half') {
+        container.scrollLeft = (selectedHalf - 1) * container.clientWidth;
+      }
+    }
+    window.addEventListener('resize', handleResizeScroll);
+    return () => window.removeEventListener('resize', handleResizeScroll);
+  }, [selectedQuarter, selectedHalf, viewMode]);
 
   const updateTooltipPosition = useCallback((dateStr: string, xp: number, time?: number, transitionMs = 180) => {
     let cell = activeCellRef.current;
@@ -370,7 +550,7 @@ function HeatmapChart({
               {quarterControls.map((quarter) => (
                 <button
                   key={quarter}
-                  onClick={() => setSelectedQuarter(quarter)}
+                  onClick={() => handleQuarterClick(quarter)}
                   className={`overflow-hidden rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     quarter === selectedQuarter
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
@@ -389,7 +569,7 @@ function HeatmapChart({
               {halfControls.map((half) => (
                 <button
                   key={half}
-                  onClick={() => setSelectedHalf(half)}
+                  onClick={() => handleHalfClick(half)}
                   className={`inline-flex min-w-[64px] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold [background-clip:padding-box] transition-[transform,box-shadow,color,background-color,border-color] duration-200 ${
                     half === selectedHalf
                       ? 'border-transparent bg-[#111827] text-white shadow-[0_10px_24px_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(17,24,39,0.22)] dark:bg-white dark:text-apple-dark1 dark:hover:shadow-[0_14px_28px_rgba(0,0,0,0.24)]'
@@ -448,187 +628,354 @@ function HeatmapChart({
       </div>
 
       <div className="pb-2">
-        <div className={`relative ${viewMode === 'quarter' ? 'overflow-x-hidden' : 'overflow-x-auto'}`}>
-          <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6" style={{ minWidth: `${gridMinWidth}px` }}>
-            {monthLabels.map((label) => (
-              <div
-                key={`${label.month}-${label.weekIndex}`}
-                className="absolute"
-                style={{ left: `${(label.weekIndex / weeks.length) * 100}%` }}
-              >
-                {label.month}
-              </div>
-            ))}
-          </div>
-
+        {viewMode === 'quarter' ? (
+          /* Swipeable 4-quarter carousel for mobile / quarter view with damping physics */
           <div
-            className="render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-transparent dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.9)] dark:shadow-none gap-[1px] p-3 lg:gap-[2px]"
+            ref={carouselRef}
+            onScroll={handleCarouselScroll}
+            onTouchStart={() => setTooltip(null)}
+            onPointerDown={() => setTooltip(null)}
+            className="flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
             style={{
-              gridTemplateColumns: `16px repeat(${weeks.length}, minmax(${minCellWidth}px, 1fr))`,
-              minWidth: `${gridMinWidth}px`,
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehaviorX: 'contain',
+              scrollSnapType: 'x mandatory',
+              scrollBehavior: 'smooth',
             }}
           >
-            {WEEKDAYS.map((label, index) => (
+            {allQuarters.map((qData) => (
               <div
-                key={`weekday-${label}`}
-                className="flex items-center justify-center text-[10px] text-apple-gray6 dark:text-apple-dark6"
-                style={{ gridColumn: 1, gridRow: index + 1 }}
-              >
-                {index % 2 === 1 ? label : ''}
-              </div>
-            ))}
-
-            {weeks.map((week, weekIndex) =>
-              week.map((day, dayIndex) => {
-                const isValidDay = day.xp >= 0 && day.dateStr;
-
-                return (
-                  <div
-                    key={`${weekIndex}-${dayIndex}-${day.dateStr || 'empty'}`}
-                    data-heatmap-date={day.dateStr || undefined}
-                    className={`heatmap-cell relative w-full rounded-[4px] transition-transform duration-150 ${
-                      isValidDay ? 'cursor-pointer hover:z-[2] hover:scale-[1.08] hover:ring-2 hover:ring-[#58cc02]' : ''
-                    } ${
-                      tooltip?.date === day.dateStr ? 'z-[3] ring-2 ring-[#1cb0f6]' : ''
-                    }`}
-                    style={{
-                      backgroundColor: getHeatmapColor(day.xp, maxXp),
-                      gridColumn: weekIndex + 2,
-                      gridRow: dayIndex + 1,
-                      paddingBottom: '100%',
-                    }}
-                    onClick={(event) => handleDayClick(day, event)}
-                  />
-                );
-              }),
-            )}
-          </div>
-
-          {tooltip && typeof document !== 'undefined' &&
-            createPortal(
-              <div
-                ref={tooltipRef}
-                className={`fixed z-[9999] w-[190px] rounded-[22px] p-3 ${
-                  isDark
-                    ? 'border border-white/10 bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(36,36,38,0.92))] text-white shadow-[0_24px_52px_rgba(0,0,0,0.34)]'
-                    : 'border border-black/6 bg-[rgba(250,251,253,0.9)] text-apple-dark1 shadow-[0_18px_38px_rgba(15,23,42,0.12)]'
-                }`}
+                key={`quarter-slide-${qData.quarter}`}
+                className="w-full min-w-full shrink-0 snap-start snap-always px-0.5"
                 style={{
-                  left: `${tooltip.x}px`,
-                  top: `${tooltip.y}px`,
-                  transform: getTooltipTransform(),
-                  transition: `left ${tooltipTransitionMs}ms ease-out, top ${tooltipTransitionMs}ms ease-out, transform ${tooltipTransitionMs}ms ease-out`,
-                  willChange: 'left, top, transform',
+                  scrollSnapAlign: 'start',
+                  scrollSnapStop: 'always',
                 }}
               >
-                <button
-                  onClick={() => setTooltip(null)}
-                    className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm transition-colors ${
-                      isDark
-                        ? 'border border-white/10 bg-[rgba(72,72,74,0.98)] text-apple-dark6 hover:text-white'
-                        : 'border border-black/6 bg-[rgba(255,255,255,0.9)] text-apple-gray6 hover:text-apple-dark1'
-                    }`}
-                >
-                  ×
-                </button>
-
-                <div className="mb-2 flex items-center justify-between gap-1">
-                  <button
-                    onClick={() => navigateDay(-1)}
-                    disabled={!canNavigate(-1)}
-                    className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
-                      isDark
-                        ? 'bg-white/10 text-apple-dark6 hover:text-white'
-                        : 'bg-[rgba(240,243,247,0.86)] text-apple-gray6 hover:text-apple-dark1'
-                    }`}
-                  >
-                    ←
-                  </button>
-
-                  <div className="flex-1 overflow-hidden px-1 text-center">
-                    <div className="truncate text-xs font-bold leading-tight">{tooltip.date}</div>
-                    <div className={`truncate text-[10px] leading-tight ${isDark ? 'text-apple-dark6' : 'text-apple-gray6'}`}>
-                      {(() => {
-                        const weekday = new Date(`${tooltip.date}T12:00:00`);
-                        return Number.isNaN(weekday.getTime()) ? '未知' : weekday.toLocaleDateString('zh-CN', { weekday: 'long' });
-                      })()}
+                <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6">
+                  {qData.monthLabels.map((label) => (
+                    <div
+                      key={`${label.month}-${label.weekIndex}`}
+                      className="absolute"
+                      style={{ left: `${(label.weekIndex / qData.weeks.length) * 100}%` }}
+                    >
+                      {label.month}
                     </div>
-                  </div>
-
-                  <button
-                    onClick={() => navigateDay(1)}
-                    disabled={!canNavigate(1)}
-                    className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
-                      isDark
-                        ? 'bg-white/10 text-apple-dark6 hover:text-white'
-                        : 'bg-[rgba(240,243,247,0.86)] text-apple-gray6 hover:text-apple-dark1'
-                    }`}
-                  >
-                    →
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[rgba(241,244,248,0.82)]'}`}>
-                    <div className="truncate text-base font-bold text-[#58cc02]">{tooltip.xp}</div>
-                    <div className={`text-[10px] ${isDark ? 'text-apple-dark6' : 'text-apple-gray6'}`}>XP</div>
-                  </div>
-                  <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[rgba(241,244,248,0.82)]'}`}>
-                    <div className="truncate text-base font-bold text-[#1cb0f6]">{tooltip.time && tooltip.time > 0 ? tooltip.time : 0}</div>
-                    <div className="text-[10px] text-apple-gray6 dark:text-apple-dark6">分钟</div>
-                  </div>
+                  ))}
                 </div>
 
                 <div
-                  className={`absolute h-0 w-0 border-l-[6px] border-r-[6px] border-transparent ${
-                    tooltip.showBelow
-                      ? isDark
-                        ? 'top-[-6px] border-b-[6px] border-b-[rgba(58,58,60,0.96)]'
-                        : 'top-[-6px] border-b-[6px] border-b-[rgba(250,251,253,0.9)]'
-                      : isDark
-                        ? 'bottom-[-6px] border-t-[6px] border-t-[rgba(36,36,38,0.96)]'
-                        : 'bottom-[-6px] border-t-[6px] border-t-[#f6f7fa]'
-                  }`}
+                  className="render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-transparent dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.9)] dark:shadow-none gap-[1px] p-3 lg:gap-[2px]"
                   style={{
-                    left: tooltip.alignment === 'left' ? '20%' : tooltip.alignment === 'right' ? '80%' : '50%',
-                    transform: 'translateX(-50%)',
+                    gridTemplateColumns: `16px repeat(${qData.weeks.length}, minmax(${minCellWidth}px, 1fr))`,
                   }}
-                />
-              </div>,
-              document.body,
-            )}
+                >
+                  {WEEKDAYS.map((label, index) => (
+                    <div
+                      key={`weekday-${label}`}
+                      className="flex items-center justify-center text-[10px] text-apple-gray6 dark:text-apple-dark6"
+                      style={{ gridColumn: 1, gridRow: index + 1 }}
+                    >
+                      {index % 2 === 1 ? label : ''}
+                    </div>
+                  ))}
 
-          <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-2 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-transparent dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.88)] dark:shadow-none dark:text-apple-dark6">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span>
-                {getViewRangeLabel(viewMode, selectedYear, selectedQuarter, selectedHalf)}，学习{' '}
-                <span className="font-bold" style={{ color: DuoColors.featherGreen }}>
-                  {activeDays}
-                </span>{' '}
-                天，获得{' '}
-                <span className="font-bold" style={{ color: DuoColors.beeYellow }}>
-                  {totalXp.toLocaleString()}
-                </span>{' '}
-                XP
-              </span>
-              {totalTime > 0 && (
-                <span>
-                  投入{' '}
-                  <span className="font-bold" style={{ color: '#1cb0f6' }}>
-                    {totalTime.toLocaleString()}
-                  </span>{' '}
-                  分钟
-                </span>
+                  {qData.weeks.map((week, weekIndex) =>
+                    week.map((day, dayIndex) => {
+                      const isValidDay = day.xp >= 0 && day.dateStr;
+
+                      return (
+                        <div
+                          key={`${weekIndex}-${dayIndex}-${day.dateStr || 'empty'}`}
+                          data-heatmap-date={day.dateStr || undefined}
+                          className={`heatmap-cell relative w-full rounded-[4px] transition-transform duration-150 ${
+                            isValidDay ? 'cursor-pointer hover:z-[2] hover:scale-[1.08] hover:ring-2 hover:ring-[#58cc02]' : ''
+                          } ${
+                            tooltip?.date === day.dateStr ? 'z-[3] ring-2 ring-[#1cb0f6]' : ''
+                          }`}
+                          style={{
+                            backgroundColor: getHeatmapColor(day.xp, yearMaxXp),
+                            gridColumn: weekIndex + 2,
+                            gridRow: dayIndex + 1,
+                            paddingBottom: '100%',
+                          }}
+                          onClick={(event) => handleDayClick(day, event)}
+                        />
+                      );
+                    }),
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : viewMode === 'half' ? (
+          /* Swipeable 2-half-year carousel for 768px / 1024px with damping physics */
+          <div
+            ref={carouselRef}
+            onScroll={handleCarouselScroll}
+            onTouchStart={() => setTooltip(null)}
+            onPointerDown={() => setTooltip(null)}
+            className="flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehaviorX: 'contain',
+              scrollSnapType: 'x mandatory',
+              scrollBehavior: 'smooth',
+            }}
+          >
+            {allHalves.map((hData) => (
+              <div
+                key={`half-slide-${hData.half}`}
+                className="w-full min-w-full shrink-0 snap-start snap-always px-0.5"
+                style={{
+                  scrollSnapAlign: 'start',
+                  scrollSnapStop: 'always',
+                }}
+              >
+                <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6">
+                  {hData.monthLabels.map((label) => (
+                    <div
+                      key={`${label.month}-${label.weekIndex}`}
+                      className="absolute"
+                      style={{ left: `${(label.weekIndex / hData.weeks.length) * 100}%` }}
+                    >
+                      {label.month}
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  className="render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-transparent dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.9)] dark:shadow-none gap-[1px] p-3 lg:gap-[2px]"
+                  style={{
+                    gridTemplateColumns: `16px repeat(${hData.weeks.length}, minmax(${minCellWidth}px, 1fr))`,
+                  }}
+                >
+                  {WEEKDAYS.map((label, index) => (
+                    <div
+                      key={`weekday-${label}`}
+                      className="flex items-center justify-center text-[10px] text-apple-gray6 dark:text-apple-dark6"
+                      style={{ gridColumn: 1, gridRow: index + 1 }}
+                    >
+                      {index % 2 === 1 ? label : ''}
+                    </div>
+                  ))}
+
+                  {hData.weeks.map((week, weekIndex) =>
+                    week.map((day, dayIndex) => {
+                      const isValidDay = day.xp >= 0 && day.dateStr;
+
+                      return (
+                        <div
+                          key={`${weekIndex}-${dayIndex}-${day.dateStr || 'empty'}`}
+                          data-heatmap-date={day.dateStr || undefined}
+                          className={`heatmap-cell relative w-full rounded-[4px] transition-transform duration-150 ${
+                            isValidDay ? 'cursor-pointer hover:z-[2] hover:scale-[1.08] hover:ring-2 hover:ring-[#58cc02]' : ''
+                          } ${
+                            tooltip?.date === day.dateStr ? 'z-[3] ring-2 ring-[#1cb0f6]' : ''
+                          }`}
+                          style={{
+                            backgroundColor: getHeatmapColor(day.xp, yearMaxXp),
+                            gridColumn: weekIndex + 2,
+                            gridRow: dayIndex + 1,
+                            paddingBottom: '100%',
+                          }}
+                          onClick={(event) => handleDayClick(day, event)}
+                        />
+                      );
+                    }),
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Single grid for full-year view (> 1200) */
+          <div className="relative overflow-x-auto">
+            <div className="relative mb-2 ml-4 flex h-4 text-xs text-apple-gray6 dark:text-apple-dark6" style={{ minWidth: `${gridMinWidth}px` }}>
+              {yearGridData?.monthLabels.map((label) => (
+                <div
+                  key={`${label.month}-${label.weekIndex}`}
+                  className="absolute"
+                  style={{ left: `${(label.weekIndex / (yearGridData?.weeks.length || 1)) * 100}%` }}
+                >
+                  {label.month}
+                </div>
+              ))}
+            </div>
+
+            <div
+              className="render-isolate screenshot-solid-panel screenshot-disable-blur relative grid overflow-hidden rounded-[24px] border border-white/70 bg-white/92 [background-clip:padding-box] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-transparent dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.9)] dark:shadow-none gap-[1px] p-3 lg:gap-[2px]"
+              style={{
+                gridTemplateColumns: `16px repeat(${yearGridData?.weeks.length || 54}, minmax(${minCellWidth}px, 1fr))`,
+                minWidth: `${gridMinWidth}px`,
+              }}
+            >
+              {WEEKDAYS.map((label, index) => (
+                <div
+                  key={`weekday-${label}`}
+                  className="flex items-center justify-center text-[10px] text-apple-gray6 dark:text-apple-dark6"
+                  style={{ gridColumn: 1, gridRow: index + 1 }}
+                >
+                  {index % 2 === 1 ? label : ''}
+                </div>
+              ))}
+
+              {yearGridData?.weeks.map((week, weekIndex) =>
+                week.map((day, dayIndex) => {
+                  const isValidDay = day.xp >= 0 && day.dateStr;
+
+                  return (
+                    <div
+                      key={`${weekIndex}-${dayIndex}-${day.dateStr || 'empty'}`}
+                      data-heatmap-date={day.dateStr || undefined}
+                      className={`heatmap-cell relative w-full rounded-[4px] transition-transform duration-150 ${
+                        isValidDay ? 'cursor-pointer hover:z-[2] hover:scale-[1.08] hover:ring-2 hover:ring-[#58cc02]' : ''
+                      } ${
+                        tooltip?.date === day.dateStr ? 'z-[3] ring-2 ring-[#1cb0f6]' : ''
+                      }`}
+                      style={{
+                        backgroundColor: getHeatmapColor(day.xp, yearMaxXp),
+                        gridColumn: weekIndex + 2,
+                        gridRow: dayIndex + 1,
+                        paddingBottom: '100%',
+                      }}
+                      onClick={(event) => handleDayClick(day, event)}
+                    />
+                  );
+                }),
               )}
             </div>
+          </div>
+        )}
 
-            <div className="flex items-center gap-1">
-              <span>少</span>
-              {['#EBEDF0', '#9BE9A8', '#40C463', DuoColors.featherGreen, '#216E39'].map((color) => (
-                <div key={color} className="h-[10px] w-[10px] rounded-sm" style={{ backgroundColor: color }} />
-              ))}
-              <span>多</span>
-            </div>
+        {tooltip && typeof document !== 'undefined' &&
+          createPortal(
+            <div
+              ref={tooltipRef}
+              className={`fixed z-[9999] w-[190px] rounded-[22px] p-3 ${
+                isDark
+                  ? 'border border-white/10 bg-[linear-gradient(180deg,rgba(58,58,60,0.94),rgba(36,36,38,0.92))] text-white shadow-[0_24px_52px_rgba(0,0,0,0.34)]'
+                  : 'border border-black/6 bg-[rgba(250,251,253,0.9)] text-apple-dark1 shadow-[0_18px_38px_rgba(15,23,42,0.12)]'
+              }`}
+              style={{
+                left: `${tooltip.x}px`,
+                top: `${tooltip.y}px`,
+                transform: getTooltipTransform(),
+                transition: `left ${tooltipTransitionMs}ms ease-out, top ${tooltipTransitionMs}ms ease-out, transform ${tooltipTransitionMs}ms ease-out`,
+                willChange: 'left, top, transform',
+              }}
+            >
+              <button
+                onClick={() => setTooltip(null)}
+                className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm transition-colors ${
+                  isDark
+                    ? 'border border-white/10 bg-[rgba(72,72,74,0.98)] text-apple-dark6 hover:text-white'
+                    : 'border border-black/6 bg-[rgba(255,255,255,0.9)] text-apple-gray6 hover:text-apple-dark1'
+                }`}
+              >
+                ×
+              </button>
+
+              <div className="mb-2 flex items-center justify-between gap-1">
+                <button
+                  onClick={() => navigateDay(-1)}
+                  disabled={!canNavigate(-1)}
+                  className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                    isDark
+                      ? 'bg-white/10 text-apple-dark6 hover:text-white'
+                      : 'bg-[rgba(240,243,247,0.86)] text-apple-gray6 hover:text-apple-dark1'
+                  }`}
+                >
+                  ←
+                </button>
+
+                <div className="flex-1 overflow-hidden px-1 text-center">
+                  <div className="truncate text-xs font-bold leading-tight">{tooltip.date}</div>
+                  <div className={`truncate text-[10px] leading-tight ${isDark ? 'text-apple-dark6' : 'text-apple-gray6'}`}>
+                    {(() => {
+                      const weekday = new Date(`${tooltip.date}T12:00:00`);
+                      return Number.isNaN(weekday.getTime()) ? '未知' : weekday.toLocaleDateString('zh-CN', { weekday: 'long' });
+                    })()}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigateDay(1)}
+                  disabled={!canNavigate(1)}
+                  className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                    isDark
+                      ? 'bg-white/10 text-apple-dark6 hover:text-white'
+                      : 'bg-[rgba(240,243,247,0.86)] text-apple-gray6 hover:text-apple-dark1'
+                  }`}
+                >
+                  →
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[rgba(241,244,248,0.82)]'}`}>
+                  <div className="truncate text-base font-bold text-[#58cc02]">{tooltip.xp}</div>
+                  <div className={`text-[10px] ${isDark ? 'text-apple-dark6' : 'text-apple-gray6'}`}>XP</div>
+                </div>
+                <div className={`flex min-w-0 flex-col justify-center rounded-2xl px-1 py-2 text-center ${isDark ? 'bg-white/10' : 'bg-[rgba(241,244,248,0.82)]'}`}>
+                  <div className="truncate text-base font-bold text-[#1cb0f6]">{tooltip.time && tooltip.time > 0 ? tooltip.time : 0}</div>
+                  <div className="text-[10px] text-apple-gray6 dark:text-apple-dark6">分钟</div>
+                </div>
+              </div>
+
+              <div
+                className={`absolute h-0 w-0 border-l-[6px] border-r-[6px] border-transparent ${
+                  tooltip.showBelow
+                    ? isDark
+                      ? 'top-[-6px] border-b-[6px] border-b-[rgba(58,58,60,0.96)]'
+                      : 'top-[-6px] border-b-[6px] border-b-[rgba(250,251,253,0.9)]'
+                    : isDark
+                      ? 'bottom-[-6px] border-t-[6px] border-t-[rgba(36,36,38,0.96)]'
+                      : 'bottom-[-6px] border-t-[6px] border-t-[#f6f7fa]'
+                }`}
+                style={{
+                  left: tooltip.alignment === 'left' ? '20%' : tooltip.alignment === 'right' ? '80%' : '50%',
+                  transform: 'translateX(-50%)',
+                }}
+              />
+            </div>,
+            document.body,
+          )}
+
+        <div className="screenshot-solid-panel screenshot-disable-blur mt-4 flex flex-col gap-2 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-xs text-apple-gray6 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:border-transparent dark:[background-clip:border-box] dark:bg-[rgba(44,44,46,0.88)] dark:shadow-none dark:text-apple-dark6">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>
+              {getViewRangeLabel(viewMode, selectedYear, selectedQuarter, selectedHalf)}，学习{' '}
+              <span className="font-bold" style={{ color: DuoColors.featherGreen }}>
+                {activeDays}
+              </span>{' '}
+              天，获得{' '}
+              <span className="font-bold" style={{ color: DuoColors.beeYellow }}>
+                {totalXp.toLocaleString()}
+              </span>{' '}
+              XP
+            </span>
+            {totalTime > 0 && (
+              <span>
+                投入{' '}
+                <span className="font-bold" style={{ color: '#1cb0f6' }}>
+                  {totalTime.toLocaleString()}
+                </span>{' '}
+                分钟
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span>少</span>
+            {['#EBEDF0', '#9BE9A8', '#40C463', DuoColors.featherGreen, '#216E39'].map((color) => (
+              <div key={color} className="h-[10px] w-[10px] rounded-sm" style={{ backgroundColor: color }} />
+            ))}
+            <span>多</span>
           </div>
         </div>
       </div>

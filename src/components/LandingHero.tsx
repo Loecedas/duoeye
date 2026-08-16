@@ -18,6 +18,7 @@ import {
   resolveThemeMode,
   type ThemeMode,
 } from '../utils/theme';
+import { getBrowserTimeZone, getDateKeyInTimeZone } from '../utils/timezone';
 import {
   EmojiModeIcon,
   MenuIcon,
@@ -145,19 +146,8 @@ const mobileMenuCompactItemClassName =
 const mobileMenuExpandedItemClassName =
   'flex min-h-[68px] flex-col items-center justify-center rounded-[24px] border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,249,252,0.92))] px-2 py-2 text-center shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] xs:px-2.5 sm:px-4 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(58,58,60,0.72),rgba(34,34,36,0.9))] dark:hover:shadow-[0_16px_28px_rgba(0,0,0,0.2)]';
 
-const dateTimeFormatter = new Intl.DateTimeFormat('en-CA', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  timeZone: 'Asia/Shanghai',
-});
-
 function formatDateKey(date: Date): string {
-  try {
-    return dateTimeFormatter.format(date);
-  } catch {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  }
+  return getDateKeyInTimeZone(date, getBrowserTimeZone());
 }
 
 function buildLandingHeatmapPreviewData() {

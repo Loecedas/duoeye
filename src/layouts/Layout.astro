@@ -224,6 +224,19 @@ const websiteSchema = {
     isolation: isolate;
   }
 
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .snap-always {
+    scroll-snap-stop: always;
+  }
+
   .deferred-section {
     content-visibility: auto;
     contain-intrinsic-size: 960px;
