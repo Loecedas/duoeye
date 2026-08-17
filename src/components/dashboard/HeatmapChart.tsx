@@ -633,8 +633,6 @@ function HeatmapChart({
           <div
             ref={carouselRef}
             onScroll={handleCarouselScroll}
-            onTouchStart={() => setTooltip(null)}
-            onPointerDown={() => setTooltip(null)}
             className="flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
             style={{
               scrollbarWidth: 'none',
@@ -715,8 +713,6 @@ function HeatmapChart({
           <div
             ref={carouselRef}
             onScroll={handleCarouselScroll}
-            onTouchStart={() => setTooltip(null)}
-            onPointerDown={() => setTooltip(null)}
             className="flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
             style={{
               scrollbarWidth: 'none',
