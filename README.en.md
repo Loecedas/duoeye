@@ -144,7 +144,7 @@ GET https://www.duolingo.com/2023-05-23/users/{userId}
 | Metric | Mapping & Calculation Logic |
 | :--- | :--- |
 | **Total XP** | Prioritize `totalXp` from the detailed query, take the maximum against the active courses sum. This retains XP of deleted/reset courses. |
-| **Total Learning Time** | Prioritize the sum of course `timeSpent`. If empty, sum up daily log `totalSessionTime`. Ultimately falls back to `totalXp / 3` estimation. |
+| **Total Learning Time** | Prioritize the sum of course `timeSpent`. If empty, sum up daily log `totalSessionTime`. If neither is available, defaults to 0 without fake estimations. |
 | **Account Age** | Local browser date - `creationDate` (timezone-aware). |
 | **Today's Stats** | Select the last day record from the daily logs, filtering by the client timezone. |
 

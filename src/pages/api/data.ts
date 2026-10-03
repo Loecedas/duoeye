@@ -23,9 +23,9 @@ function resolveRequestTimeZone(request: Request): string {
   return sanitizeTimeZone(request.headers.get('x-user-timezone'));
 }
 
-async function handleRequest(username: unknown, timeZone: string) {
+async function handleRequest(username: unknown, timeZone: string, locals?: any) {
   try {
-    const data = await getDuolingoUserData(username, { timeZone });
+    const data = await getDuolingoUserData(username, { timeZone, locals });
     return jsonResponse({ data }, 200);
   } catch (error: any) {
     if (error instanceof DuolingoDataError) {
@@ -36,17 +36,19 @@ async function handleRequest(username: unknown, timeZone: string) {
   }
 }
 
-export const GET: APIRoute = async ({ url, request }) => {
+export const GET: APIRoute = async ({ url, request, locals }) => {
   return handleRequest(
-    normalizeUsername(url.searchParams.get('username')),
+    normalizeUsername(url.searchParams.get('username'), locals),
     resolveRequestTimeZone(request),
+    locals,
   );
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   const body = await request.json().catch(() => ({}));
   return handleRequest(
-    normalizeUsername(body?.username),
+    normalizeUsername(body?.username, locals),
     resolveRequestTimeZone(request),
+    locals,
   );
 };

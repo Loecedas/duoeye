@@ -1,17 +1,12 @@
 import type { UserData } from '../types';
 import { transformDuolingoData } from './duolingoService';
 import { DEFAULT_TIMEZONE, getDateKeyInTimeZone, sanitizeTimeZone } from '../utils/timezone';
+import { getEnv } from '../utils/env';
 
 const CACHE = new Map<string, { data: UserData; timestamp: number; dayKey: string }>();
 const CACHE_TTL = 5 * 60 * 1000;
 const CACHE_MAX_ENTRIES = 200;
 const DUOLINGO_BASE_URL = 'https://www.duolingo.com';
-const DUOLINGO_JWT =
-  (typeof process !== 'undefined'
-    ? process.env.DUOLINGO_TOKEN || process.env.DUOLINGO_JWT
-    : '') ||
-  import.meta.env.DUOLINGO_TOKEN ||
-  import.meta.env.DUOLINGO_JWT;
 
 export class DuolingoDataError extends Error {
   status: number;
@@ -64,21 +59,29 @@ function createHeaders(jwt?: string): HeadersInit {
   return {
     'User-Agent': 'Duolingo/7.41.4 (Android; 10; SM-G960F)',
     Accept: 'application/json',
-    ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+    ...(jwt
+      ? {
+          Authorization: `Bearer ${jwt}`,
+          Cookie: `jwt_token=${jwt}`,
+        }
+      : {}),
   };
 }
 
-export function normalizeUsername(rawUsername: unknown): string {
+export function getDuolingoToken(locals?: any): string {
+  return (
+    getEnv('DUOLINGO_TOKEN', locals) ||
+    getEnv('DUOLINGO_JWT', locals)
+  );
+}
+
+export function normalizeUsername(rawUsername: unknown, locals?: any): string {
   if (typeof rawUsername === 'string' && rawUsername.trim()) {
     return rawUsername.trim();
   }
-  const envUsername =
-    (typeof process !== 'undefined'
-      ? process.env.DUOLINGO_USERNAME
-      : '') ||
-    import.meta.env.DUOLINGO_USERNAME;
-  if (typeof envUsername === 'string' && envUsername.trim()) {
-    return envUsername.trim();
+  const envUsername = getEnv('DUOLINGO_USERNAME', locals);
+  if (envUsername) {
+    return envUsername;
   }
   return '';
 }
@@ -89,9 +92,9 @@ export function isValidUsername(username: string): boolean {
 
 export async function getDuolingoUserData(
   rawUsername: unknown,
-  options: { timeZone?: string } = {},
+  options: { timeZone?: string; locals?: any; jwt?: string } = {},
 ): Promise<UserData> {
-  const username = normalizeUsername(rawUsername);
+  const username = normalizeUsername(rawUsername, options.locals);
   const timeZone = sanitizeTimeZone(options.timeZone || DEFAULT_TIMEZONE);
   if (!username) {
     throw new DuolingoDataError('Username is required', 400);
@@ -101,7 +104,9 @@ export async function getDuolingoUserData(
     throw new DuolingoDataError('用户名格式无效', 400);
   }
 
-  const cacheKey = `${username.toLowerCase()}::${timeZone}`;
+  const jwt = (options.jwt || getDuolingoToken(options.locals)).trim();
+  const jwtSuffix = jwt ? jwt.slice(-8) : 'anon';
+  const cacheKey = `${username.toLowerCase()}::${timeZone}::${jwtSuffix}`;
   const now = Date.now();
   const currentDayKey = getDateKeyInTimeZone(now, timeZone);
   pruneCache(now);
@@ -113,7 +118,6 @@ export async function getDuolingoUserData(
     return cached.data;
   }
 
-  const jwt = DUOLINGO_JWT;
   const headers = createHeaders(jwt);
 
   // 1) 用旧接口查 userId（与 duodash 一致）
@@ -133,6 +137,10 @@ export async function getDuolingoUserData(
 
   if (lookupResult.status >= 500) {
     throw new DuolingoDataError('多邻国服务器暂时不可用，请稍后再试', 502);
+  }
+
+  if (lookupResult.status === 0) {
+    throw new DuolingoDataError('请求多邻国接口超时或网络连接失败，请稍后重试', 504);
   }
 
   const lookupRaw = lookupResult.data as { users?: any[] } | any;

@@ -3,7 +3,7 @@ import DuoDashApp from '../components/DuoDashApp';
 import Layout from '../layouts/Layout.astro';
 import { normalizeUsername } from '../services/duolingoDataLoader';
 
-const initialUsername = normalizeUsername(Astro.url.searchParams.get('username'));
+const initialUsername = normalizeUsername(Astro.url.searchParams.get('username'), Astro.locals);
 ---
 
 <Layout title="DuoEye - 仪表盘" robots="noindex, nofollow">

@@ -666,7 +666,7 @@ export default function DuoDashApp({
       const urlUsername = new URLSearchParams(window.location.search).get('username')?.trim() || '';
       const sessionUsername = sessionStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || localStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
       const storedUsername = sessionUsername || localStorage.getItem(USERNAME_STORAGE_KEY)?.trim() || '';
-      const activeUsername = urlUsername || storedUsername;
+      const activeUsername = urlUsername || storedUsername || initialUsername?.trim() || '';
       const activeTimeZone = getBrowserTimeZone();
       const sessionUserData = sessionStorage.getItem(USERDATA_STORAGE_KEY);
       const localUserData = localStorage.getItem(USERDATA_STORAGE_KEY);

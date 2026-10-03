@@ -1,11 +1,9 @@
 import type { Course } from '../types';
 
-const ESTIMATED_XP_PER_MINUTE = 3;
-
 export function getCourseMinutes(course: Course): number {
   const recordedMinutes = Number(course.timeSpent ?? 0);
   if (recordedMinutes > 0) return Math.round(recordedMinutes);
-  if (course.xp > 0) return Math.ceil(course.xp / ESTIMATED_XP_PER_MINUTE);
+  // 无法获取到真实时间时返回 0，不进行估算
   return 0;
 }
 

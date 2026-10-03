@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import { getEnv } from '../utils/env';
 
 interface Props {
   title: string;
@@ -15,7 +16,7 @@ const {
 
 const host = Astro.request.headers.get('x-forwarded-host') || Astro.request.headers.get('host') || Astro.url.host;
 const protocol = Astro.request.headers.get('x-forwarded-proto') || 'https';
-const siteUrl = import.meta.env.SITE_URL || `${protocol}://${host}`;
+const siteUrl = getEnv('SITE_URL', Astro.locals) || `${protocol}://${host}`;
 const canonicalURL = new URL(Astro.url.pathname, siteUrl).toString();
 
 // Google 搜索结果中展示的网站结构化数据 (JSON-LD WebSite)

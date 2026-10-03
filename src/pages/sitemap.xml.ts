@@ -1,9 +1,10 @@
 import type { APIRoute } from 'astro';
+import { getEnv } from '../utils/env';
 
-export const GET: APIRoute = async ({ url, request }) => {
+export const GET: APIRoute = async ({ url, request, locals }) => {
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host;
   const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const siteUrl = import.meta.env.SITE_URL || `${protocol}://${host}`;
+  const siteUrl = getEnv('SITE_URL', locals) || `${protocol}://${host}`;
   
   // Define core pages for DuoEye
   // Since dashboard requires a username parameter (e.g. /dashboard?username=xxx),

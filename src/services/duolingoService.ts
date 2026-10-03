@@ -323,7 +323,7 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
           crowns: l.crowns || 0,
           fromLanguage: 'en',
           learningLanguage: key,
-          timeSpent: Math.ceil((l.points || 0) / 3),
+          timeSpent: 0,
         });
       }
     }
@@ -342,7 +342,7 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
           crowns: detail.crowns || 0,
           fromLanguage: detail.from_language || 'en',
           learningLanguage: key,
-          timeSpent: Math.ceil(xp / 3),
+          timeSpent: 0,
         });
       }
     }
@@ -408,9 +408,6 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
   // 保证今日数据与历史流水对齐，若流水有延迟则自动同步到今日图表
   if (xpToday > 0) {
     xpByDate.set(localTodayDateKey, Math.max(xpByDate.get(localTodayDateKey) || 0, xpToday));
-    if ((timeByDate.get(localTodayDateKey) || 0) === 0) {
-      timeByDate.set(localTodayDateKey, Math.ceil(xpToday / 3));
-    }
   }
 
   // 1. Determine official total minutes from 2023 course metrics or xpSummaries
@@ -423,12 +420,6 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
     timeByDate.forEach(t => { dailyTimeSum += t; });
     totalMinutes = dailyTimeSum;
     hasRealTimeData = totalMinutes > 0;
-  }
-
-  // Fallback: estimate from totalXp if time data is unavailable
-  if (totalMinutes === 0 && totalXp > 0) {
-    totalMinutes = Math.ceil(totalXp / 3);
-    hasRealTimeData = true;
   }
 
   const dailyXpHistory: { date: string; xp: number }[] = [];
@@ -492,9 +483,9 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
     rawAny._detailedData?.hasSuper
   );
 
-  const estimatedLearningTime = hasRealTimeData
+  const estimatedLearningTime = hasRealTimeData && totalMinutes > 0
     ? `${Math.floor(totalMinutes / 60)}小时 ${totalMinutes % 60}分钟`
-    : '暂无数据';
+    : '0小时 0分钟';
 
   return {
     streak, totalXp, gems,

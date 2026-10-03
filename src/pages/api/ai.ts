@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import type { AiProvider, UserData } from '../../types';
+import { getEnv } from '../../utils/env';
 
 export const prerender = false;
 
@@ -10,15 +11,15 @@ interface AiRuntimeConfig {
   baseUrl: string;
 }
 
-const API_KEY_ENV_MAP: Record<AiProvider, string> = {
-  bigmodel: 'BIGMODEL_API_KEY',
-  gemini: 'GEMINI_API_KEY',
-  openrouter: 'OPENROUTER_API_KEY',
-  deepseek: 'DEEPSEEK_API_KEY',
-  siliconflow: 'SILICONFLOW_API_KEY',
-  moonshot: 'MOONSHOT_API_KEY',
-  zenmux: 'ZENMUX_API_KEY',
-  custom: 'CUSTOM_API_KEY',
+const API_KEY_ENV_MAP: Record<AiProvider, string[]> = {
+  bigmodel: ['BIGMODEL_API_KEY', 'ZHIPU_API_KEY', 'GLM_API_KEY', 'ZAI_API_KEY'],
+  gemini: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+  openrouter: ['OPENROUTER_API_KEY'],
+  deepseek: ['DEEPSEEK_API_KEY'],
+  siliconflow: ['SILICONFLOW_API_KEY'],
+  moonshot: ['MOONSHOT_API_KEY', 'KIMI_API_KEY'],
+  zenmux: ['ZENMUX_API_KEY'],
+  custom: ['CUSTOM_API_KEY', 'AI_API_KEY'],
 };
 
 const DEFAULT_ENDPOINTS: Record<AiProvider, string> = {
@@ -29,18 +30,19 @@ const DEFAULT_ENDPOINTS: Record<AiProvider, string> = {
   siliconflow: 'https://api.siliconflow.cn/v1',
   moonshot: 'https://api.moonshot.cn/v1',
   zenmux: 'https://api.zenmux.com/v1',
-  custom: '',
+  custom: 'https://open.bigmodel.cn/api/paas/v4',
 };
 
-function getEnv(key: string, locals?: any): string {
-  const runtimeEnv = (locals as any)?.runtime?.env;
-  return (
-    runtimeEnv?.[key] ||
-    (typeof process !== 'undefined' ? process.env[key] : '') ||
-    (import.meta.env as Record<string, string>)[key] ||
-    ''
-  );
-}
+const DEFAULT_MODELS: Record<AiProvider, string> = {
+  bigmodel: 'glm-4-flashx',
+  gemini: 'gemini-1.5-flash',
+  openrouter: 'google/gemini-2.0-flash-exp:free',
+  deepseek: 'deepseek-chat',
+  siliconflow: 'deepseek-ai/DeepSeek-V3',
+  moonshot: 'moonshot-v1-8k',
+  zenmux: 'gemini-2.5-flash',
+  custom: 'glm-4-flashx',
+};
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -53,37 +55,78 @@ function isAiProvider(value: string): value is AiProvider {
   return value in API_KEY_ENV_MAP;
 }
 
+function findKeyForProvider(provider: AiProvider, locals?: any): string {
+  const candidateKeys = API_KEY_ENV_MAP[provider] || [];
+  for (const envName of candidateKeys) {
+    const key = getEnv(envName, locals);
+    if (key) return key;
+  }
+  return '';
+}
+
+function findAnyProviderAndKey(locals?: any): { provider: AiProvider; apiKey: string } | null {
+  for (const [provider, candidateKeys] of Object.entries(API_KEY_ENV_MAP)) {
+    for (const envName of candidateKeys) {
+      const key = getEnv(envName, locals);
+      if (key) {
+        return { provider: provider as AiProvider, apiKey: key };
+      }
+    }
+  }
+  const generic = getEnv('AI_API_KEY', locals) || getEnv('ZAI_API_KEY', locals);
+  if (generic) {
+    return { provider: 'custom', apiKey: generic };
+  }
+  return null;
+}
+
 function resolveProvider(locals?: any): AiProvider {
-  const configuredProvider = getEnv('AI_PROVIDER', locals).trim();
-  if (configuredProvider && isAiProvider(configuredProvider)) {
-    return configuredProvider;
+  const configured = getEnv('AI_PROVIDER', locals).toLowerCase().trim();
+
+  // 若用户配置了 provider
+  if (configured && isAiProvider(configured)) {
+    // 检查此 provider 是否配置了 Key
+    const key = findKeyForProvider(configured, locals);
+    if (key) return configured;
+
+    // 若配置了 custom 或未找到当前 provider 的 Key，但设置了其他 Provider 的 Key，自动适配实际 Key
+    const detected = findAnyProviderAndKey(locals);
+    if (detected && detected.provider !== 'custom') {
+      return detected.provider;
+    }
+    return configured;
   }
 
-  if (getEnv('BIGMODEL_API_KEY', locals) || getEnv('ZAI_API_KEY', locals)) return 'bigmodel';
-  if (getEnv('GEMINI_API_KEY', locals)) return 'gemini';
-  if (getEnv('OPENROUTER_API_KEY', locals)) return 'openrouter';
-  if (getEnv('DEEPSEEK_API_KEY', locals)) return 'deepseek';
-  if (getEnv('SILICONFLOW_API_KEY', locals)) return 'siliconflow';
-  if (getEnv('MOONSHOT_API_KEY', locals)) return 'moonshot';
-  if (getEnv('ZENMUX_API_KEY', locals)) return 'zenmux';
-  if (getEnv('CUSTOM_API_KEY', locals) || getEnv('AI_API_KEY', locals)) return 'custom';
+  // 未指定 provider 时，根据填写的 Key 智能识别
+  const detected = findAnyProviderAndKey(locals);
+  if (detected) return detected.provider;
 
-  return 'custom';
+  return 'bigmodel';
 }
 
 function getAiConfig(locals?: any): AiRuntimeConfig {
   const provider = resolveProvider(locals);
-  const explicitApiKey = getEnv(API_KEY_ENV_MAP[provider], locals);
-  const fallbackApiKey =
-    getEnv('AI_API_KEY', locals) ||
-    getEnv('ZAI_API_KEY', locals) ||
-    (provider === 'bigmodel' ? getEnv('BIGMODEL_API_KEY', locals) : '');
+  let apiKey = findKeyForProvider(provider, locals);
+
+  if (!apiKey) {
+    const anyConfig = findAnyProviderAndKey(locals);
+    if (anyConfig) {
+      apiKey = anyConfig.apiKey;
+    }
+  }
+
+  const model = getEnv('AI_MODEL', locals) || DEFAULT_MODELS[provider] || 'glm-4-flashx';
+  let baseUrl = getEnv('AI_BASE_URL', locals) || DEFAULT_ENDPOINTS[provider];
+
+  if (!baseUrl && provider === 'custom') {
+    baseUrl = DEFAULT_ENDPOINTS.bigmodel;
+  }
 
   return {
     provider,
-    apiKey: explicitApiKey || fallbackApiKey,
-    model: getEnv('AI_MODEL', locals) || 'glm-4-flashx',
-    baseUrl: getEnv('AI_BASE_URL', locals) || DEFAULT_ENDPOINTS[provider],
+    apiKey,
+    model,
+    baseUrl,
   };
 }
 
@@ -133,14 +176,17 @@ function buildPrompts(userData: UserData) {
 function mapProviderError(status: number, provider: AiProvider): string | undefined {
   if (status === 401) {
     if (provider === 'custom' || provider === 'bigmodel') {
-      return '当前 AI Key 鉴权失败，请优先检查 CUSTOM_API_KEY 或 BIGMODEL_API_KEY';
+      return '当前 AI Key 鉴权失败，请检查 Cloudflare 中配置的 BIGMODEL_API_KEY 或 CUSTOM_API_KEY';
     }
-
-    return '当前 AI Key 鉴权失败';
+    return `当前 ${provider} AI Key 鉴权失败，请检查 Cloudflare 中的密钥配置`;
   }
 
   if (status === 403) {
     return '当前模型或接口没有访问权限';
+  }
+
+  if (status === 429) {
+    return 'AI 服务请求过于频繁或额度已用尽，请稍后再试';
   }
 
   return undefined;
@@ -150,7 +196,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const config = getAiConfig(locals);
 
   if (!config.apiKey) {
-    return jsonResponse({ error: `未配置 ${config.provider} 对应的 API Key` }, 500);
+    return jsonResponse(
+      {
+        error: `未在 Cloudflare 环境变量中检测到有效的 API Key。请在 Cloudflare 后台配置 ${
+          API_KEY_ENV_MAP[config.provider]?.[0] || 'BIGMODEL_API_KEY'
+        } 或 AI_API_KEY。`,
+      },
+      500,
+    );
   }
 
   if (!config.baseUrl) {
@@ -167,7 +220,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const { systemPrompt, userPrompt } = buildPrompts(userData);
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${config.apiKey}`,
+      Authorization: `Bearer ${config.apiKey.trim()}`,
       'Content-Type': 'application/json',
     };
 
@@ -176,18 +229,35 @@ export const POST: APIRoute = async ({ request, locals }) => {
       headers['X-Title'] = 'DuoEye';
     }
 
-    const response = await fetch(`${config.baseUrl.replace(/\/$/, '')}/chat/completions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: config.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.7,
-      }),
-    });
+    const cleanBaseUrl = config.baseUrl.trim().replace(/\/$/, '').replace(/\/chat\/completions$/, '');
+    const endpoint = `${cleanBaseUrl}/chat/completions`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    let response: Response;
+    try {
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: config.model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.7,
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchErr: any) {
+      clearTimeout(timeoutId);
+      if (fetchErr.name === 'AbortError') {
+        return jsonResponse({ error: 'AI 服务响应超时，请稍后再试' }, 504);
+      }
+      throw fetchErr;
+    }
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
