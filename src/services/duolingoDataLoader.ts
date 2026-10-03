@@ -6,7 +6,12 @@ const CACHE = new Map<string, { data: UserData; timestamp: number; dayKey: strin
 const CACHE_TTL = 5 * 60 * 1000;
 const CACHE_MAX_ENTRIES = 200;
 const DUOLINGO_BASE_URL = 'https://www.duolingo.com';
-const DUOLINGO_JWT = (typeof process !== 'undefined' ? process.env.DUOLINGO_TOKEN : '') || import.meta.env.DUOLINGO_TOKEN;
+const DUOLINGO_JWT =
+  (typeof process !== 'undefined'
+    ? process.env.DUOLINGO_TOKEN || process.env.DUOLINGO_JWT
+    : '') ||
+  import.meta.env.DUOLINGO_TOKEN ||
+  import.meta.env.DUOLINGO_JWT;
 
 export class DuolingoDataError extends Error {
   status: number;
@@ -55,25 +60,27 @@ function pruneCache(now: number): void {
   }
 }
 
-function createHeaders(): HeadersInit {
+function createHeaders(jwt?: string): HeadersInit {
   return {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-    Accept: 'application/json, text/plain, */*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
-    Referer: 'https://www.duolingo.com/',
-    Origin: 'https://www.duolingo.com',
-    'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'Sec-Fetch-Dest': 'empty',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'same-origin',
+    'User-Agent': 'Duolingo/7.41.4 (Android; 10; SM-G960F)',
+    Accept: 'application/json',
+    ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
   };
 }
 
 export function normalizeUsername(rawUsername: unknown): string {
-  return typeof rawUsername === 'string' ? rawUsername.trim() : '';
+  if (typeof rawUsername === 'string' && rawUsername.trim()) {
+    return rawUsername.trim();
+  }
+  const envUsername =
+    (typeof process !== 'undefined'
+      ? process.env.DUOLINGO_USERNAME
+      : '') ||
+    import.meta.env.DUOLINGO_USERNAME;
+  if (typeof envUsername === 'string' && envUsername.trim()) {
+    return envUsername.trim();
+  }
+  return '';
 }
 
 export function isValidUsername(username: string): boolean {
@@ -101,100 +108,83 @@ export async function getDuolingoUserData(
 
   const cached = CACHE.get(cacheKey);
   if (cached && now - cached.timestamp < CACHE_TTL && cached.dayKey === currentDayKey) {
-    // LRU: Refresh insertion order by deleting and re-setting
     CACHE.delete(cacheKey);
     CACHE.set(cacheKey, cached);
     return cached.data;
   }
 
-  const headers = createHeaders();
-  const v2Result = await fetchWithTimeout(
-    `${DUOLINGO_BASE_URL}/2023-05-23/users?username=${encodeURIComponent(username)}`,
+  const jwt = DUOLINGO_JWT;
+  const headers = createHeaders(jwt);
+
+  // 1) 用旧接口查 userId（与 duodash 一致）
+  const lookupResult = await fetchWithTimeout(
+    `${DUOLINGO_BASE_URL}/2017-06-30/users?username=${encodeURIComponent(username)}`,
     headers,
     10000,
   );
 
-  if (v2Result.status === 401 || v2Result.status === 403) {
-    throw new DuolingoDataError('该账号设置为私密，无法访问', 403);
+  if (lookupResult.status === 401 || lookupResult.status === 403) {
+    throw new DuolingoDataError('JWT Token 已过期或无效，请重新获取 Duolingo JWT Token', 401);
   }
 
-  if (v2Result.status === 429) {
+  if (lookupResult.status === 429) {
     throw new DuolingoDataError('请求过于频繁，多邻国暂时限制了访问，请稍后再试', 429);
   }
 
-  if (v2Result.status >= 500) {
+  if (lookupResult.status >= 500) {
     throw new DuolingoDataError('多邻国服务器暂时不可用，请稍后再试', 502);
   }
 
-  const v2Raw = v2Result.data as { users?: any[] } | any;
-  const v2Data = v2Raw?.users?.[0] || v2Raw;
+  const lookupRaw = lookupResult.data as { users?: any[] } | any;
+  const lookupUser = lookupRaw?.users?.[0] || lookupRaw;
+  const userId = lookupUser?.id || lookupUser?.user_id;
 
-  if (!v2Data) {
+  if (!userId) {
     throw new DuolingoDataError('找不到该用户，请检查用户名是否正确', 404);
   }
 
-  const userData: any = {
-    ...(v2Data || {}),
-    tracking_properties: {
-      ...(v2Data?.tracking_properties || v2Data?.trackingProperties || {}),
-    },
-  };
+  // 2) 用新接口获取完整用户数据（含数学/音乐/象棋等非语言课程，与 duodash 一致）
+  const mainResult = await fetchWithTimeout(
+    `${DUOLINGO_BASE_URL}/2023-05-23/users/${userId}`,
+    headers,
+    10000,
+  );
 
-  const userId = userData.id || userData.user_id || userData.tracking_properties?.user_id;
+  if (mainResult.status === 401 || mainResult.status === 403) {
+    if (!jwt && lookupUser) {
+      // 未配置 JWT 时回退使用公开的 lookupUser
+    } else {
+      throw new DuolingoDataError('JWT Token 已过期或无效，请重新获取 Duolingo JWT Token', 401);
+    }
+  }
 
-  // --- End Ameba API Support ---
+  const rawMain = (mainResult.data as any)?.users?.[0] || (mainResult.data as any)?.user || mainResult.data;
+  let userData: any = rawMain || lookupUser;
 
-  if (userId && DUOLINGO_JWT) {
-    const authHeaders: HeadersInit = {
-      ...headers,
-      Authorization: `Bearer ${DUOLINGO_JWT}`,
+  if (!userData) {
+    throw new DuolingoDataError('获取用户数据失败', 500);
+  }
+
+  if (lookupUser && typeof lookupUser === 'object') {
+    userData = {
+      ...lookupUser,
+      ...userData,
+      trackingProperties: {
+        ...(lookupUser.trackingProperties || lookupUser.tracking_properties || {}),
+        ...(userData.trackingProperties || userData.tracking_properties || {}),
+      },
     };
-    const [xpResult, leaderboardResult, amebaResult] = await Promise.all([
-      fetchWithTimeout(
-        `${DUOLINGO_BASE_URL}/2023-05-23/users/${userId}/xp_summaries?startDate=1970-01-01`,
-        authHeaders,
-        12000,
-      ),
-      fetchWithTimeout(
-        `${DUOLINGO_BASE_URL}/2023-05-23/users/${userId}/leaderboards?active=true`,
-        authHeaders,
-        10000,
-      ),
-      fetchWithTimeout(
-        `${DUOLINGO_BASE_URL}/2023-05-23/users/${userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties,totalXp`,
-        authHeaders,
-        10000,
-      ),
-    ]);
+  }
 
-    if (xpResult.data?.summaries) {
-      userData._xpSummaries = xpResult.data.summaries;
-    }
-
-    if (leaderboardResult.data) {
-      userData._leaderboardHistory = leaderboardResult.data;
-    }
-
-    if (amebaResult.data) {
-      // The API might return { users: [...] }, { user: { ... } }, or the user object directly.
-      userData._amebaData = 
-        amebaResult.data.users?.[0] || 
-        amebaResult.data.user || 
-        amebaResult.data;
-    }
-  } else if (userId) {
-    // If no JWT, still try to fetch Ameba data (might be public)
-    const amebaResult = await fetchWithTimeout(
-      `${DUOLINGO_BASE_URL}/2023-05-23/users/${userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties,totalXp`,
-      headers,
-      8000
-    );
-    if (amebaResult.data) {
-      userData._amebaData = 
-        amebaResult.data.users?.[0] || 
-        amebaResult.data.user || 
-        amebaResult.data;
-    }
+  // 3) 获取 xp_summaries（获取完整历史数据，与 duodash 一致）
+  const xpResult = await fetchWithTimeout(
+    `${DUOLINGO_BASE_URL}/2017-06-30/users/${userId}/xp_summaries?startDate=1970-01-01`,
+    headers,
+    12000,
+  );
+  const xpData = xpResult.data as { summaries?: unknown[] } | null;
+  if (xpData?.summaries) {
+    userData._xpSummaries = xpData.summaries;
   }
 
   if (!userData || typeof userData !== 'object') {

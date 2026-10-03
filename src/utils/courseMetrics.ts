@@ -4,7 +4,9 @@ const ESTIMATED_XP_PER_MINUTE = 3;
 
 export function getCourseMinutes(course: Course): number {
   const recordedMinutes = Number(course.timeSpent ?? 0);
-  return recordedMinutes > 0 ? Math.round(recordedMinutes) : 0;
+  if (recordedMinutes > 0) return Math.round(recordedMinutes);
+  if (course.xp > 0) return Math.ceil(course.xp / ESTIMATED_XP_PER_MINUTE);
+  return 0;
 }
 
 export function getCoursesTotalMinutes(courses: Course[]): number {

@@ -130,14 +130,13 @@ DuoEye 通过多邻国官方非公开 API 获取数据：
 
 | 数据接口 | 说明 |
 | :--- | :--- |
-| `GET /2023-05-23/users?username={username}` | 获取用户的基础 ID 和用户名 |
-| `GET /2023-05-23/users/{userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties,totalXp` | 获取科目详情（包含数学/象棋）与累计总经验 |
-| `GET /2023-05-23/users/{userId}/xp_summaries?startDate=1970-01-01` | 获取每日获得的经验值和学习时间流水 |
-| `GET /2023-05-23/users/{userId}/leaderboards?active=true` | 获取当前活跃排行榜与所处联赛段位 |
+| `GET /2017-06-30/users?username={username}` | 获取用户的基础 ID（仅取 id 字段） |
+| `GET /2023-05-23/users/{userId}` | 获取完整用户数据（含数学/音乐/象棋等非语言课程） |
+| `GET /2017-06-30/users/{userId}/xp_summaries?startDate=1970-01-01` | 获取每日经验值与学习时间完整流水 |
 
 *请求示例：*
 ```http
-GET https://www.duolingo.com/2023-05-23/users/{userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties,totalXp
+GET https://www.duolingo.com/2023-05-23/users/{userId}
 ```
 
 ### 核心字段计算逻辑

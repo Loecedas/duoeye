@@ -106,7 +106,7 @@ function calcDaysSince(createdAt: Date, timeZone: string = DEFAULT_TIMEZONE): nu
 function resolveTierIndex(rawAny: any, rawData: DuolingoRawUser): number {
   if (rawAny._leaderboardTier !== undefined && rawAny._leaderboardTier >= 0) return rawAny._leaderboardTier;
 
-  const lb = rawAny._leaderboard as any;
+  const lb = (rawAny._leaderboardHistory || rawAny._leaderboard) as any;
   if (lb !== undefined && lb !== null) {
     if (lb.active_leaderboard?.tier !== undefined) return lb.active_leaderboard.tier;
     if (lb.tier !== undefined && lb.tier >= 0) return lb.tier;
@@ -115,40 +115,32 @@ function resolveTierIndex(rawAny: any, rawData: DuolingoRawUser): number {
       return lb.ranked_users[0].tier;
   }
   if (rawAny.tier !== undefined && rawAny.tier >= 0 && rawAny.tier <= 10) return rawAny.tier;
-  if (rawAny.trackingProperties?.league_tier !== undefined) return rawAny.trackingProperties.league_tier;
-  if (rawAny.trackingProperties?.leaderboard_league !== undefined) return rawAny.trackingProperties.leaderboard_league;
-  if (rawAny.tracking_properties?.league_tier !== undefined) return rawAny.tracking_properties.league_tier;
-  if (rawAny.tracking_properties?.leaderboard_league !== undefined) return rawAny.tracking_properties.leaderboard_league;
-  if (rawData.language_data) {
-    const currentLang = Object.values(rawData.language_data).find((l: any) => l.current_learning) as any;
-    if (currentLang?.tier !== undefined) return currentLang.tier;
-  }
+  if (rawData.trackingProperties?.league_tier !== undefined) return rawData.trackingProperties.league_tier;
+  if (rawData.trackingProperties?.leaderboard_league !== undefined) return rawData.trackingProperties.leaderboard_league;
+  if (rawData.tracking_properties?.league_tier !== undefined) return rawData.tracking_properties.league_tier;
+  if (rawData.tracking_properties?.leaderboard_league !== undefined) return rawData.tracking_properties.leaderboard_league;
   return -1;
 }
 
 function parseCreationDate(
-  creationTs: number | undefined,
-  created: string | undefined,
+  creationDate: number | string | undefined,
   timeZone: string = DEFAULT_TIMEZONE,
 ): { dateStr: string; ageDays: number } {
-  if (creationTs) {
-    const ts = creationTs < 10000000000 ? creationTs * 1000 : creationTs;
-    const cDate = new Date(ts);
-    if (!isNaN(cDate.getTime())) {
-      return {
-        dateStr: cDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', timeZone }),
-        ageDays: calcDaysSince(cDate, timeZone)
-      };
-    }
+  if (!creationDate) {
+    return { dateStr: "未知", ageDays: 0 };
   }
-  if (created) {
-    const cDate = new Date(created);
-    if (!isNaN(cDate.getTime())) {
-      return {
-        dateStr: cDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', timeZone }),
-        ageDays: calcDaysSince(cDate, timeZone)
-      };
-    }
+  let cDate: Date;
+  if (typeof creationDate === 'number') {
+    const ts = creationDate < 10000000000 ? creationDate * 1000 : creationDate;
+    cDate = new Date(ts);
+  } else {
+    cDate = new Date(creationDate);
+  }
+  if (!isNaN(cDate.getTime())) {
+    return {
+      dateStr: cDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', timeZone }),
+      ageDays: calcDaysSince(cDate, timeZone)
+    };
   }
   return { dateStr: "未知", ageDays: 0 };
 }
@@ -156,44 +148,98 @@ function parseCreationDate(
 function resolveStreakExtendedTime(
   streakExtendedToday: boolean,
   rawAny: any,
-  rawData: DuolingoRawUser,
-  localTodayStart: number,
   timeZone: string = DEFAULT_TIMEZONE,
 ): string | undefined {
   if (!streakExtendedToday) return undefined;
 
   if (rawAny.streakData?.currentStreak?.lastExtendedDate) {
-    return new Date(rawAny.streakData.currentStreak.lastExtendedDate)
-      .toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone });
-  }
-
-  if (rawData.calendar?.length) {
-    const todayStr = toLocalDateKey(new Date(), timeZone);
-    const todayEvents = rawData.calendar
-      .filter(e => e && e.datetime && toLocalDateKey(new Date(e.datetime), timeZone) === todayStr)
-      .sort((a, b) => a.datetime - b.datetime);
-    if (todayEvents.length > 0) {
-      return new Date(todayEvents[0].datetime)
-        .toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone });
-    }
-  }
-
-  if (rawAny.xpGains?.length) {
-    const todayGains = rawAny.xpGains
-      .filter((g: any) => g && typeof g.time === 'number' && g.time * 1000 >= localTodayStart)
-      .sort((a: any, b: any) => a.time - b.time);
-    if (todayGains.length > 0) {
-      return new Date(todayGains[0].time * 1000)
-        .toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone });
+    const extDate = new Date(rawAny.streakData.currentStreak.lastExtendedDate);
+    if (!isNaN(extDate.getTime())) {
+      return extDate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone });
     }
   }
 
   return undefined;
 }
 
-function sumPoints(items: Array<{ points?: number; xp?: number }> | undefined): number {
-  if (!items || !Array.isArray(items)) return 0;
-  return items.reduce((sum, item) => sum + (item.points || item.xp || 0), 0);
+function normalizeSubjectAndTitle(rawCourse: any): { subject?: string; title: string } {
+  const rawSubject = String(rawCourse.subject || '').toLowerCase().trim();
+  const rawLearningLang = String(rawCourse.learningLanguage || '').toLowerCase().trim();
+  const rawId = String(rawCourse.id || '').toLowerCase().trim();
+  const rawTitle = String(rawCourse.title || '').trim();
+
+  let subject: string | undefined = undefined;
+
+  if (
+    rawSubject === 'chess' ||
+    rawLearningLang === 'chess' ||
+    rawId.includes('chess') ||
+    rawTitle.toLowerCase() === 'chess' ||
+    rawTitle === '国际象棋'
+  ) {
+    subject = 'chess';
+  } else if (
+    rawSubject === 'math' ||
+    rawLearningLang === 'math' ||
+    rawId.includes('math') ||
+    rawTitle.toLowerCase() === 'math' ||
+    rawTitle === '数学'
+  ) {
+    subject = 'math';
+  } else if (
+    rawSubject === 'music' ||
+    rawLearningLang === 'music' ||
+    rawId.includes('music') ||
+    rawTitle.toLowerCase() === 'music' ||
+    rawTitle === '音乐'
+  ) {
+    subject = 'music';
+  } else if (rawSubject) {
+    subject = rawSubject;
+  }
+
+  let title = rawTitle;
+  if (subject === 'chess') {
+    title = '国际象棋';
+  } else if (subject === 'math') {
+    title = '数学';
+  } else if (subject === 'music') {
+    title = '音乐';
+  } else if (!title) {
+    title = rawCourse.learningLanguage || subject || '未知科目';
+  }
+
+  return { subject, title };
+}
+
+function parseCourseItem(rawCourse: any): Course | null {
+  if (!rawCourse || typeof rawCourse !== 'object') return null;
+
+  const xp = Number(rawCourse.xp || rawCourse.points || 0);
+  const isCurrent = Boolean(rawCourse.current_learning || rawCourse.isCurrent);
+
+  if (xp <= 0 && !isCurrent) {
+    return null;
+  }
+
+  const { subject, title } = normalizeSubjectAndTitle(rawCourse);
+
+  let rawTime = Number(rawCourse.timeSpent || rawCourse.duration || 0);
+  if (rawTime > 1000000) {
+    rawTime = Math.floor(rawTime / 1000);
+  }
+  const timeSpentMinutes = Math.floor(rawTime / 60);
+
+  return {
+    id: String(rawCourse.id || `${rawCourse.learningLanguage || 'course'}_${rawCourse.fromLanguage || 'en'}`),
+    title,
+    xp,
+    crowns: Number(rawCourse.crowns || 0),
+    fromLanguage: rawCourse.fromLanguage || 'en',
+    learningLanguage: rawCourse.learningLanguage || subject || 'unknown',
+    subject,
+    timeSpent: timeSpentMinutes,
+  };
 }
 
 export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: string = DEFAULT_TIMEZONE): UserData {
@@ -203,153 +249,119 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
 
   const timeZone = sanitizeTimeZone(rawTimeZone);
   const rawAny = rawData as any;
-  const streak = rawData.site_streak ?? rawData.streak ?? 0;
+  const streak = rawData.streak ?? 0;
 
-  const gems: number = rawAny._inventoryGems ?? rawAny._fieldsData?.gems ?? rawAny._inventory?.gems
-    ?? rawAny._inventory?.lingots ?? rawAny._inventory?.gem_count
-    ?? rawData.gemsTotalCount ?? rawData.totalGems ?? rawData.gems
-    ?? rawData.tracking_properties?.gems ?? rawData.lingots ?? rawData.rupees ?? 0;
+  const gems: number =
+    rawAny.gemsTotalCount ??
+    rawAny.totalGems ??
+    rawAny.gems ??
+    rawData.gemsTotalCount ??
+    rawData.totalGems ??
+    rawData.gems ??
+    rawData.trackingProperties?.gems ??
+    rawData.tracking_properties?.gems ??
+    rawAny._inventoryGems ??
+    rawAny._detailedData?.gemsTotalCount ??
+    rawAny._detailedData?.totalGems ??
+    rawAny._detailedData?.gems ??
+    0;
 
-  let totalXp = rawAny._amebaData?.totalXp ?? rawData.totalXp ?? rawData.total_xp ?? 0;
+  let totalXp =
+    rawAny._detailedData?.totalXp ??
+    rawAny._amebaData?.totalXp ??
+    rawData.totalXp ??
+    0;
 
-  const dailyGoal = rawData.dailyGoal ?? rawData.daily_goal ?? rawData.xpGoal ?? 0;
-  const creationTs = rawData.creation_date || rawData.creationDate;
+  const dailyGoal = rawData.dailyGoal ?? rawData.xpGoal ?? 0;
+  const creationDate = rawData.creationDate;
 
-  let courses: Course[] = [];
-
-  // --- Ameba Data Parsing (New Subjects Support) ---
-  const amebaData = rawAny._amebaData;
-  if (amebaData?.courses?.length) {
-    courses = amebaData.courses.map((c: any) => {
-      const subject = String(c.subject || '').toLowerCase();
-      let title = c.title;
-      if (subject) {
-        if (subject === 'chess') title = '国际象棋';
-        else if (subject === 'math') title = '数学';
-        else if (subject === 'music') title = '音乐';
-      } else if (title === '国际象棋') {
-        title = 'Chess';
-      }
-
-      // Time spent extraction (from Ameba structure)
-      let timeSpent = c.timeSpent || c.duration || 0;
-      // If duration is in ms, convert to seconds
-      if (timeSpent > 1000000) timeSpent = Math.floor(timeSpent / 1000);
-
-      return {
-        title: title || c.learningLanguage || subject,
-        xp: c.xp || c.points || 0,
-        fromLanguage: c.fromLanguage,
-        learningLanguage: c.learningLanguage,
-        crowns: c.crowns || 0,
-        id: c.id || c.courseId,
-        subject: subject,
-        timeSpent: Math.floor(timeSpent / 60), // Store in minutes
-      };
-    });
+  // --- 2023 Courses Parsing (Languages & New Subjects: Chess, Math, Music) ---
+  const rawCourseList: any[] = [];
+  const detailedCourses = rawAny._detailedData?.courses || rawAny._amebaData?.courses;
+  if (Array.isArray(detailedCourses)) {
+    rawCourseList.push(...detailedCourses);
+  }
+  if (Array.isArray(rawData.courses)) {
+    rawCourseList.push(...rawData.courses);
   }
 
-  // Fallback and legacy courses (Merge with Ameba courses if not already present)
-  if (rawData.courses?.length) {
-    rawData.courses.forEach((c: any) => {
-      const exists = courses.some(ac => 
-        (ac.id && c.id && ac.id === c.id) || 
-        (ac.learningLanguage === c.learningLanguage && ac.fromLanguage === c.fromLanguage)
-      );
-      if (!exists && ((c.xp || c.points || 0) > 0 || c.current_learning)) {
-        const subject = String(c.subject || '').toLowerCase();
-        let title = c.title;
-        if (subject === 'chess') title = '国际象棋';
-        else if (subject === 'math') title = '数学';
-        else if (subject === 'music') title = '音乐';
-        else if (title === '国际象棋') title = 'Chess';
+  const courseMap = new Map<string, Course>();
+  for (const rc of rawCourseList) {
+    const course = parseCourseItem(rc);
+    if (!course) continue;
 
-        courses.push({
-          title: title || c.learningLanguage,
-          xp: c.xp || c.points || 0,
-          fromLanguage: c.fromLanguage,
-          learningLanguage: c.learningLanguage,
-          crowns: c.crowns || 0,
-          id: c.id,
-          subject: subject
-        });
+    const key = (course.id && course.id.length > 2)
+      ? course.id
+      : `${course.learningLanguage}::${course.fromLanguage}`;
+
+    const existing = courseMap.get(key);
+    if (!existing) {
+      courseMap.set(key, course);
+    } else {
+      existing.xp = Math.max(existing.xp, course.xp);
+      existing.crowns = Math.max(existing.crowns, course.crowns);
+      if (!existing.subject && course.subject) {
+        existing.subject = course.subject;
+        existing.title = course.title;
       }
-    });
-  }
-
-  if (rawAny.languages?.length) {
-    const v1Courses = rawAny.languages
-      .filter((l: any) => l.points > 0 || l.current_learning)
-      .map((l: any) => ({
-        id: l.language,
-        title: l.language_string,
-        xp: l.points || 0,
-        crowns: l.crowns || 0,
-        fromLanguage: 'en',
-        learningLanguage: l.language,
-      }));
-
-    for (const v1c of v1Courses) {
-      const exists = courses.some(c =>
-        c.title === v1c.title ||
-        c.learningLanguage === v1c.learningLanguage ||
-        (c.id && v1c.id && v1c.id.length > 0 && c.id.includes(v1c.id))
-      );
-      if (!exists) courses.push(v1c);
+      if ((course.timeSpent || 0) > (existing.timeSpent || 0)) {
+        existing.timeSpent = course.timeSpent;
+      }
     }
   }
 
-  if (courses.length === 0 && rawData.language_data) {
-    courses = Object.entries(rawData.language_data)
-      .filter(([_, langDetail]: [string, any]) => {
-        const xp = langDetail.points || langDetail.level_progress || 0;
-        return xp > 0 || langDetail.current_learning;
-      })
-      .map(([langCode, langDetail]: [string, any]) => {
-        let crowns = langDetail.crowns || 0;
-        if (crowns === 0 && langDetail.skills?.length) {
-          crowns = langDetail.skills.reduce((acc: number, skill: any) =>
-            acc + (skill.levels_finished || skill.crowns || skill.finishedLevels || 0), 0);
-        }
-        return {
-          id: langDetail.learning_language || langCode,
-          title: langDetail.language_string === '国际象棋' ? 'Chess' : langDetail.language_string,
-          xp: langDetail.points || langDetail.level_progress || 0,
-          crowns,
-          fromLanguage: langDetail.from_language || 'en',
-          learningLanguage: langDetail.learning_language || langCode,
-        };
-      });
+  // 补充历史语言课程（2017 与 2023 互补，取长补短，保留历史重置语言）
+  if (Array.isArray(rawAny.languages)) {
+    for (const l of rawAny.languages) {
+      if ((l.points || 0) <= 0 && !l.current_learning) continue;
+      const key = l.language || l.learning_language;
+      if (key && !courseMap.has(key)) {
+        courseMap.set(key, {
+          id: key,
+          title: l.language_string || key,
+          xp: l.points || 0,
+          crowns: l.crowns || 0,
+          fromLanguage: 'en',
+          learningLanguage: key,
+          timeSpent: Math.ceil((l.points || 0) / 3),
+        });
+      }
+    }
   }
 
+  if (rawAny.language_data && typeof rawAny.language_data === 'object') {
+    for (const [langCode, detail] of Object.entries(rawAny.language_data as Record<string, any>)) {
+      const xp = detail.points || detail.level_progress || 0;
+      if (xp <= 0 && !detail.current_learning) continue;
+      const key = detail.learning_language || langCode;
+      if (key && !courseMap.has(key)) {
+        courseMap.set(key, {
+          id: key,
+          title: detail.language_string || key,
+          xp,
+          crowns: detail.crowns || 0,
+          fromLanguage: detail.from_language || 'en',
+          learningLanguage: key,
+          timeSpent: Math.ceil(xp / 3),
+        });
+      }
+    }
+  }
+
+  const courses: Course[] = Array.from(courseMap.values());
   const coursesXpSum = courses.reduce((sum, c) => sum + (c.xp || 0), 0);
   totalXp = Math.max(totalXp, coursesXpSum);
 
   let learningLanguage = "None";
-  if (rawData.language_data) {
-    const current = Object.values(rawData.language_data).find(l => l.current_learning);
-    learningLanguage = current?.language_string ?? courses[0]?.title ?? "None";
-  } else if (rawData.currentCourse) {
-    learningLanguage = rawData.currentCourse.title;
+  if (rawData.currentCourse) {
+    const currentSubject = normalizeSubjectAndTitle(rawData.currentCourse);
+    learningLanguage = currentSubject.title;
   } else if (courses.length > 0) {
     learningLanguage = courses[0].title;
-  }
-  if (learningLanguage === '国际象棋') {
-    learningLanguage = 'Chess';
   }
 
   const xpByDate = new Map<string, number>();
   const timeByDate = new Map<string, number>();
-
-  function addCalendarEvent(event: { datetime: number; improvement?: number }): void {
-    if (!event || !event.datetime) return;
-    const d = new Date(event.datetime);
-    if (isNaN(d.getTime())) return;
-    const dateKey = toLocalDateKey(d, timeZone);
-    const improvement = event.improvement || 0;
-    xpByDate.set(dateKey, (xpByDate.get(dateKey) || 0) + improvement);
-    timeByDate.set(dateKey, (timeByDate.get(dateKey) || 0) + Math.ceil((improvement || 10) / 3));
-  }
 
   if (rawAny._xpSummaries?.length) {
     for (const summary of rawAny._xpSummaries) {
@@ -363,21 +375,45 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
       const minutes = Math.round(sessionTimeSeconds / 60);
       timeByDate.set(dateKey, minutes);
     }
-  } else if (rawData.calendar?.length) {
-    rawData.calendar.forEach(addCalendarEvent);
-  } else if (rawData.language_data) {
-    Object.values(rawData.language_data).forEach((lang: any) => {
-      if (lang.calendar?.length) lang.calendar.forEach(addCalendarEvent);
-    });
   }
 
+  const now = new Date();
+  const localTodayDateKey = toLocalDateKey(now, timeZone);
+  const streakExtendedToday = Boolean(
+    rawData.streakExtendedToday ||
+    rawAny.streakData?.currentStreak?.lastExtendedDate
+  );
+  const streakExtendedTime = resolveStreakExtendedTime(streakExtendedToday, rawAny, timeZone);
 
+  let xpToday = 0;
+  let lessonsToday = 0;
 
-  // 1. Determine official total XP as the sum of daily histories (xpByDate)
-  let totalXpSum = 0;
-  xpByDate.forEach(xp => { totalXpSum += xp; });
+  if (rawAny._xpSummaries?.length) {
+    const todaySummary = rawAny._xpSummaries.find((s: any) =>
+      parseSummaryDateKey(s.date, timeZone) === localTodayDateKey
+    );
+    if (todaySummary) {
+      xpToday = todaySummary.gainedXp ?? todaySummary.gained_xp ?? 0;
+      lessonsToday = todaySummary.numSessions ?? 0;
+    }
+  }
 
-  // 2. Determine official total minutes
+  if (xpToday === 0) {
+    const todayXpFromHistory = xpByDate.get(localTodayDateKey) || 0;
+    if (todayXpFromHistory > 0) {
+      xpToday = todayXpFromHistory;
+    }
+  }
+
+  // 保证今日数据与历史流水对齐，若流水有延迟则自动同步到今日图表
+  if (xpToday > 0) {
+    xpByDate.set(localTodayDateKey, Math.max(xpByDate.get(localTodayDateKey) || 0, xpToday));
+    if ((timeByDate.get(localTodayDateKey) || 0) === 0) {
+      timeByDate.set(localTodayDateKey, Math.ceil(xpToday / 3));
+    }
+  }
+
+  // 1. Determine official total minutes from 2023 course metrics or xpSummaries
   const coursesTimeSum = courses.reduce((sum, c) => sum + (c.timeSpent || 0), 0);
   let totalMinutes = coursesTimeSum;
   let hasRealTimeData = totalMinutes > 0;
@@ -389,13 +425,11 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
     hasRealTimeData = totalMinutes > 0;
   }
 
-  // Fallback: if totalMinutes is 0, estimate it from totalXp
+  // Fallback: estimate from totalXp if time data is unavailable
   if (totalMinutes === 0 && totalXp > 0) {
     totalMinutes = Math.ceil(totalXp / 3);
     hasRealTimeData = true;
   }
-
-
 
   const dailyXpHistory: { date: string; xp: number }[] = [];
   const dailyTimeHistory: { date: string; time: number }[] = [];
@@ -448,68 +482,19 @@ export function transformDuolingoData(rawData: DuolingoRawUser, rawTimeZone: str
   const leagueName = (tierIndex >= 0 && tierIndex < LEAGUE_TIERS.length)
     ? LEAGUE_TIERS[tierIndex] : "—";
 
-  const { dateStr: creationDateStr, ageDays: accountAgeDays } = parseCreationDate(creationTs, rawData.created, timeZone);
+  const { dateStr: creationDateStr, ageDays: accountAgeDays } = parseCreationDate(creationDate, timeZone);
 
-  const hasInventoryPremium = rawAny.inventory?.premium_subscription || rawAny.inventory?.super_subscription;
-  const hasItemPremium = rawAny.has_item_premium_subscription || rawAny.has_item_immersive_subscription;
-  const isPlus = !!(rawData.hasPlus || rawData.hasSuper || rawData.plusStatus === 'active' || rawAny.has_plus || rawAny.is_plus || hasInventoryPremium || hasItemPremium);
-
-  // totalMinutes and hasRealTimeData are already calculated and calibrated above
+  const isPlus = Boolean(
+    rawData.hasPlus ||
+    rawData.hasSuper ||
+    rawData.plusStatus === 'active' ||
+    rawAny._detailedData?.hasPlus ||
+    rawAny._detailedData?.hasSuper
+  );
 
   const estimatedLearningTime = hasRealTimeData
     ? `${Math.floor(totalMinutes / 60)}小时 ${totalMinutes % 60}分钟`
     : '暂无数据';
-
-  let xpToday = 0;
-  let lessonsToday = 0;
-  const streakExtendedToday = rawAny.streak_extended_today ?? rawAny.streakExtendedToday ?? false;
-
-  const now = new Date();
-  const localTodayStart = getStartOfDayInTimezone(now, timeZone);
-  const localTodayEnd = localTodayStart + MS_PER_DAY;
-  const localTodayDateKey = toLocalDateKey(now, timeZone);
-
-  const streakExtendedTime = resolveStreakExtendedTime(streakExtendedToday, rawAny, rawData, localTodayStart, timeZone);
-
-  if (rawAny._xpSummaries?.length) {
-    const todaySummary = rawAny._xpSummaries.find((s: any) =>
-      parseSummaryDateKey(s.date, timeZone) === localTodayDateKey
-    );
-    if (todaySummary) {
-      xpToday = todaySummary.gainedXp ?? todaySummary.gained_xp ?? 0;
-      lessonsToday = todaySummary.numSessions ?? 0;
-    }
-  }
-
-  if (xpToday === 0) {
-    const todayXpFromHistory = xpByDate.get(localTodayDateKey) || 0;
-
-    if (rawAny.xp_today !== undefined) {
-      xpToday = rawAny.xp_today;
-    } else if (todayXpFromHistory > 0) {
-      xpToday = todayXpFromHistory;
-    } else if (rawAny.streakData?.currentStreak?.endDate) {
-      const streakEndTs = new Date(rawAny.streakData.currentStreak.endDate).getTime();
-      if (streakEndTs >= localTodayStart && streakEndTs < localTodayEnd) {
-        xpToday = rawAny.streakData.currentStreak.lastExtendedDate ? 1 : 0;
-      }
-    } else if (rawData.calendar?.length) {
-      const todayEvents = rawData.calendar.filter(e =>
-        e.datetime >= localTodayStart && e.datetime < localTodayEnd
-      );
-      xpToday = todayEvents.reduce((acc, e) => acc + (e.improvement || 0), 0);
-      if (lessonsToday === 0) lessonsToday = todayEvents.length;
-    }
-  }
-
-  if (xpToday === 0 && rawAny.xpGains?.length) {
-    const todayGains = rawAny.xpGains.filter((g: any) => {
-      const gainTs = g.time * 1000;
-      return gainTs >= localTodayStart && gainTs < localTodayEnd;
-    });
-    xpToday = todayGains.reduce((acc: number, g: any) => acc + (g.xp || 0), 0);
-    if (lessonsToday === 0) lessonsToday = todayGains.length;
-  }
 
   return {
     streak, totalXp, gems,

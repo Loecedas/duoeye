@@ -67,32 +67,7 @@ export interface AiConfig {
   baseUrl?: string;
 }
 
-export interface DuolingoCalendarEvent {
-  datetime: number;
-  improvement: number;
-  event_type?: string;
-}
-
 export type DuolingoRawCourse = Course;
-
-export interface DuolingoLanguageDataDetail {
-  points: number;
-  crowns?: number;
-  language_string: string;
-  level: number;
-  streak?: number;
-  learning_language?: string;
-  from_language?: string;
-  current_learning?: boolean;
-}
-
-export interface DuolingoLanguage {
-  language: string;
-  language_string: string;
-  points: number;
-  crowns?: number;
-  current_learning?: boolean;
-}
 
 export interface DuolingoTrackingProperties {
   gems?: number;
@@ -101,24 +76,18 @@ export interface DuolingoTrackingProperties {
   user_id?: number;
 }
 
-export interface DuolingoInventory {
-  premium_subscription?: boolean;
-  super_subscription?: boolean;
-}
-
 export interface DuolingoStreakData {
   currentStreak?: {
     startDate?: string;
     endDate?: string;
     lastExtendedDate?: string;
+    length?: number;
   };
-}
-
-export interface DuolingoXpGain {
-  time: number;
-  xp: number;
-  skillId?: string;
-  eventType?: string;
+  previousStreak?: {
+    startDate?: string;
+    endDate?: string;
+    length?: number;
+  };
 }
 
 export interface DuolingoXpSummary {
@@ -133,56 +102,39 @@ export interface DuolingoXpSummary {
 }
 
 export interface DuolingoRawUser {
+  id?: number | string;
+  user_id?: number | string;
   username: string;
   name?: string;
   fullname?: string;
   picture?: string;
   avatar?: string;
   streak: number;
-  site_streak?: number;
   totalXp?: number;
-  total_xp?: number;
   gems?: number;
-  lingots?: number;
-  rupees?: number;
+  gemsTotalCount?: number;
+  totalGems?: number;
   tier?: number;
-  courses?: DuolingoRawCourse[];
-  language_data?: { [key: string]: DuolingoLanguageDataDetail };
-  currentCourse?: DuolingoRawCourse;
-  calendar?: DuolingoCalendarEvent[];
-  creationDate?: number;
-  created?: string;
-  creation_date?: number;
+  creationDate?: number | string;
   hasPlus?: boolean;
   hasSuper?: boolean;
   plusStatus?: string;
   dailyGoal?: number;
-  daily_goal?: number;
-  id?: number;
-  user_id?: number;
   xpGoal?: number;
-  gemsTotalCount?: number;
-  totalGems?: number;
-  has_plus?: boolean;
-  is_plus?: boolean;
-  xp_today?: number;
-  streak_extended_today?: boolean;
   streakExtendedToday?: boolean;
   numSessionsCompleted?: number;
   streakFreezeCount?: number;
   weeklyXp?: number;
-  languages?: DuolingoLanguage[];
+  courses?: DuolingoRawCourse[];
+  currentCourse?: DuolingoRawCourse;
+  currentCourseId?: string;
   tracking_properties?: DuolingoTrackingProperties;
   trackingProperties?: DuolingoTrackingProperties;
-  inventory?: DuolingoInventory;
-  has_item_premium_subscription?: boolean;
-  has_item_immersive_subscription?: boolean;
   streakData?: DuolingoStreakData;
-  xpGains?: DuolingoXpGain[];
   _xpSummaries?: DuolingoXpSummary[];
   _leaderboardHistory?: unknown;
-  _inventory?: unknown;
-  _leaderboard?: unknown;
+  _detailedData?: unknown;
+  _amebaData?: unknown;
   _inventoryGems?: number;
   _fieldsData?: Record<string, unknown>;
   _leaderboardTier?: number;
@@ -196,8 +148,6 @@ export interface XpSummary {
   streakExtended: boolean;
   totalSessionTime: number;
 }
-
-export type XpGain = DuolingoXpGain;
 
 export interface CacheEntry<T> {
   data: T;

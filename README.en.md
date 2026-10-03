@@ -130,14 +130,13 @@ DuoEye fetches user statistics via Duolingo's official internal APIs:
 
 | Endpoint | Description |
 | :--- | :--- |
-| `GET /2023-05-23/users?username={username}` | Fetch user ID and username |
-| `GET /2023-05-23/users/{userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties,totalXp` | Fetch course details (Math/Chess) and total cumulative XP |
-| `GET /2023-05-23/users/{userId}/xp_summaries?startDate=1970-01-01` | Fetch historical daily XP logs and learning session durations |
-| `GET /2023-05-23/users/{userId}/leaderboards?active=true` | Fetch current leaderboard league and ranking |
+| `GET /2017-06-30/users?username={username}` | Resolve basic user ID |
+| `GET /2023-05-23/users/{userId}` | Fetch full user profile data (including Math, Music, Chess, etc.) |
+| `GET /2017-06-30/users/{userId}/xp_summaries?startDate=1970-01-01` | Fetch full historical daily XP logs and learning session durations |
 
 *Request Example:*
 ```http
-GET https://www.duolingo.com/2023-05-23/users/{userId}?fields=courses,currentCourse,fromLanguage,learningLanguage,trackingProperties,totalXp
+GET https://www.duolingo.com/2023-05-23/users/{userId}
 ```
 
 ### Core Calculation Logic
