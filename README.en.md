@@ -161,6 +161,35 @@ If the API returns a "JWT Token is expired or invalid" error, retrieve a new tok
 **Data Discrepancy with Official App**  
 Deleted or reset language courses are permanently deleted from course structures, causing slight variations between course sums and the actual account-level total XP. This is normal data behavior.
 
+## Deployment Guide
+
+### Deploying to Cloudflare
+
+This project is optimized for Cloudflare Workers (with Static Assets), allowing quick, friction-free deployment.
+
+#### Option 1: One-Click Deploy via Wrangler CLI
+
+1. Authenticate with Cloudflare:
+   ```bash
+   npx wrangler login
+   ```
+2. Build and deploy:
+   ```bash
+   npm run deploy:cf
+   ```
+3. In the Cloudflare Dashboard under your Worker's **Settings -> Variables and Secrets**, configure your environment variables (`DUOLINGO_TOKEN`, `AI_PROVIDER`, API keys, etc.).
+
+#### Option 2: Continuous Integration via Git
+
+1. In Cloudflare Dashboard, create a new Worker / Pages project connected to your Git repository.
+2. Build configuration:
+   - **Framework preset**: `Astro`
+   - **Build command**: `npm run build:cf`
+   - **Compatibility flags**: Ensure `nodejs_compat` is enabled
+3. Add environment variables according to `.env.example`.
+
+---
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).

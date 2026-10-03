@@ -32,8 +32,14 @@ const DEFAULT_ENDPOINTS: Record<AiProvider, string> = {
   custom: '',
 };
 
-function getEnv(key: string): string {
-  return process.env[key] || (import.meta.env as Record<string, string>)[key] || '';
+function getEnv(key: string, locals?: any): string {
+  const runtimeEnv = (locals as any)?.runtime?.env;
+  return (
+    runtimeEnv?.[key] ||
+    (typeof process !== 'undefined' ? process.env[key] : '') ||
+    (import.meta.env as Record<string, string>)[key] ||
+    ''
+  );
 }
 
 function jsonResponse(data: unknown, status = 200) {
@@ -47,37 +53,37 @@ function isAiProvider(value: string): value is AiProvider {
   return value in API_KEY_ENV_MAP;
 }
 
-function resolveProvider(): AiProvider {
-  const configuredProvider = getEnv('AI_PROVIDER').trim();
+function resolveProvider(locals?: any): AiProvider {
+  const configuredProvider = getEnv('AI_PROVIDER', locals).trim();
   if (configuredProvider && isAiProvider(configuredProvider)) {
     return configuredProvider;
   }
 
-  if (getEnv('BIGMODEL_API_KEY') || getEnv('ZAI_API_KEY')) return 'bigmodel';
-  if (getEnv('GEMINI_API_KEY')) return 'gemini';
-  if (getEnv('OPENROUTER_API_KEY')) return 'openrouter';
-  if (getEnv('DEEPSEEK_API_KEY')) return 'deepseek';
-  if (getEnv('SILICONFLOW_API_KEY')) return 'siliconflow';
-  if (getEnv('MOONSHOT_API_KEY')) return 'moonshot';
-  if (getEnv('ZENMUX_API_KEY')) return 'zenmux';
-  if (getEnv('CUSTOM_API_KEY') || getEnv('AI_API_KEY')) return 'custom';
+  if (getEnv('BIGMODEL_API_KEY', locals) || getEnv('ZAI_API_KEY', locals)) return 'bigmodel';
+  if (getEnv('GEMINI_API_KEY', locals)) return 'gemini';
+  if (getEnv('OPENROUTER_API_KEY', locals)) return 'openrouter';
+  if (getEnv('DEEPSEEK_API_KEY', locals)) return 'deepseek';
+  if (getEnv('SILICONFLOW_API_KEY', locals)) return 'siliconflow';
+  if (getEnv('MOONSHOT_API_KEY', locals)) return 'moonshot';
+  if (getEnv('ZENMUX_API_KEY', locals)) return 'zenmux';
+  if (getEnv('CUSTOM_API_KEY', locals) || getEnv('AI_API_KEY', locals)) return 'custom';
 
   return 'custom';
 }
 
-function getAiConfig(): AiRuntimeConfig {
-  const provider = resolveProvider();
-  const explicitApiKey = getEnv(API_KEY_ENV_MAP[provider]);
+function getAiConfig(locals?: any): AiRuntimeConfig {
+  const provider = resolveProvider(locals);
+  const explicitApiKey = getEnv(API_KEY_ENV_MAP[provider], locals);
   const fallbackApiKey =
-    getEnv('AI_API_KEY') ||
-    getEnv('ZAI_API_KEY') ||
-    (provider === 'bigmodel' ? getEnv('BIGMODEL_API_KEY') : '');
+    getEnv('AI_API_KEY', locals) ||
+    getEnv('ZAI_API_KEY', locals) ||
+    (provider === 'bigmodel' ? getEnv('BIGMODEL_API_KEY', locals) : '');
 
   return {
     provider,
     apiKey: explicitApiKey || fallbackApiKey,
-    model: getEnv('AI_MODEL') || 'glm-4-flashx',
-    baseUrl: getEnv('AI_BASE_URL') || DEFAULT_ENDPOINTS[provider],
+    model: getEnv('AI_MODEL', locals) || 'glm-4-flashx',
+    baseUrl: getEnv('AI_BASE_URL', locals) || DEFAULT_ENDPOINTS[provider],
   };
 }
 
@@ -140,8 +146,8 @@ function mapProviderError(status: number, provider: AiProvider): string | undefi
   return undefined;
 }
 
-export const POST: APIRoute = async ({ request }) => {
-  const config = getAiConfig();
+export const POST: APIRoute = async ({ request, locals }) => {
+  const config = getAiConfig(locals);
 
   if (!config.apiKey) {
     return jsonResponse({ error: `未配置 ${config.provider} 对应的 API Key` }, 500);

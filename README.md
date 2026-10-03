@@ -161,6 +161,35 @@ API 返回类似“JWT Token 已过期或无效”的错误提示时，重新在
 **数据与 App 存在偏差**  
 已删除/重置的语言课程数据在多邻国接口中不复存在，因此根据课程总计的时间会与实际包含已删除课程的总时间存在微小差别，这是正常数据对账结果。
 
+## 部署指南
+
+### 部署到 Cloudflare
+
+本项目已深度适配 Cloudflare Workers（带 Static Assets），支持一键快速部署。
+
+#### 方式一：Wrangler CLI 本地一键部署
+
+1. 登录 Cloudflare：
+   ```bash
+   npx wrangler login
+   ```
+2. 构建并部署：
+   ```bash
+   npm run deploy:cf
+   ```
+3. 在 Cloudflare 控制台对应 Worker 的 **Settings -> Variables and Secrets** 中配置环境变量（如 `DUOLINGO_TOKEN`、`AI_PROVIDER`、API Keys 等）。
+
+#### 方式二：Git 仓库自动集成部署
+
+1. 在 Cloudflare Dashboard 中创建 Worker 或 Pages 项目并关联 Git 仓库。
+2. 构建配置：
+   - **Framework preset**: `Astro`
+   - **Build command**: `npm run build:cf`
+   - **Compatibility flags**: 确保包含 `nodejs_compat`
+3. 添加环境变量（参考 `.env.example`）。
+
+---
+
 ## 许可证
 
 本项目基于 [MIT 许可证](LICENSE) 开源。

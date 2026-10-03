@@ -4,12 +4,25 @@ import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 import vercel from '@astrojs/vercel';
 import netlify from '@astrojs/netlify';
+import cloudflare from '@astrojs/cloudflare';
 
-const adapter = process.env.NETLIFY ? netlify() : vercel();
+function resolveAdapter() {
+  if (process.env.NETLIFY) {
+    return netlify();
+  }
+  if (process.env.CF_PAGES || process.env.CLOUDFLARE || process.env.CF_WORKER) {
+    return cloudflare({
+      platformProxy: {
+        enabled: true,
+      },
+    });
+  }
+  return vercel();
+}
 
 export default defineConfig({
   output: 'server',
-  adapter: adapter,
+  adapter: resolveAdapter(),
   image: {
     service: passthroughImageService(),
   },

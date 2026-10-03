@@ -28,6 +28,8 @@ npm-debug.log*
 .astro/
 .astro-cache/
 .vercel/
+.wrangler/
+.dev.vars
 
 # Local agent instructions
 AGENTS.md
