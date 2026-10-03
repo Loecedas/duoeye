@@ -10,14 +10,14 @@ function resolveAdapter() {
   if (process.env.NETLIFY) {
     return netlify();
   }
-  if (process.env.CF_PAGES || process.env.CLOUDFLARE || process.env.CF_WORKER) {
-    return cloudflare({
-      platformProxy: {
-        enabled: true,
-      },
-    });
+  if (process.env.VERCEL) {
+    return vercel();
   }
-  return vercel();
+  return cloudflare({
+    platformProxy: {
+      enabled: true,
+    },
+  });
 }
 
 export default defineConfig({
